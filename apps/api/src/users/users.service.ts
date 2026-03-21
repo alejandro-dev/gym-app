@@ -18,6 +18,9 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class UsersService {
 	constructor(private readonly prisma: PrismaService) {}
 
+	/**
+	 * Selecciona los campos de un usuario para la consulta.
+	 */
 	private readonly userSelect = {
 		id: true,
 		email: true,

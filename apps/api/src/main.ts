@@ -1,7 +1,7 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import cookieParser from 'cookie-parser';
+import * as cookieParser from 'cookie-parser';
 import { REFRESH_TOKEN_COOKIE_NAME } from './auth/constants/auth.constants';
 import { AppModule } from './app.module';
 
@@ -18,7 +18,9 @@ async function bootstrap() {
 
 	const swaggerConfig = new DocumentBuilder()
 		.setTitle('Gym App API')
-		.setDescription('Documentacion de la API para autenticacion y gestion de usuarios.')
+		.setDescription(
+			'Documentacion de la API para autenticacion y gestion de usuarios y ejercicios.',
+		)
 		.setVersion('1.0.0')
 		.addBearerAuth()
 		.addCookieAuth(REFRESH_TOKEN_COOKIE_NAME)

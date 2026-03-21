@@ -37,4 +37,4 @@ jobs:
         run: pnpm --filter api build
 
       - name: Run API tests
-        run: pnpm --filter api test -- --runInBand auth users
+        run: pnpm --filter api test -- --runInBand auth users exercises

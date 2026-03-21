@@ -31,6 +31,11 @@ import { UsersService } from './users.service';
 @Roles(UserRole.ADMIN, UserRole.COACH)
 @Controller('users')
 export class UsersController {
+	/**
+	 * Crea una nueva instancia del controlador de usuarios.
+	 *
+	 * @param usersService - Servicio de dominio de usuarios
+	 */
 	constructor(private readonly usersService: UsersService) {}
 
 	/**
