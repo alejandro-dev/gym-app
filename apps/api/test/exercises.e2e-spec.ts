@@ -181,14 +181,14 @@ describe('ExercisesController (e2e)', () => {
 		const firstExercise = await prisma.exercise.create({
 			data: buildCreateExercisePayload('front-squat'),
 		});
-		await prisma.exercise.create({
+		const secondExercise =await prisma.exercise.create({
 			data: buildCreateExercisePayload('leg-press'),
 		});
 
 		await request(app.getHttpServer())
 			.patch(`/exercises/${firstExercise.id}`)
 			.set('Authorization', `Bearer ${adminAccessToken}`)
-			.send({ slug: 'leg-press' })
+			.send({ slug: secondExercise.slug })
 			.expect(409);
 	});
 
