@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+coverage/
+.next/
+out/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime files
+*.pid
+*.pid.lock
+*.seed
+
+# OS / Editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# TypeScript / tooling
+*.tsbuildinfo
+.cache/
+.temp/
+.tmp/
+
+# Prisma
+generated/
+**/generated/prisma/
+
+# Agent tooling
+.agents/
+skills-lock.json
+
+# Test output
+.nyc_output/
+
+# Misc
+report.*.json
