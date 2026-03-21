@@ -11,6 +11,27 @@ jobs:
   api:
     name: Build and Test API
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/gym_app_test?schema=public
+      JWT_ACCESS_SECRET: superaccesssecret
+      JWT_REFRESH_SECRET: superrefreshsecret
+      JWT_ACCESS_TTL_SECONDS: 900
+      JWT_REFRESH_TTL_SECONDS: 604800
+      NODE_ENV: test
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: gym_app_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d gym_app_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout repository
@@ -33,8 +54,14 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter api exec prisma generate --schema prisma/schema.prisma
 
+      - name: Apply Prisma migrations
+        run: pnpm --filter api exec prisma migrate deploy --schema prisma/schema.prisma
+
       - name: Build API
         run: pnpm --filter api build
 
       - name: Run API tests
         run: pnpm --filter api test -- --runInBand auth users exercises
+
+      - name: Run API e2e tests
+        run: pnpm --filter api test:e2e -- --runInBand exercises.e2e-spec.ts
