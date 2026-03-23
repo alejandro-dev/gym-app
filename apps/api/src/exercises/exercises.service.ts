@@ -8,6 +8,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
+import { handlePrismaError } from '../prisma/prisma-error.util';
 
 /**
  * Servicio base para operaciones del dominio de ejercicios.
@@ -36,20 +37,6 @@ export class ExercisesService {
 		createdAt: true,
 		updatedAt: true,
 	} satisfies Prisma.ExerciseSelect;
-
-	/**
-	 * Crea un ejercicio y devuelve la version publica del registro.
-	 */
-	async create(createExerciseDto: CreateExerciseDto) {
-		try {
-			return await this.prisma.exercise.create({
-				data: this.toCreateData(createExerciseDto),
-				select: this.exerciseSelect,
-			});
-		} catch (error) {
-			this.handlePrismaError(error);
-		}
-	}
 
 	/**
 	 * Obtiene todos los ejercicios ordenados por fecha de creacion descendente.
@@ -81,6 +68,21 @@ export class ExercisesService {
 	}
 
 	/**
+	 * Crea un ejercicio y devuelve la version publica del registro.
+	 */
+	async create(createExerciseDto: CreateExerciseDto) {
+		try {
+			return await this.prisma.exercise.create({
+				data: this.toCreateData(createExerciseDto),
+				select: this.exerciseSelect,
+			});
+				
+		} catch (error) {
+			handlePrismaError(error, 'exercise');		
+		}
+	}
+
+	/**
 	 * Actualiza un ejercicio existente.
 	 * Lanza `NotFoundException` si el ejercicio no existe.
 	 */
@@ -94,8 +96,9 @@ export class ExercisesService {
 				data: this.toUpdateData(updateExerciseDto),
 				select: this.exerciseSelect,
 			});
+
 		} catch (error) {
-			this.handlePrismaError(error);
+			handlePrismaError(error, 'exercise');
 		}
 	}
 
@@ -153,24 +156,5 @@ export class ExercisesService {
 
 		// Si no existe lanza NotFoundException
 		if (!exercise) throw new NotFoundException(`Exercise with id "${id}" not found`);
-	}
-
-	/**
-	 * Traduce errores conocidos de Prisma a excepciones HTTP comprensibles.
-	 */
-	private handlePrismaError(error: unknown): never {
-		if (error instanceof Prisma.PrismaClientKnownRequestError) {
-			if (error.code === 'P2002') {
-				const target = Array.isArray(error.meta?.target)
-					? error.meta.target.join(', ')
-					: 'unique field';
-
-				throw new ConflictException(
-					`An exercise with the same ${target} already exists`,
-				);
-			}
-		}
-
-		throw new InternalServerErrorException('Unexpected database error');
 	}
 }

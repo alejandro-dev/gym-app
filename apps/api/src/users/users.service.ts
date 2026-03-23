@@ -8,6 +8,7 @@ import { Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { handlePrismaError } from '../prisma/prisma-error.util';
 
 /**
  * Servicio de dominio para operaciones CRUD de usuarios.
@@ -44,8 +45,9 @@ export class UsersService {
 				data: this.toCreateData(createUserDto),
 				select: this.userSelect,
 			});
+
 		} catch (error) {
-			this.handlePrismaError(error);
+			handlePrismaError(error, 'user');
 		}
 	}
 
@@ -90,8 +92,9 @@ export class UsersService {
 				data: this.toUpdateData(updateUserDto),
 				select: this.userSelect,
 			});
+
 		} catch (error) {
-			this.handlePrismaError(error);
+			handlePrismaError(error, 'user');
 		}
 	}
 
@@ -159,24 +162,5 @@ export class UsersService {
 
 		// Si no existe lanza NotFoundException
 		if (!user) throw new NotFoundException(`User with id "${id}" not found`);
-	}
-
-	/**
-	 * Traduce errores conocidos de Prisma a excepciones HTTP comprensibles.
-	 */
-	private handlePrismaError(error: unknown): never {
-		if (error instanceof Prisma.PrismaClientKnownRequestError) {
-			if (error.code === 'P2002') {
-				const target = Array.isArray(error.meta?.target)
-					? error.meta.target.join(', ')
-					: 'unique field';
-
-				throw new ConflictException(
-					`A user with the same ${target} already exists`,
-				);
-			}
-		}
-
-		throw new InternalServerErrorException('Unexpected database error');
 	}
 }

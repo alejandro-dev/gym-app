@@ -60,8 +60,20 @@ jobs:
       - name: Build API
         run: pnpm --filter api build
 
-      - name: Run API tests
-        run: pnpm --filter api test -- --runInBand auth users exercises
+      - name: Run Auth unit tests
+        run: pnpm --filter api test -- --runInBand auth
 
-      - name: Run API e2e tests
+      - name: Run Users unit tests
+        run: pnpm --filter api test -- --runInBand users
+
+      - name: Run Exercises unit tests
+        run: pnpm --filter api test -- --runInBand exercises
+
+      - name: Run Workout Plans unit tests
+        run: pnpm --filter api test -- --runInBand workout-plans
+
+      - name: Run Exercises e2e tests
         run: pnpm --filter api test:e2e -- --runInBand exercises.e2e-spec.ts
+
+      - name: Run Workout Plans e2e tests
+        run: pnpm --filter api test:e2e -- --runInBand workout-plan.e2e-spec.ts
