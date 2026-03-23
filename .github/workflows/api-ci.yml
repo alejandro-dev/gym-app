@@ -78,6 +78,12 @@ jobs:
       - name: Run Workout Sessions unit tests
         run: pnpm --filter api test -- --runInBand workout-sessions
 
+      - name: Run Workout Sets unit tests
+        run: pnpm --filter api test -- --runInBand workout-sets
+
+      - name: Run Personal Records unit tests
+        run: pnpm --filter api test -- --runInBand personal-records
+
       - name: Run Exercises e2e tests
         run: pnpm --filter api exec jest --config ./test/jest-e2e.json --runInBand test/exercises.e2e-spec.ts
 
@@ -89,3 +95,9 @@ jobs:
 
       - name: Run Workout Sessions e2e tests
         run: pnpm --filter api exec jest --config ./test/jest-e2e.json --runInBand test/workout-sessions.e2e-spec.ts
+
+      - name: Run Workout Sets e2e tests
+        run: pnpm --filter api exec jest --config ./test/jest-e2e.json --runInBand test/workout-sets.e2e-spec.ts
+
+      - name: Run Personal Records e2e tests
+        run: pnpm --filter api exec jest --config ./test/jest-e2e.json --runInBand test/personal-records.e2e-spec.ts
