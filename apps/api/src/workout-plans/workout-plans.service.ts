@@ -72,6 +72,10 @@ export class WorkoutPlansService {
       }
    }
 
+   /**
+    * Actualiza un plan de trabajo existente.
+    * Lanza `NotFoundException` si el plan de trabajo no existe.
+    */
    async update(id: string, updateWorkoutPlanDto: UpdateWorkoutPlanDto) {
       // Verificamos si el plan de trabajo existe
       await this.ensureWorkoutPlanExists(id);
@@ -128,6 +132,9 @@ export class WorkoutPlansService {
       };
    }
 
+   /**
+    * Verifica si el plan de trabajo existe antes de actualizar o eliminar.
+    */
    private async ensureWorkoutPlanExists(id: string) {
       const workoutPlan = await this.prisma.workoutPlan.findUnique({
          where: { id },
