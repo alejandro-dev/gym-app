@@ -76,10 +76,10 @@ jobs:
         run: pnpm --filter api test -- --runInBand workout-plan-exercises
 
       - name: Run Exercises e2e tests
-        run: pnpm --filter api test:e2e -- --runInBand exercises.e2e-spec.ts
+        run: pnpm --filter api exec jest --config ./test/jest-e2e.json --runInBand test/exercises.e2e-spec.ts
 
       - name: Run Workout Plans e2e tests
-        run: pnpm --filter api test:e2e -- --runInBand workout-plan.e2e-spec.ts
+        run: pnpm --filter api exec jest --config ./test/jest-e2e.json --runInBand test/workout-plan.e2e-spec.ts
 
       - name: Run Workout Plan Exercises e2e tests
-        run: pnpm --filter api test:e2e -- --runInBand workout-plan-exercises.e2e-spec.ts
+        run: pnpm --filter api exec jest --config ./test/jest-e2e.json --runInBand test/workout-plan-exercises.e2e-spec.ts
