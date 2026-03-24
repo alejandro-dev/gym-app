@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { handlePrismaError } from '../prisma/prisma-error.util';
 import { CreatePersonalRecordDto } from './dto/create-personal-record.dto';
 import { UpdatePersonalRecordDto } from './dto/update-personal-record.dto';
+import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 
 /**
  * Servicio base para operaciones del dominio de records personales.
@@ -32,10 +33,14 @@ export class PersonalRecordsService {
 
    /**
     * Obtiene todos los records personales ordenados por fecha de logro descendente.
+    * 
+    * @param user - Usuario autenticado
+    * @returns Listado de records accesibles para el usuario autenticado
     */
-   async findAll() {
+   async findAll(user: AuthenticatedUser) {
       return await this.prisma.personalRecord.findMany({
          select: this.personalRecordSelect,
+         where: user.role === UserRole.USER ? { userId: user.sub } : undefined,
          orderBy: [
             { achievedAt: 'desc' },
             { createdAt: 'desc' },
@@ -46,13 +51,14 @@ export class PersonalRecordsService {
    /**
     * Obtiene un record personal por id.
     *
+    * @param user - Usuario autenticado
     * @param id - Identificador del record
     * @returns Record encontrado
     * @throws NotFoundException si no existe
     */
-   async findOne(id: string) {
+   async findOne(user: AuthenticatedUser, id: string) {
       const personalRecord = await this.prisma.personalRecord.findUnique({
-         where: { id },
+         where: { id, userId: user.role === UserRole.USER ? user.sub : undefined },
          select: this.personalRecordSelect,
       });
 
@@ -83,13 +89,14 @@ export class PersonalRecordsService {
    /**
     * Actualiza un record personal existente.
     *
+    * @param user - Usuario autenticado
     * @param id - Identificador del record
     * @param updatePersonalRecordDto - Datos de actualizacion parcial
     * @returns Record actualizado
     * @throws NotFoundException si no existe
     */
-   async update(id: string, updatePersonalRecordDto: UpdatePersonalRecordDto) {
-      await this.ensurePersonalRecordExists(id);
+   async update(user: AuthenticatedUser, id: string, updatePersonalRecordDto: UpdatePersonalRecordDto) {
+      await this.ensurePersonalRecordExists(user, id);
 
       try {
          return await this.prisma.personalRecord.update({
@@ -105,12 +112,13 @@ export class PersonalRecordsService {
    /**
     * Elimina un record personal existente.
     *
+    * @param user - Usuario autenticado
     * @param id - Identificador del record
     * @returns Record eliminado
     * @throws NotFoundException si no existe
     */
-   async remove(id: string) {
-      await this.ensurePersonalRecordExists(id);
+   async remove(user: AuthenticatedUser, id: string) {
+      await this.ensurePersonalRecordExists(user, id);
 
       return await this.prisma.personalRecord.delete({
          where: { id },
@@ -166,12 +174,14 @@ export class PersonalRecordsService {
    /**
     * Verifica si el record existe antes de actualizar o eliminar.
     *
+    * @param user - Usuario autenticado
     * @param id - Identificador del record
+    * @returns Promesa resuelta cuando el record existe y es accesible para el usuario
     * @throws NotFoundException si no existe
     */
-   private async ensurePersonalRecordExists(id: string) {
+   private async ensurePersonalRecordExists(user: AuthenticatedUser, id: string) {
       const personalRecord = await this.prisma.personalRecord.findUnique({
-         where: { id },
+         where: { id, userId: user.role === UserRole.USER ? user.sub : undefined },
          select: { id: true },
       });
 

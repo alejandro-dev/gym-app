@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { UserRole } from '@prisma/client';
 import { PersonalRecordsService } from './personal-records.service';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -8,6 +9,12 @@ import {
 
 describe('PersonalRecordsService', () => {
 	let service: PersonalRecordsService;
+	const currentUser = {
+		sub: 'user_123',
+		email: 'user@example.com',
+		role: UserRole.USER,
+		tokenType: 'access' as const,
+	};
 
 	const prismaMock = {
 		personalRecord: {
@@ -98,7 +105,7 @@ describe('PersonalRecordsService', () => {
 	it('returns the personal record list in stable read order', async () => {
 		prismaMock.personalRecord.findMany.mockResolvedValue([personalRecordRecord]);
 
-		const result = await (service as any).findAll();
+		const result = await (service as any).findAll(currentUser);
 
 		expect(prismaMock.personalRecord.findMany).toHaveBeenCalledWith({
 			select: expect.objectContaining({
@@ -111,6 +118,7 @@ describe('PersonalRecordsService', () => {
 				createdAt: true,
 			}),
 			orderBy: [{ achievedAt: 'desc' }, { createdAt: 'desc' }],
+			where: { userId: currentUser.sub },
 		});
 		expect(result).toEqual([personalRecordRecord]);
 	});
@@ -118,8 +126,12 @@ describe('PersonalRecordsService', () => {
 	it('returns the personal record when it exists', async () => {
 		prismaMock.personalRecord.findUnique.mockResolvedValue(personalRecordRecord);
 
-		const result = await (service as any).findOne(personalRecordRecord.id);
+		const result = await (service as any).findOne(currentUser, personalRecordRecord.id);
 
+		expect(prismaMock.personalRecord.findUnique).toHaveBeenCalledWith({
+			where: { id: personalRecordRecord.id, userId: currentUser.sub },
+			select: expect.any(Object),
+		});
 		expect(result).toEqual(personalRecordRecord);
 	});
 
@@ -127,7 +139,7 @@ describe('PersonalRecordsService', () => {
 		prismaMock.personalRecord.findUnique.mockResolvedValue(null);
 
 		await expect(
-			(service as any).findOne('missing_personalRecord'),
+			(service as any).findOne(currentUser, 'missing_personalRecord'),
 		).rejects.toBeInstanceOf(NotFoundException);
 	});
 
@@ -138,10 +150,14 @@ describe('PersonalRecordsService', () => {
 			value: 125,
 		});
 
-		const result = await (service as any).update(personalRecordRecord.id, {
+		const result = await (service as any).update(currentUser, personalRecordRecord.id, {
 			value: 125,
 		});
 
+		expect(prismaMock.personalRecord.findUnique).toHaveBeenCalledWith({
+			where: { id: personalRecordRecord.id, userId: currentUser.sub },
+			select: { id: true },
+		});
 		expect(prismaMock.personalRecord.update).toHaveBeenCalledWith({
 			where: { id: personalRecordRecord.id },
 			data: {
@@ -161,7 +177,7 @@ describe('PersonalRecordsService', () => {
 		prismaMock.personalRecord.findUnique.mockResolvedValue(null);
 
 		await expect(
-			(service as any).remove('missing_personalRecord'),
+			(service as any).remove(currentUser, 'missing_personalRecord'),
 		).rejects.toBeInstanceOf(NotFoundException);
 	});
 });

@@ -9,6 +9,7 @@ import { WorkoutPlanExerciseModule } from './workout-plan-exercises/workout-plan
 import { WorkoutSessionsModule } from './workout-sessions/workout-sessions.module';
 import { WorkoutSetsModule } from './workout-sets/workout-sets.module';
 import { PersonalRecordsModule } from './personal-records/personal-records.module';
+import { BullmqModule } from './bullmq/bullmq.module';
 
 @Module({
 	imports: [
@@ -23,7 +24,8 @@ import { PersonalRecordsModule } from './personal-records/personal-records.modul
 		WorkoutPlanExerciseModule,
 		WorkoutSessionsModule,
 		WorkoutSetsModule,
-		PersonalRecordsModule
+		PersonalRecordsModule,
+		BullmqModule
 	]
 })
 export class AppModule {}

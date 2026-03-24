@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateWorkoutPlanDto } from './dto/create-workout-plan.dto';
 import { UpdateWorkoutPlanDto } from './dto/update-workout-plan.dto';
 import { handlePrismaError } from '../prisma/prisma-error.util';
+import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 
 /**
  * Servicio base para operaciones del dominio de planes de trabajo.
@@ -32,10 +33,15 @@ export class WorkoutPlansService {
 
    /**
     * Obtiene todos los planes de trabajo ordenados por fecha de creacion descendente.
+    *
+    * @param user - Usuario autenticado
+    * @param userId - Identificador opcional del usuario por el que filtrar cuando el rol lo permite
+    * @returns Listado de planes de trabajo accesibles para el usuario autenticado
     */
-   async findAll() {
+   async findAll(user: AuthenticatedUser, userId: string) {
       return await this.prisma.workoutPlan.findMany({
          select: this.workoutPlanSelect,
+         where: user.role === UserRole.USER ? { userId: user.sub } : userId ? { userId: userId } : undefined,
          orderBy: {
             createdAt: 'desc'
          }
@@ -44,11 +50,15 @@ export class WorkoutPlansService {
 
    /**
     * Obtiene un plan de trabajo por id.
-    * Lanza `NotFoundException` si no existe.
+    *
+    * @param user - Usuario autenticado
+    * @param id - Identificador del plan de trabajo
+    * @returns Plan de trabajo encontrado
+    * @throws NotFoundException si no existe
     */
-   async findOne(id: string) {
+   async findOne(user: AuthenticatedUser, id: string) {
       const workoutPlan =  await this.prisma.workoutPlan.findUnique({
-         where: { id },
+         where: { id, userId: user.role === UserRole.ADMIN || user.role === UserRole.COACH ? undefined : user.sub },
          select: this.workoutPlanSelect
       });
 
@@ -59,6 +69,9 @@ export class WorkoutPlansService {
 
    /**
     * Crea un plan de trabajo y devuelve la version publica del registro.
+    *
+    * @param createWorkoutPlanDto - Datos de creacion del plan de trabajo
+    * @returns Plan de trabajo creado
     */
    async create(createWorkoutPlanDto: CreateWorkoutPlanDto) {
       try {
@@ -74,11 +87,16 @@ export class WorkoutPlansService {
 
    /**
     * Actualiza un plan de trabajo existente.
-    * Lanza `NotFoundException` si el plan de trabajo no existe.
+    *
+    * @param user - Usuario autenticado
+    * @param id - Identificador del plan de trabajo
+    * @param updateWorkoutPlanDto - Datos de actualizacion parcial
+    * @returns Plan de trabajo actualizado
+    * @throws NotFoundException si el plan de trabajo no existe
     */
-   async update(id: string, updateWorkoutPlanDto: UpdateWorkoutPlanDto) {
+   async update(user: AuthenticatedUser, id: string, updateWorkoutPlanDto: UpdateWorkoutPlanDto) {
       // Verificamos si el plan de trabajo existe
-      await this.ensureWorkoutPlanExists(id);
+      await this.ensureWorkoutPlanExists(user, id);
 
       try {
          return await this.prisma.workoutPlan.update({
@@ -94,10 +112,15 @@ export class WorkoutPlansService {
 
    /**
     * Elimina un plan de trabajo existente y devuelve el registro eliminado.
+    *
+    * @param user - Usuario autenticado
+    * @param id - Identificador del plan de trabajo
+    * @returns Plan de trabajo eliminado
+    * @throws NotFoundException si no existe
     */
-   async remove(id: string) {
+   async remove(user: AuthenticatedUser, id: string) {
       // Verificamos si el plan de trabajo existe
-      await this.ensureWorkoutPlanExists(id);
+      await this.ensureWorkoutPlanExists(user, id);
 
       return await this.prisma.workoutPlan.delete({
          where: { id },
@@ -107,6 +130,9 @@ export class WorkoutPlansService {
 
    /**
     * Convierte el DTO de creacion al formato esperado por Prisma.
+    *
+    * @param createWorkoutPlanDto - Datos de creacion del plan de trabajo
+    * @returns Datos adaptados a Prisma
     */
    private toCreateData(createWorkoutPlanDto: CreateWorkoutPlanDto): Prisma.WorkoutPlanCreateInput {
       return {
@@ -123,6 +149,9 @@ export class WorkoutPlansService {
 
    /**
     * Convierte el DTO de actualizacion al formato de update parcial de Prisma.
+    *
+    * @param updateWorkoutPlanDto - Datos de actualizacion parcial
+    * @returns Datos adaptados a Prisma
     */
    private toUpdateData(updateWorkoutPlanDto: UpdateWorkoutPlanDto): Prisma.WorkoutPlanUpdateInput {
       return {
@@ -134,11 +163,16 @@ export class WorkoutPlansService {
 
    /**
     * Verifica si el plan de trabajo existe antes de actualizar o eliminar.
+    *
+    * @param user - Usuario autenticado
+    * @param id - Identificador del plan de trabajo
+    * @returns Promesa resuelta cuando el plan existe y es accesible para el usuario
+    * @throws NotFoundException si no existe
     */
-   private async ensureWorkoutPlanExists(id: string) {
+   private async ensureWorkoutPlanExists(user: AuthenticatedUser, id: string) {
       const workoutPlan = await this.prisma.workoutPlan.findUnique({
-         where: { id },
-         select: { id: true },
+         where: { id, userId: user.role === UserRole.ADMIN || user.role === UserRole.COACH ? undefined : user.sub },
+         select: { id: true, userId: true },
       });
 
       // Si no existe lanza NotFoundException

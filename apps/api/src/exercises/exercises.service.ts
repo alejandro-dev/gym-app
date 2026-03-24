@@ -40,6 +40,8 @@ export class ExercisesService {
 
 	/**
 	 * Obtiene todos los ejercicios ordenados por fecha de creacion descendente.
+	 *
+	 * @returns Listado de ejercicios
 	 */
 	async findAll() {
 		return this.prisma.exercise.findMany({
@@ -52,7 +54,10 @@ export class ExercisesService {
 
 	/**
 	 * Obtiene un ejercicio por id.
-	 * Lanza `NotFoundException` si no existe.
+	 *
+	 * @param id - Identificador del ejercicio
+	 * @returns Ejercicio encontrado
+	 * @throws NotFoundException si no existe
 	 */
 	async findOne(id: string) {
 		// Consulta de un ejercicio por id
@@ -69,6 +74,9 @@ export class ExercisesService {
 
 	/**
 	 * Crea un ejercicio y devuelve la version publica del registro.
+	 *
+	 * @param createExerciseDto - Datos de creacion del ejercicio
+	 * @returns Ejercicio creado
 	 */
 	async create(createExerciseDto: CreateExerciseDto) {
 		try {
@@ -84,7 +92,11 @@ export class ExercisesService {
 
 	/**
 	 * Actualiza un ejercicio existente.
-	 * Lanza `NotFoundException` si el ejercicio no existe.
+	 *
+	 * @param id - Identificador del ejercicio
+	 * @param updateExerciseDto - Datos de actualizacion parcial
+	 * @returns Ejercicio actualizado
+	 * @throws NotFoundException si el ejercicio no existe
 	 */
 	async update(id: string, updateExerciseDto: UpdateExerciseDto) {
 		// Verifica si el ejercicio existe
@@ -104,6 +116,10 @@ export class ExercisesService {
 
 	/**
 	 * Elimina un ejercicio existente y devuelve el registro eliminado.
+	 *
+	 * @param id - Identificador del ejercicio
+	 * @returns Ejercicio eliminado
+	 * @throws NotFoundException si no existe
 	 */
 	async remove(id: string) {
 		// Verifica si el ejercicio existe
@@ -117,6 +133,9 @@ export class ExercisesService {
 
 	/**
 	 * Convierte el DTO de creacion al formato esperado por Prisma.
+	 *
+	 * @param createExerciseDto - Datos de creacion del ejercicio
+	 * @returns Datos adaptados a Prisma
 	 */
 	private toCreateData(createExerciseDto: CreateExerciseDto): Prisma.ExerciseCreateInput {
 		return {
@@ -132,6 +151,9 @@ export class ExercisesService {
 
 	/**
 	 * Convierte el DTO de actualizacion al formato de update parcial de Prisma.
+	 *
+	 * @param updateExerciseDto - Datos de actualizacion parcial
+	 * @returns Datos adaptados a Prisma
 	 */
 	private toUpdateData(updateExerciseDto: UpdateExerciseDto): Prisma.ExerciseUpdateInput {
 		return {
@@ -147,6 +169,10 @@ export class ExercisesService {
 
 	/**
 	 * Verifica si el ejercicio existe antes de actualizar o eliminar.
+	 *
+	 * @param id - Identificador del ejercicio
+	 * @returns Promesa resuelta cuando el ejercicio existe
+	 * @throws NotFoundException si no existe
 	 */
 	private async ensureExerciseExists(id: string) {
 		const exercise = await this.prisma.exercise.findUnique({

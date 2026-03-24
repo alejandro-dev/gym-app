@@ -35,6 +35,10 @@ export class AuthController {
 
 	/**
 	 * Registra un usuario nuevo y devuelve access y refresh token.
+	 *
+	 * @param registerDto - Datos de registro del usuario
+	 * @param response - Respuesta HTTP donde se escribe la cookie del refresh token
+	 * @returns Usuario registrado junto con access token
 	 */
 	@ApiOperation({ summary: 'Registrar usuario' })
 	@ApiOkResponse({ description: 'Usuario registrado correctamente.' })
@@ -54,6 +58,10 @@ export class AuthController {
 
 	/**
 	 * Inicia sesion con email y password.
+	 *
+	 * @param loginDto - Credenciales de acceso
+	 * @param response - Respuesta HTTP donde se escribe la cookie del refresh token
+	 * @returns Usuario autenticado junto con access token
 	 */
 	@ApiOperation({ summary: 'Iniciar sesion' })
 	@ApiOkResponse({ description: 'Sesion iniciada correctamente.' })
@@ -73,6 +81,11 @@ export class AuthController {
 
 	/**
 	 * Renueva access y refresh token a partir del refresh token actual.
+	 *
+	 * @param request - Peticion HTTP para leer la cookie del refresh token
+	 * @param refreshTokenDto - Cuerpo opcional con el refresh token
+	 * @param response - Respuesta HTTP donde se escribe la cookie actualizada
+	 * @returns Usuario autenticado junto con un nuevo access token
 	 */
 	@ApiOperation({ summary: 'Refrescar tokens' })
 	@ApiCookieAuth(REFRESH_TOKEN_COOKIE_NAME)
@@ -102,6 +115,9 @@ export class AuthController {
 
 	/**
 	 * Devuelve los datos publicos del usuario autenticado.
+	 *
+	 * @param user - Usuario autenticado
+	 * @returns Perfil publico del usuario autenticado
 	 */
 	@ApiOperation({ summary: 'Obtener perfil autenticado' })
 	@ApiBearerAuth()
@@ -114,6 +130,10 @@ export class AuthController {
 
 	/**
 	 * Invalida el refresh token almacenado del usuario autenticado.
+	 *
+	 * @param user - Usuario autenticado
+	 * @param response - Respuesta HTTP donde se limpia la cookie del refresh token
+	 * @returns Confirmacion de cierre de sesion
 	 */
 	@ApiOperation({ summary: 'Cerrar sesion' })
 	@ApiBearerAuth()
@@ -130,6 +150,10 @@ export class AuthController {
 
 	/**
 	 * Escribe el refresh token en una cookie httpOnly.
+	 *
+	 * @param response - Respuesta HTTP donde se escribe la cookie
+	 * @param refreshToken - Refresh token a almacenar
+	 * @returns `void`
 	 */
 	private setRefreshTokenCookie(response: Response, refreshToken: string) {
 		response.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
@@ -143,6 +167,9 @@ export class AuthController {
 
 	/**
 	 * Elimina la cookie donde se almacena el refresh token.
+	 *
+	 * @param response - Respuesta HTTP donde se elimina la cookie
+	 * @returns `void`
 	 */
 	private clearRefreshTokenCookie(response: Response) {
 		response.clearCookie(REFRESH_TOKEN_COOKIE_NAME, {

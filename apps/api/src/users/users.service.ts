@@ -38,6 +38,9 @@ export class UsersService {
 
 	/**
 	 * Crea un usuario y devuelve la version publica del registro.
+	 *
+	 * @param createUserDto - Datos de creacion del usuario
+	 * @returns Usuario creado
 	 */
 	async create(createUserDto: CreateUserDto) {
 		try {
@@ -53,6 +56,8 @@ export class UsersService {
 
 	/**
 	 * Obtiene todos los usuarios ordenados por fecha de creacion descendente.
+	 *
+	 * @returns Listado de usuarios
 	 */
 	async findAll() {
 		return this.prisma.user.findMany({
@@ -65,7 +70,10 @@ export class UsersService {
 
 	/**
 	 * Obtiene un usuario por id.
-	 * Lanza `NotFoundException` si no existe.
+	 *
+	 * @param id - Identificador del usuario
+	 * @returns Usuario encontrado
+	 * @throws NotFoundException si no existe
 	 */
 	async findOne(id: string) {
 		const user = await this.prisma.user.findUnique({
@@ -81,7 +89,11 @@ export class UsersService {
 
 	/**
 	 * Actualiza un usuario existente.
-	 * Lanza `NotFoundException` si el usuario no existe.
+	 *
+	 * @param id - Identificador del usuario
+	 * @param updateUserDto - Datos de actualizacion parcial
+	 * @returns Usuario actualizado
+	 * @throws NotFoundException si el usuario no existe
 	 */
 	async update(id: string, updateUserDto: UpdateUserDto) {
 		await this.ensureUserExists(id);
@@ -100,6 +112,10 @@ export class UsersService {
 
 	/**
 	 * Elimina un usuario existente y devuelve el registro eliminado.
+	 *
+	 * @param id - Identificador del usuario
+	 * @returns Usuario eliminado
+	 * @throws NotFoundException si no existe
 	 */
 	async remove(id: string) {
 		await this.ensureUserExists(id);
@@ -112,6 +128,9 @@ export class UsersService {
 
 	/**
 	 * Convierte el DTO de creacion al formato esperado por Prisma.
+	 *
+	 * @param createUserDto - Datos de creacion del usuario
+	 * @returns Datos adaptados a Prisma
 	 */
 	private toCreateData(createUserDto: CreateUserDto): Prisma.UserCreateInput {
 		return {
@@ -131,6 +150,9 @@ export class UsersService {
 
 	/**
 	 * Convierte el DTO de actualizacion al formato de update parcial de Prisma.
+	 *
+	 * @param updateUserDto - Datos de actualizacion parcial
+	 * @returns Datos adaptados a Prisma
 	 */
 	private toUpdateData(updateUserDto: UpdateUserDto): Prisma.UserUpdateInput {
 		return {
@@ -153,6 +175,10 @@ export class UsersService {
 
 	/**
 	 * Verifica si el usuario existe antes de actualizar o eliminar.
+	 *
+	 * @param id - Identificador del usuario
+	 * @returns Promesa resuelta cuando el usuario existe
+	 * @throws NotFoundException si no existe
 	 */
 	private async ensureUserExists(id: string) {
 		const user = await this.prisma.user.findUnique({

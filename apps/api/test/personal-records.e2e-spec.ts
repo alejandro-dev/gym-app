@@ -1,6 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { MuscleGroup } from '@prisma/client';
+import { MuscleGroup, UserRole } from '@prisma/client';
 import * as cookieParser from 'cookie-parser';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
@@ -11,6 +11,7 @@ describe('PersonalRecordsController (e2e)', () => {
 	let app: INestApplication<App>;
 	let prisma: PrismaService;
 	let ownerUserId: string;
+	let userAccessToken: string;
 	let exerciseId: string;
 
 	beforeAll(async () => {
@@ -33,7 +34,12 @@ describe('PersonalRecordsController (e2e)', () => {
 		await app.init();
 		await cleanDatabase();
 
-		ownerUserId = await createOwnerUser();
+		userAccessToken = await createAuthenticatedUser(UserRole.USER);
+		const user = await prisma.user.findFirstOrThrow({
+			where: { email: { contains: 'user-' } },
+			orderBy: { createdAt: 'desc' },
+		});
+		ownerUserId = user.id;
 	});
 
 	beforeEach(async () => {
@@ -71,6 +77,7 @@ describe('PersonalRecordsController (e2e)', () => {
 
 		const response = await request(app.getHttpServer())
 			.post('/personal-records')
+			.set('Authorization', `Bearer ${userAccessToken}`)
 			.send(payload)
 			.expect(201);
 
@@ -98,6 +105,7 @@ describe('PersonalRecordsController (e2e)', () => {
 
 		const response = await request(app.getHttpServer())
 			.get('/personal-records')
+			.set('Authorization', `Bearer ${userAccessToken}`)
 			.expect(200);
 
 		expect(response.body).toEqual(
@@ -122,6 +130,7 @@ describe('PersonalRecordsController (e2e)', () => {
 
 		const response = await request(app.getHttpServer())
 			.get(`/personal-records/${record.id}`)
+			.set('Authorization', `Bearer ${userAccessToken}`)
 			.expect(200);
 
 		expect(response.body).toEqual(
@@ -137,6 +146,7 @@ describe('PersonalRecordsController (e2e)', () => {
 	it('returns 404 when the personal record does not exist', async () => {
 		await request(app.getHttpServer())
 			.get('/personal-records/missing-personal-record-id')
+			.set('Authorization', `Bearer ${userAccessToken}`)
 			.expect(404);
 	});
 
@@ -153,6 +163,7 @@ describe('PersonalRecordsController (e2e)', () => {
 
 		const response = await request(app.getHttpServer())
 			.patch(`/personal-records/${record.id}`)
+			.set('Authorization', `Bearer ${userAccessToken}`)
 			.send({
 				value: 125,
 				metric: 'one-rep-max',
@@ -181,6 +192,7 @@ describe('PersonalRecordsController (e2e)', () => {
 
 		await request(app.getHttpServer())
 			.patch(`/personal-records/${record.id}`)
+			.set('Authorization', `Bearer ${userAccessToken}`)
 			.send({
 				userId: 'another-user-id',
 				exerciseId: 'another-exercise-id',
@@ -191,6 +203,7 @@ describe('PersonalRecordsController (e2e)', () => {
 	it('returns 404 when updating a missing personal record', async () => {
 		await request(app.getHttpServer())
 			.patch('/personal-records/missing-personal-record-id')
+			.set('Authorization', `Bearer ${userAccessToken}`)
 			.send({ value: 110 })
 			.expect(404);
 	});
@@ -208,6 +221,7 @@ describe('PersonalRecordsController (e2e)', () => {
 
 		const response = await request(app.getHttpServer())
 			.delete(`/personal-records/${record.id}`)
+			.set('Authorization', `Bearer ${userAccessToken}`)
 			.expect(200);
 
 		expect(response.body).toEqual(
@@ -221,19 +235,41 @@ describe('PersonalRecordsController (e2e)', () => {
 	it('returns 404 when deleting a missing personal record', async () => {
 		await request(app.getHttpServer())
 			.delete('/personal-records/missing-personal-record-id')
+			.set('Authorization', `Bearer ${userAccessToken}`)
 			.expect(404);
 	});
 
-	async function createOwnerUser() {
-		const user = await prisma.user.create({
-			data: {
-				email: `owner-record-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`,
-				username: `owner-record-${Math.random().toString(36).slice(2, 10)}`,
-				passwordHash: 'hashed-password',
-			},
+	async function createAuthenticatedUser(role: UserRole) {
+		const email = `${role.toLowerCase()}-${Date.now()}-${Math.random()
+			.toString(36)
+			.slice(2)}@example.com`;
+		const password = 'supersecreto123';
+
+		await request(app.getHttpServer())
+			.post('/auth/register')
+			.send({
+				email,
+				password,
+				username: email.split('@')[0],
+				firstName: role,
+			})
+			.expect(201);
+
+		const user = await prisma.user.update({
+			where: { email },
+			data: { role },
 		});
 
-		return user.id;
+		const loginResponse = await request(app.getHttpServer())
+			.post('/auth/login')
+			.send({ email, password })
+			.expect(201);
+
+		expect(loginResponse.body.user).toEqual(
+			expect.objectContaining({ id: user.id, email, role }),
+		);
+
+		return loginResponse.body.accessToken as string;
 	}
 
 	async function cleanDatabase() {

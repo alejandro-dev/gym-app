@@ -47,6 +47,10 @@ export class AuthService {
 
 	/**
 	 * Registra un usuario nuevo con rol USER y emite sus tokens.
+	 *
+	 * @param registerDto - Datos de registro del usuario
+	 * @returns Usuario registrado junto con access token y refresh token
+	 * @throws ConflictException si el email o username ya existen
 	 */
 	async register(registerDto: RegisterDto) {
 		const passwordHash = await this.hashValue(registerDto.password);
@@ -84,6 +88,10 @@ export class AuthService {
 
 	/**
 	 * Valida credenciales y devuelve un par nuevo de tokens.
+	 *
+	 * @param loginDto - Credenciales de acceso
+	 * @returns Usuario autenticado junto con access token y refresh token
+	 * @throws UnauthorizedException si las credenciales no son validas
 	 */
 	async login(loginDto: LoginDto) {
 		const user = await this.prisma.user.findUnique({
@@ -123,6 +131,10 @@ export class AuthService {
 
 	/**
 	 * Devuelve el perfil publico del usuario autenticado.
+	 *
+	 * @param userId - Identificador del usuario autenticado
+	 * @returns Perfil publico del usuario autenticado
+	 * @throws UnauthorizedException si el usuario no existe
 	 */
 	async getProfile(userId: string) {
 		const user = await this.prisma.user.findUnique({
@@ -139,6 +151,11 @@ export class AuthService {
 
 	/**
 	 * Rota el refresh token y devuelve un nuevo par de tokens.
+	 *
+	 * @param refreshToken - Refresh token actual
+	 * @returns Usuario autenticado junto con un nuevo access token y refresh token
+	 * @throws BadRequestException si no se recibe refresh token
+	 * @throws UnauthorizedException si el token no es valido o no coincide con el almacenado
 	 */
 	async refreshTokens(refreshToken: string) {
 		if (!refreshToken) {
@@ -181,6 +198,9 @@ export class AuthService {
 
 	/**
 	 * Elimina el refresh token almacenado del usuario.
+	 *
+	 * @param userId - Identificador del usuario autenticado
+	 * @returns Confirmacion de cierre de sesion
 	 */
 	async logout(userId: string) {
 		await this.prisma.user.update({
@@ -193,6 +213,9 @@ export class AuthService {
 
 	/**
 	 * Emite access y refresh token y persiste el refresh token hasheado.
+	 *
+	 * @param user - Usuario para el que se emiten los tokens
+	 * @returns Usuario junto con access token y refresh token
 	 */
 	private async issueTokens(user: {
 		id: string;
@@ -246,6 +269,9 @@ export class AuthService {
 
 	/**
 	 * Hash seguro para passwords y refresh tokens.
+	 *
+	 * @param value - Valor plano a hashear
+	 * @returns Hash derivado con salt
 	 */
 	private async hashValue(value: string) {
 		const salt = randomBytes(16).toString('hex');
@@ -255,6 +281,10 @@ export class AuthService {
 
 	/**
 	 * Verifica un valor plano frente a su hash almacenado.
+	 *
+	 * @param value - Valor plano a comprobar
+	 * @param storedHash - Hash almacenado con salt
+	 * @returns `true` si el valor coincide con el hash almacenado
 	 */
 	private async verifyValue(value: string, storedHash: string) {
 		const [salt, storedKey] = storedHash.split(':');
@@ -275,6 +305,11 @@ export class AuthService {
 
 	/**
 	 * Verifica la firma y expiracion de un JWT.
+	 *
+	 * @param token - JWT a validar
+	 * @param secret - Secreto usado para verificar la firma
+	 * @returns Payload valido del token
+	 * @throws UnauthorizedException si el token es invalido o ha expirado
 	 */
 	private async verifyToken(token: string, secret: string) {
 		try {
@@ -288,6 +323,8 @@ export class AuthService {
 
 	/**
 	 * Obtiene el secreto usado para firmar access tokens.
+	 *
+	 * @returns Secreto para access tokens
 	 */
 	private getAccessTokenSecret() {
 		return this.configService.get<string>(
@@ -298,6 +335,8 @@ export class AuthService {
 
 	/**
 	 * Obtiene el secreto usado para firmar refresh tokens.
+	 *
+	 * @returns Secreto para refresh tokens
 	 */
 	private getRefreshTokenSecret() {
 		return this.configService.get<string>(
@@ -308,6 +347,8 @@ export class AuthService {
 
 	/**
 	 * Devuelve la duracion del access token en segundos.
+	 *
+	 * @returns Tiempo de vida del access token en segundos
 	 */
 	private getAccessTokenTtlSeconds() {
 		return this.configService.get<number>('JWT_ACCESS_TTL_SECONDS', 900);
@@ -315,6 +356,8 @@ export class AuthService {
 
 	/**
 	 * Devuelve la duracion del refresh token en segundos.
+	 *
+	 * @returns Tiempo de vida del refresh token en segundos
 	 */
 	private getRefreshTokenTtlSeconds() {
 		return this.configService.get<number>('JWT_REFRESH_TTL_SECONDS', 604800);

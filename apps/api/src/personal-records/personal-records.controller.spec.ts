@@ -1,9 +1,30 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { UserRole } from '@prisma/client';
+
+jest.mock('src/auth/guards/access-token.guard', () => ({ AccessTokenGuard: class {} }), {
+	virtual: true,
+});
+jest.mock('src/auth/guards/roles.guard', () => ({ RolesGuard: class {} }), {
+	virtual: true,
+});
+jest.mock('src/auth/decorators/roles.decorator', () => ({ Roles: () => () => undefined }), {
+	virtual: true,
+});
+jest.mock('src/auth/decorators/current-user.decorator', () => ({ CurrentUser: () => () => undefined }), {
+	virtual: true,
+});
+
 import { PersonalRecordsController } from './personal-records.controller';
 import { PersonalRecordsService } from './personal-records.service';
 
 describe('PersonalRecordsController', () => {
 	let controller: PersonalRecordsController;
+	const currentUser = {
+		sub: 'user_123',
+		email: 'user@example.com',
+		role: UserRole.USER,
+		tokenType: 'access' as const,
+	};
 
 	const personalRecordsServiceMock = {
 		create: jest.fn(),
@@ -55,15 +76,15 @@ describe('PersonalRecordsController', () => {
 
 	it('delegates findAll to the service', async () => {
 		personalRecordsServiceMock.findAll.mockResolvedValue([personalRecordRecord]);
-		const result = await (controller as any).findAll();
-		expect(personalRecordsServiceMock.findAll).toHaveBeenCalledTimes(1);
+		const result = await (controller as any).findAll(currentUser);
+		expect(personalRecordsServiceMock.findAll).toHaveBeenCalledWith(currentUser);
 		expect(result).toEqual([personalRecordRecord]);
 	});
 
 	it('delegates findOne to the service', async () => {
 		personalRecordsServiceMock.findOne.mockResolvedValue(personalRecordRecord);
-		const result = await (controller as any).findOne(personalRecordRecord.id);
-		expect(personalRecordsServiceMock.findOne).toHaveBeenCalledWith(personalRecordRecord.id);
+		const result = await (controller as any).findOne(currentUser, personalRecordRecord.id);
+		expect(personalRecordsServiceMock.findOne).toHaveBeenCalledWith(currentUser, personalRecordRecord.id);
 		expect(result).toEqual(personalRecordRecord);
 	});
 
@@ -72,15 +93,15 @@ describe('PersonalRecordsController', () => {
 			...personalRecordRecord,
 			value: 125,
 		});
-		const result = await (controller as any).update(personalRecordRecord.id, { value: 125 });
-		expect(personalRecordsServiceMock.update).toHaveBeenCalledWith(personalRecordRecord.id, { value: 125 });
+		const result = await (controller as any).update(currentUser, personalRecordRecord.id, { value: 125 });
+		expect(personalRecordsServiceMock.update).toHaveBeenCalledWith(currentUser, personalRecordRecord.id, { value: 125 });
 		expect(result).toEqual({ ...personalRecordRecord, value: 125 });
 	});
 
 	it('delegates remove to the service', async () => {
 		personalRecordsServiceMock.remove.mockResolvedValue(personalRecordRecord);
-		const result = await (controller as any).remove(personalRecordRecord.id);
-		expect(personalRecordsServiceMock.remove).toHaveBeenCalledWith(personalRecordRecord.id);
+		const result = await (controller as any).remove(currentUser, personalRecordRecord.id);
+		expect(personalRecordsServiceMock.remove).toHaveBeenCalledWith(currentUser, personalRecordRecord.id);
 		expect(result).toEqual(personalRecordRecord);
 	});
 });

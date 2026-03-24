@@ -1,9 +1,30 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { UserRole } from '@prisma/client';
+
+jest.mock('src/auth/guards/access-token.guard', () => ({ AccessTokenGuard: class {} }), {
+	virtual: true,
+});
+jest.mock('src/auth/guards/roles.guard', () => ({ RolesGuard: class {} }), {
+	virtual: true,
+});
+jest.mock('src/auth/decorators/roles.decorator', () => ({ Roles: () => () => undefined }), {
+	virtual: true,
+});
+jest.mock('src/auth/decorators/current-user.decorator', () => ({ CurrentUser: () => () => undefined }), {
+	virtual: true,
+});
+
 import { WorkoutSetsController } from './workout-sets.controller';
 import { WorkoutSetsService } from './workout-sets.service';
 
 describe('WorkoutSetsController', () => {
 	let controller: WorkoutSetsController;
+	const currentUser = {
+		sub: 'user_123',
+		email: 'user@example.com',
+		role: UserRole.USER,
+		tokenType: 'access' as const,
+	};
 
 	const workoutSetsServiceMock = {
 		create: jest.fn(),
@@ -57,15 +78,15 @@ describe('WorkoutSetsController', () => {
 
 	it('delegates findAll to the service', async () => {
 		workoutSetsServiceMock.findAll.mockResolvedValue([workoutSetRecord]);
-		const result = await (controller as any).findAll();
-		expect(workoutSetsServiceMock.findAll).toHaveBeenCalledTimes(1);
+		const result = await (controller as any).findAll(currentUser, undefined);
+		expect(workoutSetsServiceMock.findAll).toHaveBeenCalledWith(currentUser, undefined);
 		expect(result).toEqual([workoutSetRecord]);
 	});
 
 	it('delegates findOne to the service', async () => {
 		workoutSetsServiceMock.findOne.mockResolvedValue(workoutSetRecord);
-		const result = await (controller as any).findOne(workoutSetRecord.id);
-		expect(workoutSetsServiceMock.findOne).toHaveBeenCalledWith(workoutSetRecord.id);
+		const result = await (controller as any).findOne(currentUser, workoutSetRecord.id);
+		expect(workoutSetsServiceMock.findOne).toHaveBeenCalledWith(currentUser, workoutSetRecord.id);
 		expect(result).toEqual(workoutSetRecord);
 	});
 
@@ -74,15 +95,15 @@ describe('WorkoutSetsController', () => {
 			...workoutSetRecord,
 			reps: 8,
 		});
-		const result = await (controller as any).update(workoutSetRecord.id, { reps: 8 });
-		expect(workoutSetsServiceMock.update).toHaveBeenCalledWith(workoutSetRecord.id, { reps: 8 });
+		const result = await (controller as any).update(currentUser, workoutSetRecord.id, { reps: 8 });
+		expect(workoutSetsServiceMock.update).toHaveBeenCalledWith(currentUser, workoutSetRecord.id, { reps: 8 });
 		expect(result).toEqual({ ...workoutSetRecord, reps: 8 });
 	});
 
 	it('delegates remove to the service', async () => {
 		workoutSetsServiceMock.remove.mockResolvedValue(workoutSetRecord);
-		const result = await (controller as any).remove(workoutSetRecord.id);
-		expect(workoutSetsServiceMock.remove).toHaveBeenCalledWith(workoutSetRecord.id);
+		const result = await (controller as any).remove(currentUser, workoutSetRecord.id);
+		expect(workoutSetsServiceMock.remove).toHaveBeenCalledWith(currentUser, workoutSetRecord.id);
 		expect(result).toEqual(workoutSetRecord);
 	});
 });

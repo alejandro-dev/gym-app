@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { handlePrismaError } from '../prisma/prisma-error.util';
 import { CreateWorkoutSetDto } from './dto/create-workout-set.dto';
 import { UpdateWorkoutSetDto } from './dto/update-workout-set.dto';
+import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 
 /**
  * Servicio base para operaciones del dominio de series de entrenamiento.
@@ -37,10 +38,15 @@ export class WorkoutSetsService {
 
    /**
     * Obtiene todas las series de entrenamiento ordenadas por sesion, ejercicio y numero de serie.
+    * 
+    * @param user - Usuario autenticado
+    * @param userId - Identificador opcional del usuario por el que filtrar cuando el rol lo permite
+    * @returns Listado de series accesibles para el usuario autenticado
     */
-   async findAll() {
+   async findAll(user: AuthenticatedUser, userId: string) {
       return await this.prisma.workoutSet.findMany({
          select: this.workoutSetSelect,
+         where: user.role === UserRole.USER ? { workoutSession: { userId: user.sub } } : userId ? { workoutSession: { userId: userId } } : undefined,
          orderBy: [
             { workoutSessionId: 'asc' },
             { exerciseId: 'asc' },
@@ -52,13 +58,14 @@ export class WorkoutSetsService {
    /**
     * Obtiene una serie de entrenamiento por id.
     *
+    * @param user - Usuario autenticado
     * @param id - Identificador de la serie
     * @returns Serie encontrada
     * @throws NotFoundException si no existe
     */
-   async findOne(id: string) {
+   async findOne(user: AuthenticatedUser, id: string) {
       const workoutSet = await this.prisma.workoutSet.findUnique({
-         where: { id },
+         where: { id, workoutSession: { userId: user.role === UserRole.USER ? user.sub : undefined } },
          select: this.workoutSetSelect,
       });
 
@@ -89,13 +96,14 @@ export class WorkoutSetsService {
    /**
     * Actualiza una serie de entrenamiento existente.
     *
+    * @param user - Usuario autenticado
     * @param id - Identificador de la serie
     * @param updateWorkoutSetDto - Datos de actualizacion parcial
     * @returns Serie actualizada
     * @throws NotFoundException si no existe
     */
-   async update(id: string, updateWorkoutSetDto: UpdateWorkoutSetDto) {
-      await this.ensureWorkoutSetExists(id);
+   async update(user: AuthenticatedUser, id: string, updateWorkoutSetDto: UpdateWorkoutSetDto) {
+      await this.ensureWorkoutSetExists(user, id);
 
       try {
          return await this.prisma.workoutSet.update({
@@ -111,12 +119,13 @@ export class WorkoutSetsService {
    /**
     * Elimina una serie de entrenamiento existente.
     *
+    * @param user - Usuario autenticado
     * @param id - Identificador de la serie
     * @returns Serie eliminada
     * @throws NotFoundException si no existe
     */
-   async remove(id: string) {
-      await this.ensureWorkoutSetExists(id);
+   async remove(user: AuthenticatedUser, id: string) {
+      await this.ensureWorkoutSetExists(user, id);
 
       return await this.prisma.workoutSet.delete({
          where: { id },
@@ -179,12 +188,14 @@ export class WorkoutSetsService {
    /**
     * Verifica si la serie existe antes de actualizar o eliminar.
     *
+    * @param user - Usuario autenticado
     * @param id - Identificador de la serie
+    * @returns Promesa resuelta cuando la serie existe y es accesible para el usuario
     * @throws NotFoundException si no existe
     */
-   private async ensureWorkoutSetExists(id: string) {
+   private async ensureWorkoutSetExists(user: AuthenticatedUser, id: string) {
       const workoutSet = await this.prisma.workoutSet.findUnique({
-         where: { id },
+         where: { id, workoutSession: { userId: user.role === UserRole.USER ? user.sub : undefined } },
          select: { id: true },
       });
 

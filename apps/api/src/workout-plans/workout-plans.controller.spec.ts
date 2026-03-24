@@ -1,4 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { UserRole } from '@prisma/client';
+
+jest.mock('src/auth/guards/access-token.guard', () => ({ AccessTokenGuard: class {} }), {
+	virtual: true,
+});
+jest.mock('src/auth/guards/roles.guard', () => ({ RolesGuard: class {} }), {
+	virtual: true,
+});
+jest.mock('src/auth/decorators/roles.decorator', () => ({ Roles: () => () => undefined }), {
+	virtual: true,
+});
+jest.mock('src/auth/decorators/current-user.decorator', () => ({ CurrentUser: () => () => undefined }), {
+	virtual: true,
+});
+
 import { WorkoutPlansController } from './workout-plans.controller';
 import { WorkoutPlansService } from './workout-plans.service';
 
@@ -13,6 +28,12 @@ type UpdateWorkoutPlanDto = Partial<CreateWorkoutPlanDto>;
 
 describe('WorkoutPlansController', () => {
 	let controller: WorkoutPlansController;
+	const currentUser = {
+		sub: 'user_123',
+		email: 'user@example.com',
+		role: UserRole.USER,
+		tokenType: 'access' as const,
+	};
 
 	const workoutPlansServiceMock = {
 		create: jest.fn(),
@@ -72,9 +93,12 @@ describe('WorkoutPlansController', () => {
 		it('delegates to workoutPlansService.findAll', async () => {
 			workoutPlansServiceMock.findAll.mockResolvedValue([workoutPlanRecord]);
 
-			const result = await (controller as any).findAll();
+			const result = await (controller as any).findAll(currentUser, undefined);
 
-			expect(workoutPlansServiceMock.findAll).toHaveBeenCalledTimes(1);
+			expect(workoutPlansServiceMock.findAll).toHaveBeenCalledWith(
+				currentUser,
+				undefined,
+			);
 			expect(result).toEqual([workoutPlanRecord]);
 		});
 	});
@@ -83,9 +107,10 @@ describe('WorkoutPlansController', () => {
 		it('delegates to workoutPlansService.findOne', async () => {
 			workoutPlansServiceMock.findOne.mockResolvedValue(workoutPlanRecord);
 
-			const result = await (controller as any).findOne(workoutPlanRecord.id);
+			const result = await (controller as any).findOne(currentUser, workoutPlanRecord.id);
 
 			expect(workoutPlansServiceMock.findOne).toHaveBeenCalledWith(
+				currentUser,
 				workoutPlanRecord.id,
 			);
 			expect(result).toEqual(workoutPlanRecord);
@@ -100,11 +125,13 @@ describe('WorkoutPlansController', () => {
 			});
 
 			const result = await (controller as any).update(
+				currentUser,
 				workoutPlanRecord.id,
 				updatedWorkoutPlanDto,
 			);
 
 			expect(workoutPlansServiceMock.update).toHaveBeenCalledWith(
+				currentUser,
 				workoutPlanRecord.id,
 				updatedWorkoutPlanDto,
 			);
@@ -119,9 +146,10 @@ describe('WorkoutPlansController', () => {
 		it('delegates to workoutPlansService.remove', async () => {
 			workoutPlansServiceMock.remove.mockResolvedValue(workoutPlanRecord);
 
-			const result = await (controller as any).remove(workoutPlanRecord.id);
+			const result = await (controller as any).remove(currentUser, workoutPlanRecord.id);
 
 			expect(workoutPlansServiceMock.remove).toHaveBeenCalledWith(
+				currentUser,
 				workoutPlanRecord.id,
 			);
 			expect(result).toEqual(workoutPlanRecord);
