@@ -25,7 +25,7 @@ import { BullmqModule } from './bullmq/bullmq.module';
 		WorkoutSessionsModule,
 		WorkoutSetsModule,
 		PersonalRecordsModule,
-		BullmqModule
+		...(process.env.NODE_ENV === 'test' ? [] : [BullmqModule]),
 	]
 })
 export class AppModule {}

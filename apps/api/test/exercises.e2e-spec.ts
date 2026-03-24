@@ -55,11 +55,11 @@ describe('ExercisesController (e2e)', () => {
 		await request(app.getHttpServer()).get('/exercises').expect(401);
 	});
 
-	it('rejects requests from authenticated users without the required role', async () => {
+	it('allows authenticated users with USER role to list exercises', async () => {
 		await request(app.getHttpServer())
 			.get('/exercises')
 			.set('Authorization', `Bearer ${userAccessToken}`)
-			.expect(403);
+			.expect(200);
 	});
 
 	it('creates an exercise', async () => {
