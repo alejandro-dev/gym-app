@@ -57,6 +57,9 @@ jobs:
       - name: Apply Prisma migrations
         run: pnpm --filter api exec prisma migrate deploy --schema prisma/schema.prisma
 
+      - name: Run lint
+        run: pnpm --filter api lint:check
+
       - name: Build API
         run: pnpm --filter api build
 

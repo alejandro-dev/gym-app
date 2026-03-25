@@ -3,23 +3,41 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
 describe('AuthController', () => {
-	let controller: AuthController;
+  let controller: AuthController;
+  const authServiceMock = {
+    verifyEmail: jest.fn(),
+  };
 
-	beforeEach(async () => {
-		const module: TestingModule = await Test.createTestingModule({
-			controllers: [AuthController],
-			providers: [
-				{
-					provide: AuthService,
-					useValue: {},
-				},
-			],
-		}).compile();
+  beforeEach(async () => {
+    jest.clearAllMocks();
 
-		controller = module.get<AuthController>(AuthController);
-	});
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [AuthController],
+      providers: [
+        {
+          provide: AuthService,
+          useValue: authServiceMock,
+        },
+      ],
+    }).compile();
 
-	it('should be defined', () => {
-		expect(controller).toBeDefined();
-	});
+    controller = module.get<AuthController>(AuthController);
+  });
+
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
+  });
+
+  it('verifies email using the provided token', async () => {
+    authServiceMock.verifyEmail.mockResolvedValue({
+      message: 'Email verified successfully',
+    });
+
+    const result = await controller.verifyEmail({ token: 'valid-token-value' });
+
+    expect(authServiceMock.verifyEmail).toHaveBeenCalledWith(
+      'valid-token-value',
+    );
+    expect(result).toEqual({ message: 'Email verified successfully' });
+  });
 });

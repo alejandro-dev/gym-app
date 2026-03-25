@@ -13,20 +13,20 @@ import { BullmqModule } from './bullmq/bullmq.module';
 import { BullmqTestModule } from './bullmq/bullmq-test.module';
 
 @Module({
-	imports: [
-		ConfigModule.forRoot({
-			isGlobal: true,
-		}),
-		PrismaModule,
-		AuthModule,
-		UsersModule,
-		ExercisesModule,
-		WorkoutPlansModule,
-		WorkoutPlanExerciseModule,
-		WorkoutSessionsModule,
-		WorkoutSetsModule,
-		PersonalRecordsModule,
-		process.env.NODE_ENV === 'test' ? BullmqTestModule : BullmqModule,
-	]
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    PrismaModule,
+    AuthModule,
+    UsersModule,
+    ExercisesModule,
+    WorkoutPlansModule,
+    WorkoutPlanExerciseModule,
+    WorkoutSessionsModule,
+    WorkoutSetsModule,
+    PersonalRecordsModule,
+    process.env.NODE_ENV === 'test' ? BullmqTestModule : BullmqModule,
+  ],
 })
 export class AppModule {}

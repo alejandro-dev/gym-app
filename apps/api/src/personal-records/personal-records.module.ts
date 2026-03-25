@@ -7,6 +7,6 @@ import { PersonalRecordsController } from './personal-records.controller';
  */
 @Module({
   providers: [PersonalRecordsService],
-  controllers: [PersonalRecordsController]
+  controllers: [PersonalRecordsController],
 })
 export class PersonalRecordsModule {}

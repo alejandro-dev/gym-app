@@ -5,5 +5,5 @@ import { CreateWorkoutPlanDto } from './create-workout-plan.dto';
  * Datos permitidos para actualizar parcialmente un plan de entrenamiento.
  */
 export class UpdateWorkoutPlanDto extends PartialType(
-	OmitType(CreateWorkoutPlanDto, ['userId'] as const),
+  OmitType(CreateWorkoutPlanDto, ['userId'] as const),
 ) {}

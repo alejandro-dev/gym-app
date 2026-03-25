@@ -1,19 +1,26 @@
 import { Global, Module } from '@nestjs/common';
-import { WorkoutProducer } from './workout.producer';
+import { AuthProducer } from './auth/auth.producer';
+import { WorkoutProducer } from './workout/workout.producer';
 
 /**
  * Modulo de BullMQ para pruebas end-to-end sin dependencias externas.
  */
 @Global()
 @Module({
-   providers: [
-      {
-         provide: WorkoutProducer,
-         useValue: {
-            enqueueWorkoutCompleted: async () => undefined,
-         },
+  providers: [
+    {
+      provide: WorkoutProducer,
+      useValue: {
+        enqueueWorkoutCompleted: () => Promise.resolve(),
       },
-   ],
-   exports: [WorkoutProducer],
+    },
+    {
+      provide: AuthProducer,
+      useValue: {
+        enqueueUserRegistered: () => Promise.resolve(),
+      },
+    },
+  ],
+  exports: [WorkoutProducer, AuthProducer],
 })
 export class BullmqTestModule {}
