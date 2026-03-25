@@ -10,6 +10,7 @@ import { WorkoutSessionsModule } from './workout-sessions/workout-sessions.modul
 import { WorkoutSetsModule } from './workout-sets/workout-sets.module';
 import { PersonalRecordsModule } from './personal-records/personal-records.module';
 import { BullmqModule } from './bullmq/bullmq.module';
+import { BullmqTestModule } from './bullmq/bullmq-test.module';
 
 @Module({
 	imports: [
@@ -25,7 +26,7 @@ import { BullmqModule } from './bullmq/bullmq.module';
 		WorkoutSessionsModule,
 		WorkoutSetsModule,
 		PersonalRecordsModule,
-		...(process.env.NODE_ENV === 'test' ? [] : [BullmqModule]),
+		process.env.NODE_ENV === 'test' ? BullmqTestModule : BullmqModule,
 	]
 })
 export class AppModule {}
