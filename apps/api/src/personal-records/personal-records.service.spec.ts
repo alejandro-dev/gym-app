@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PersonalRecordMetric, UserRole } from '@prisma/client';
+import { PersonalRecordMetric, Prisma, UserRole } from '@prisma/client';
 import { PersonalRecordsService } from './personal-records.service';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -16,13 +16,38 @@ describe('PersonalRecordsService', () => {
     tokenType: 'access' as const,
   };
 
+  type PersonalRecordRecord = {
+    id: string;
+    userId: string;
+    exerciseId: string;
+    metric: PersonalRecordMetric;
+    value: number;
+    achievedAt: Date;
+    createdAt: Date;
+  };
+
   const prismaMock = {
     personalRecord: {
-      create: jest.fn(),
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
+      create: jest.fn<
+        Promise<PersonalRecordRecord>,
+        [Prisma.PersonalRecordCreateArgs]
+      >(),
+      findMany: jest.fn<
+        Promise<PersonalRecordRecord[]>,
+        [Prisma.PersonalRecordFindManyArgs]
+      >(),
+      findUnique: jest.fn<
+        Promise<PersonalRecordRecord | { id: string } | null>,
+        [Prisma.PersonalRecordFindUniqueArgs]
+      >(),
+      update: jest.fn<
+        Promise<PersonalRecordRecord>,
+        [Prisma.PersonalRecordUpdateArgs]
+      >(),
+      delete: jest.fn<
+        Promise<PersonalRecordRecord>,
+        [Prisma.PersonalRecordDeleteArgs]
+      >(),
     },
   };
 
@@ -34,7 +59,7 @@ describe('PersonalRecordsService', () => {
     achievedAt: '2026-03-23T10:00:00.000Z',
   };
 
-  const personalRecordRecord = {
+  const personalRecordRecord: PersonalRecordRecord = {
     id: 'personalRecord_123',
     userId: 'user_123',
     exerciseId: 'exercise_123',

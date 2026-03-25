@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserRole } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 import { WorkoutPlansService } from './workout-plans.service';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -43,11 +43,26 @@ describe('WorkoutPlansService', () => {
 
   const prismaMock = {
     workoutPlan: {
-      create: jest.fn(),
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
+      create: jest.fn<
+        Promise<WorkoutPlanRecord>,
+        [Prisma.WorkoutPlanCreateArgs]
+      >(),
+      findMany: jest.fn<
+        Promise<WorkoutPlanRecord[]>,
+        [Prisma.WorkoutPlanFindManyArgs]
+      >(),
+      findUnique: jest.fn<
+        Promise<WorkoutPlanRecord | { id: string; userId: string } | null>,
+        [Prisma.WorkoutPlanFindUniqueArgs]
+      >(),
+      update: jest.fn<
+        Promise<WorkoutPlanRecord>,
+        [Prisma.WorkoutPlanUpdateArgs]
+      >(),
+      delete: jest.fn<
+        Promise<WorkoutPlanRecord>,
+        [Prisma.WorkoutPlanDeleteArgs]
+      >(),
     },
   };
 
