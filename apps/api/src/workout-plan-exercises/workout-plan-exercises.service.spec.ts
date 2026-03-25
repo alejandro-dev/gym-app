@@ -62,9 +62,7 @@ describe('WorkoutPlanExerciseService', () => {
         [Prisma.WorkoutPlanExerciseFindManyArgs]
       >(),
       findUnique: jest.fn<
-        Promise<
-          WorkoutPlanExerciseRecord | { id: string; workoutPlan: true } | null
-        >,
+        Promise<WorkoutPlanExerciseRecord | { id: string } | null>,
         [Prisma.WorkoutPlanExerciseFindUniqueArgs]
       >(),
       update: jest.fn<

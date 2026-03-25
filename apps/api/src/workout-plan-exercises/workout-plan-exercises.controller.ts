@@ -71,7 +71,7 @@ export class WorkoutPlanExerciseController {
   @Get()
   findAll(
     @CurrentUser() user: AuthenticatedUser,
-    @Query('userId') userId: string,
+    @Query('userId') userId?: string,
   ): Promise<WorkoutPlanExerciseResponseDto[]> {
     return this.workoutPlanExerciseService.findAll(user, userId);
   }
