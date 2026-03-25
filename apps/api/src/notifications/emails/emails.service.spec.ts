@@ -4,6 +4,12 @@ import { EmailsService } from './emails.service';
 
 describe('EmailsService', () => {
   let service: EmailsService;
+  const verificationLinkMatcher = expect.stringContaining(
+    'Verificar email',
+  ) as unknown as string;
+  const fallbackUrlMatcher = expect.stringContaining(
+    'http://localhost:3000/auth/verify-email?token=fallback-token',
+  ) as unknown as string;
 
   const mailerServiceMock: {
     sendMail: jest.Mock<Promise<void>, [Record<string, unknown>]>;
@@ -48,7 +54,7 @@ describe('EmailsService', () => {
         '',
         'Si no has creado esta cuenta, puedes ignorar este mensaje.',
       ].join('\n'),
-      html: expect.stringContaining('Verificar email'),
+      html: verificationLinkMatcher,
     });
   });
 
@@ -74,9 +80,7 @@ describe('EmailsService', () => {
         '',
         'Si no has creado esta cuenta, puedes ignorar este mensaje.',
       ].join('\n'),
-      html: expect.stringContaining(
-        'http://localhost:3000/auth/verify-email?token=fallback-token',
-      ),
+      html: fallbackUrlMatcher,
     });
   });
 });

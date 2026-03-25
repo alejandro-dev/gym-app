@@ -7,6 +7,19 @@ import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 
+type AuthResponseBody = {
+  user: {
+    id: string;
+    email: string;
+    role: UserRole;
+  };
+  accessToken: string;
+};
+
+type WorkoutSetListItem = {
+  id: string;
+};
+
 describe('WorkoutSetsController (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
@@ -15,6 +28,7 @@ describe('WorkoutSetsController (e2e)', () => {
   let workoutSessionId: string;
   let firstExerciseId: string;
   let secondExerciseId: string;
+  const anyString = expect.any(String) as unknown as string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -71,14 +85,15 @@ describe('WorkoutSetsController (e2e)', () => {
       .set('Authorization', `Bearer ${userAccessToken}`)
       .send(payload)
       .expect(201);
+    const createdSet = response.body as Record<string, unknown>;
 
-    expect(response.body).toEqual(
+    expect(createdSet).toEqual(
       expect.objectContaining({
         workoutSessionId,
         exerciseId: firstExerciseId,
         setNumber: 1,
         reps: 10,
-        id: expect.any(String),
+        id: anyString,
       }),
     );
   });
@@ -119,8 +134,9 @@ describe('WorkoutSetsController (e2e)', () => {
       .get('/workout-sets')
       .set('Authorization', `Bearer ${userAccessToken}`)
       .expect(200);
+    const workoutSets = response.body as WorkoutSetListItem[];
 
-    expect(response.body.map((set: { id: string }) => set.id)).toEqual(
+    expect(workoutSets.map((set) => set.id)).toEqual(
       expect.arrayContaining([firstSet.id, secondSet.id]),
     );
   });
@@ -286,12 +302,13 @@ describe('WorkoutSetsController (e2e)', () => {
       .post('/auth/login')
       .send({ email, password })
       .expect(201);
+    const loginBody = loginResponse.body as AuthResponseBody;
 
-    expect(loginResponse.body.user).toEqual(
+    expect(loginBody.user).toEqual(
       expect.objectContaining({ id: user.id, email, role }),
     );
 
-    return loginResponse.body.accessToken as string;
+    return loginBody.accessToken;
   }
 
   async function createBaseDependencies() {

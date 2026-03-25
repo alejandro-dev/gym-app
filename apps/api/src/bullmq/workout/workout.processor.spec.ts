@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExerciseCategory, PersonalRecordMetric } from '@prisma/client';
-import { Job } from 'bullmq';
 import { PrismaService } from '../../prisma/prisma.service';
 import { WORKOUT_JOBS } from './workout-queue.constants';
 import { WorkoutProcessor } from './workout.processor';
 
 describe('WorkoutProcessor', () => {
   let processor: WorkoutProcessor;
+  type WorkoutCompletedJob = Parameters<WorkoutProcessor['process']>[0];
 
   const prismaMock = {
     workoutSession: {
@@ -63,10 +63,12 @@ describe('WorkoutProcessor', () => {
       .mockResolvedValueOnce({ id: 'pr_1', value: 105 })
       .mockResolvedValueOnce({ id: 'pr_2', value: 100 });
 
-    await processor.process({
+    const job = {
       name: WORKOUT_JOBS.COMPLETED,
       data: { workoutSessionId: 'session_123', userId: 'user_123' },
-    } as Job);
+    } as unknown as WorkoutCompletedJob;
+
+    await processor.process(job);
 
     expect(prismaMock.personalRecord.findFirst).toHaveBeenNthCalledWith(1, {
       where: {
@@ -111,10 +113,12 @@ describe('WorkoutProcessor', () => {
       value: 25,
     });
 
-    await processor.process({
+    const job = {
       name: WORKOUT_JOBS.COMPLETED,
       data: { workoutSessionId: 'session_456', userId: 'user_123' },
-    } as Job);
+    } as unknown as WorkoutCompletedJob;
+
+    await processor.process(job);
 
     expect(prismaMock.personalRecord.create).not.toHaveBeenCalled();
   });

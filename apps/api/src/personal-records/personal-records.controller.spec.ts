@@ -83,7 +83,7 @@ describe('PersonalRecordsController', () => {
       achievedAt: '2026-03-23T10:00:00.000Z',
     };
     personalRecordsServiceMock.create.mockResolvedValue(personalRecordRecord);
-    const result = await (controller as any).create(dto);
+    const result = await controller.create(dto);
     expect(personalRecordsServiceMock.create).toHaveBeenCalledWith(dto);
     expect(result).toEqual(personalRecordRecord);
   });
@@ -92,7 +92,7 @@ describe('PersonalRecordsController', () => {
     personalRecordsServiceMock.findAll.mockResolvedValue([
       personalRecordRecord,
     ]);
-    const result = await (controller as any).findAll(currentUser);
+    const result = await controller.findAll(currentUser);
     expect(personalRecordsServiceMock.findAll).toHaveBeenCalledWith(
       currentUser,
     );
@@ -101,7 +101,7 @@ describe('PersonalRecordsController', () => {
 
   it('delegates findOne to the service', async () => {
     personalRecordsServiceMock.findOne.mockResolvedValue(personalRecordRecord);
-    const result = await (controller as any).findOne(
+    const result = await controller.findOne(
       currentUser,
       personalRecordRecord.id,
     );
@@ -117,7 +117,7 @@ describe('PersonalRecordsController', () => {
       ...personalRecordRecord,
       value: 125,
     });
-    const result = await (controller as any).update(
+    const result = await controller.update(
       currentUser,
       personalRecordRecord.id,
       { value: 125 },
@@ -132,7 +132,7 @@ describe('PersonalRecordsController', () => {
 
   it('delegates remove to the service', async () => {
     personalRecordsServiceMock.remove.mockResolvedValue(personalRecordRecord);
-    const result = await (controller as any).remove(
+    const result = await controller.remove(
       currentUser,
       personalRecordRecord.id,
     );

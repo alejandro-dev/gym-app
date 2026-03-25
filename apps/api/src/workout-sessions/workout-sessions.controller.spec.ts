@@ -109,7 +109,7 @@ describe('WorkoutSessionsController', () => {
     it('delegates to workoutSessionsService.create with plan', async () => {
       workoutSessionsServiceMock.create.mockResolvedValue(workoutSessionRecord);
 
-      const result = await (controller as any).create(createWorkoutSessionDto);
+      const result = await controller.create(createWorkoutSessionDto);
 
       expect(workoutSessionsServiceMock.create).toHaveBeenCalledWith(
         createWorkoutSessionDto,
@@ -126,7 +126,7 @@ describe('WorkoutSessionsController', () => {
         endedAt: null,
       });
 
-      await (controller as any).create(createWorkoutSessionWithoutPlanDto);
+      await controller.create(createWorkoutSessionWithoutPlanDto);
 
       expect(workoutSessionsServiceMock.create).toHaveBeenCalledWith(
         createWorkoutSessionWithoutPlanDto,
@@ -140,7 +140,7 @@ describe('WorkoutSessionsController', () => {
         workoutSessionRecord,
       ]);
 
-      const result = await (controller as any).findAll(currentUser, undefined);
+      const result = await controller.findAll(currentUser, undefined);
 
       expect(workoutSessionsServiceMock.findAll).toHaveBeenCalledWith(
         currentUser,
@@ -156,7 +156,7 @@ describe('WorkoutSessionsController', () => {
         workoutSessionRecord,
       );
 
-      const result = await (controller as any).findOne(
+      const result = await controller.findOne(
         currentUser,
         workoutSessionRecord.id,
       );
@@ -182,7 +182,7 @@ describe('WorkoutSessionsController', () => {
         notes: 'Sin plan asociado',
       });
 
-      const result = await (controller as any).update(
+      const result = await controller.update(
         currentUser,
         workoutSessionRecord.id,
         updateWorkoutSessionDto,
@@ -205,7 +205,7 @@ describe('WorkoutSessionsController', () => {
     it('delegates to workoutSessionsService.remove', async () => {
       workoutSessionsServiceMock.remove.mockResolvedValue(workoutSessionRecord);
 
-      const result = await (controller as any).remove(
+      const result = await controller.remove(
         currentUser,
         workoutSessionRecord.id,
       );
@@ -224,7 +224,7 @@ describe('WorkoutSessionsController', () => {
         workoutSessionRecord,
       );
 
-      const result = await (controller as any).completeSession(
+      const result = await controller.completeSession(
         currentUser,
         workoutSessionRecord.id,
       );

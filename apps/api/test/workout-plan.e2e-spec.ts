@@ -7,11 +7,25 @@ import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 
+type AuthResponseBody = {
+  user: {
+    id: string;
+    email: string;
+    role: UserRole;
+  };
+  accessToken: string;
+};
+
+type WorkoutPlanListItem = {
+  id: string;
+};
+
 describe('WorkoutPlansController (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let ownerUserId: string;
   let userAccessToken: string;
+  const anyString = expect.any(String) as unknown as string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -62,16 +76,17 @@ describe('WorkoutPlansController (e2e)', () => {
       .set('Authorization', `Bearer ${userAccessToken}`)
       .send(payload)
       .expect(201);
+    const createdPlan = response.body as Record<string, unknown>;
 
-    expect(response.body).toEqual(
+    expect(createdPlan).toEqual(
       expect.objectContaining({
         name: payload.name,
         description: payload.description,
         userId: payload.userId,
         isActive: payload.isActive,
-        id: expect.any(String),
-        createdAt: expect.any(String),
-        updatedAt: expect.any(String),
+        id: anyString,
+        createdAt: anyString,
+        updatedAt: anyString,
       }),
     );
   });
@@ -107,14 +122,15 @@ describe('WorkoutPlansController (e2e)', () => {
       .get('/workout-plans')
       .set('Authorization', `Bearer ${userAccessToken}`)
       .expect(200);
+    const workoutPlans = response.body as WorkoutPlanListItem[];
 
-    expect(response.body).toHaveLength(2);
-    expect(response.body[0]).toEqual(
+    expect(workoutPlans).toHaveLength(2);
+    expect(workoutPlans[0]).toEqual(
       expect.objectContaining({
         id: secondPlan.id,
       }),
     );
-    expect(response.body[1]).toEqual(
+    expect(workoutPlans[1]).toEqual(
       expect.objectContaining({
         id: firstPlan.id,
       }),
@@ -284,12 +300,13 @@ describe('WorkoutPlansController (e2e)', () => {
       .post('/auth/login')
       .send({ email, password })
       .expect(201);
+    const loginBody = loginResponse.body as AuthResponseBody;
 
-    expect(loginResponse.body.user).toEqual(
+    expect(loginBody.user).toEqual(
       expect.objectContaining({ id: user.id, email, role }),
     );
 
-    return loginResponse.body.accessToken as string;
+    return loginBody.accessToken;
   }
 
   function buildCreateWorkoutPlanPayload(suffix: string) {

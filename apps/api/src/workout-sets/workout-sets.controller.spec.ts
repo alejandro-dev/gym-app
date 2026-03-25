@@ -83,7 +83,7 @@ describe('WorkoutSetsController', () => {
 
   it('delegates create to the service', async () => {
     workoutSetsServiceMock.create.mockResolvedValue(workoutSetRecord);
-    const result = await (controller as any).create(createWorkoutSetDto);
+    const result = await controller.create(createWorkoutSetDto);
     expect(workoutSetsServiceMock.create).toHaveBeenCalledWith(
       createWorkoutSetDto,
     );
@@ -92,7 +92,7 @@ describe('WorkoutSetsController', () => {
 
   it('delegates findAll to the service', async () => {
     workoutSetsServiceMock.findAll.mockResolvedValue([workoutSetRecord]);
-    const result = await (controller as any).findAll(currentUser, undefined);
+    const result = await controller.findAll(currentUser, undefined);
     expect(workoutSetsServiceMock.findAll).toHaveBeenCalledWith(
       currentUser,
       undefined,
@@ -102,10 +102,7 @@ describe('WorkoutSetsController', () => {
 
   it('delegates findOne to the service', async () => {
     workoutSetsServiceMock.findOne.mockResolvedValue(workoutSetRecord);
-    const result = await (controller as any).findOne(
-      currentUser,
-      workoutSetRecord.id,
-    );
+    const result = await controller.findOne(currentUser, workoutSetRecord.id);
     expect(workoutSetsServiceMock.findOne).toHaveBeenCalledWith(
       currentUser,
       workoutSetRecord.id,
@@ -118,11 +115,9 @@ describe('WorkoutSetsController', () => {
       ...workoutSetRecord,
       reps: 8,
     });
-    const result = await (controller as any).update(
-      currentUser,
-      workoutSetRecord.id,
-      { reps: 8 },
-    );
+    const result = await controller.update(currentUser, workoutSetRecord.id, {
+      reps: 8,
+    });
     expect(workoutSetsServiceMock.update).toHaveBeenCalledWith(
       currentUser,
       workoutSetRecord.id,
@@ -133,10 +128,7 @@ describe('WorkoutSetsController', () => {
 
   it('delegates remove to the service', async () => {
     workoutSetsServiceMock.remove.mockResolvedValue(workoutSetRecord);
-    const result = await (controller as any).remove(
-      currentUser,
-      workoutSetRecord.id,
-    );
+    const result = await controller.remove(currentUser, workoutSetRecord.id);
     expect(workoutSetsServiceMock.remove).toHaveBeenCalledWith(
       currentUser,
       workoutSetRecord.id,

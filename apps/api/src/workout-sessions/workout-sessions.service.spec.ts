@@ -117,34 +117,33 @@ describe('WorkoutSessionsService', () => {
     it('creates a workout session with plan and returns the public record', async () => {
       prismaMock.workoutSession.create.mockResolvedValue(workoutSessionRecord);
 
-      const result = await (service as any).create(createWorkoutSessionDto);
+      const result = await service.create(createWorkoutSessionDto);
+      const [createArgs] = prismaMock.workoutSession.create.mock.calls[0];
 
-      expect(prismaMock.workoutSession.create).toHaveBeenCalledWith({
-        data: {
-          user: {
-            connect: {
-              id: createWorkoutSessionDto.userId,
-            },
+      expect(createArgs.data).toEqual({
+        user: {
+          connect: {
+            id: createWorkoutSessionDto.userId,
           },
-          workoutPlan: {
-            connect: {
-              id: createWorkoutSessionDto.workoutPlanId,
-            },
+        },
+        workoutPlan: {
+          connect: {
+            id: createWorkoutSessionDto.workoutPlanId,
           },
-          name: createWorkoutSessionDto.name,
-          notes: createWorkoutSessionDto.notes,
-          startedAt: new Date(createWorkoutSessionDto.startedAt),
-          endedAt: new Date(createWorkoutSessionDto.endedAt!),
         },
-        select: {
-          id: true,
-          userId: true,
-          workoutPlanId: true,
-          name: true,
-          notes: true,
-          startedAt: true,
-          endedAt: true,
-        },
+        name: createWorkoutSessionDto.name,
+        notes: createWorkoutSessionDto.notes,
+        startedAt: new Date(createWorkoutSessionDto.startedAt),
+        endedAt: new Date(createWorkoutSessionDto.endedAt!),
+      });
+      expect(createArgs.select).toMatchObject({
+        id: true,
+        userId: true,
+        workoutPlanId: true,
+        name: true,
+        notes: true,
+        startedAt: true,
+        endedAt: true,
       });
       expect(result).toEqual(workoutSessionRecord);
     });
@@ -164,27 +163,24 @@ describe('WorkoutSessionsService', () => {
         workoutSessionWithoutPlanRecord,
       );
 
-      const result = await (service as any).create(
-        createWorkoutSessionWithoutPlanDto,
-      );
+      const result = await service.create(createWorkoutSessionWithoutPlanDto);
+      const [createArgs] = prismaMock.workoutSession.create.mock.calls[0];
 
-      expect(prismaMock.workoutSession.create).toHaveBeenCalledWith({
-        data: {
-          user: {
-            connect: {
-              id: createWorkoutSessionWithoutPlanDto.userId,
-            },
+      expect(createArgs.data).toEqual({
+        user: {
+          connect: {
+            id: createWorkoutSessionWithoutPlanDto.userId,
           },
-          name: createWorkoutSessionWithoutPlanDto.name,
-          notes: createWorkoutSessionWithoutPlanDto.notes,
-          startedAt: new Date(createWorkoutSessionWithoutPlanDto.startedAt),
-          endedAt: null,
         },
-        select: expect.objectContaining({
-          id: true,
-          userId: true,
-          workoutPlanId: true,
-        }),
+        name: createWorkoutSessionWithoutPlanDto.name,
+        notes: createWorkoutSessionWithoutPlanDto.notes,
+        startedAt: new Date(createWorkoutSessionWithoutPlanDto.startedAt),
+        endedAt: null,
+      });
+      expect(createArgs.select).toMatchObject({
+        id: true,
+        userId: true,
+        workoutPlanId: true,
       });
       expect(result).toEqual(workoutSessionWithoutPlanRecord);
     });
@@ -195,7 +191,7 @@ describe('WorkoutSessionsService', () => {
       );
 
       await expect(
-        (service as any).create(createWorkoutSessionDto),
+        service.create(createWorkoutSessionDto),
       ).rejects.toBeInstanceOf(InternalServerErrorException);
     });
   });
@@ -206,23 +202,22 @@ describe('WorkoutSessionsService', () => {
         workoutSessionRecord,
       ]);
 
-      const result = await (service as any).findAll(currentUser, undefined);
+      const result = await service.findAll(currentUser, undefined);
+      const [findManyArgs] = prismaMock.workoutSession.findMany.mock.calls[0];
 
-      expect(prismaMock.workoutSession.findMany).toHaveBeenCalledWith({
-        select: expect.objectContaining({
-          id: true,
-          userId: true,
-          workoutPlanId: true,
-          name: true,
-          notes: true,
-          startedAt: true,
-          endedAt: true,
-        }),
-        orderBy: {
-          createdAt: 'desc',
-        },
-        where: { userId: currentUser.sub },
+      expect(findManyArgs.select).toMatchObject({
+        id: true,
+        userId: true,
+        workoutPlanId: true,
+        name: true,
+        notes: true,
+        startedAt: true,
+        endedAt: true,
       });
+      expect(findManyArgs.orderBy).toEqual({
+        createdAt: 'desc',
+      });
+      expect(findManyArgs.where).toEqual({ userId: currentUser.sub });
       expect(result).toEqual([workoutSessionRecord]);
     });
 
@@ -231,38 +226,36 @@ describe('WorkoutSessionsService', () => {
         workoutSessionRecord,
       ]);
 
-      await (service as any).findAll(adminUser, 'target_user');
+      await service.findAll(adminUser, 'target_user');
+      const [findManyArgs] = prismaMock.workoutSession.findMany.mock.calls[0];
 
-      expect(prismaMock.workoutSession.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { userId: 'target_user' },
-        }),
-      );
+      expect(findManyArgs.where).toEqual({ userId: 'target_user' });
     });
-  });
 
-  describe('findOne', () => {
     it('returns the workout session when it exists', async () => {
       prismaMock.workoutSession.findUnique.mockResolvedValue(
         workoutSessionRecord,
       );
 
-      const result = await (service as any).findOne(
+      const result = await service.findOne(
         currentUser,
         workoutSessionRecord.id,
       );
+      const [findUniqueArgs] =
+        prismaMock.workoutSession.findUnique.mock.calls[0];
 
-      expect(prismaMock.workoutSession.findUnique).toHaveBeenCalledWith({
-        where: { id: workoutSessionRecord.id, userId: currentUser.sub },
-        select: expect.objectContaining({
-          id: true,
-          userId: true,
-          workoutPlanId: true,
-          name: true,
-          notes: true,
-          startedAt: true,
-          endedAt: true,
-        }),
+      expect(findUniqueArgs.where).toEqual({
+        id: workoutSessionRecord.id,
+        userId: currentUser.sub,
+      });
+      expect(findUniqueArgs.select).toMatchObject({
+        id: true,
+        userId: true,
+        workoutPlanId: true,
+        name: true,
+        notes: true,
+        startedAt: true,
+        endedAt: true,
       });
       expect(result).toEqual(workoutSessionRecord);
     });
@@ -271,12 +264,10 @@ describe('WorkoutSessionsService', () => {
       prismaMock.workoutSession.findUnique.mockResolvedValue(null);
 
       await expect(
-        (service as any).findOne(currentUser, 'missing_workoutSession'),
+        service.findOne(currentUser, 'missing_workoutSession'),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
-  });
 
-  describe('update', () => {
     it('updates normal editable fields', async () => {
       const updatedRecord: WorkoutSessionRecord = {
         ...workoutSessionRecord,
@@ -290,29 +281,30 @@ describe('WorkoutSessionsService', () => {
       });
       prismaMock.workoutSession.update.mockResolvedValue(updatedRecord);
 
-      const result = await (service as any).update(
+      const result = await service.update(
         currentUser,
         workoutSessionRecord.id,
         updatedWorkoutSessionDto,
       );
+      const [findUniqueArgs] =
+        prismaMock.workoutSession.findUnique.mock.calls[0];
+      const [updateArgs] = prismaMock.workoutSession.update.mock.calls[0];
 
-      expect(prismaMock.workoutSession.findUnique).toHaveBeenCalledWith({
+      expect(findUniqueArgs).toEqual({
         where: { id: workoutSessionRecord.id, userId: currentUser.sub },
         select: { id: true, userId: true, endedAt: true },
       });
-      expect(prismaMock.workoutSession.update).toHaveBeenCalledWith({
-        where: { id: workoutSessionRecord.id },
-        data: {
-          name: updatedWorkoutSessionDto.name,
-          notes: updatedWorkoutSessionDto.notes,
-          endedAt: new Date(updatedWorkoutSessionDto.endedAt!),
-          workoutPlan: undefined,
-        },
-        select: expect.objectContaining({
-          id: true,
-          userId: true,
-          workoutPlanId: true,
-        }),
+      expect(updateArgs.where).toEqual({ id: workoutSessionRecord.id });
+      expect(updateArgs.data).toEqual({
+        name: updatedWorkoutSessionDto.name,
+        notes: updatedWorkoutSessionDto.notes,
+        endedAt: new Date(updatedWorkoutSessionDto.endedAt!),
+        workoutPlan: undefined,
+      });
+      expect(updateArgs.select).toMatchObject({
+        id: true,
+        userId: true,
+        workoutPlanId: true,
       });
       expect(result).toEqual(updatedRecord);
     });
@@ -326,24 +318,23 @@ describe('WorkoutSessionsService', () => {
         workoutPlanId: 'workoutPlan_456',
       });
 
-      await (service as any).update(currentUser, workoutSessionRecord.id, {
+      await service.update(currentUser, workoutSessionRecord.id, {
         workoutPlanId: 'workoutPlan_456',
       });
+      const [updateArgs] = prismaMock.workoutSession.update.mock.calls[0];
 
-      expect(prismaMock.workoutSession.update).toHaveBeenCalledWith({
-        where: { id: workoutSessionRecord.id },
-        data: {
-          name: undefined,
-          notes: undefined,
-          endedAt: undefined,
-          workoutPlan: {
-            connect: {
-              id: 'workoutPlan_456',
-            },
+      expect(updateArgs.where).toEqual({ id: workoutSessionRecord.id });
+      expect(updateArgs.data).toEqual({
+        name: undefined,
+        notes: undefined,
+        endedAt: undefined,
+        workoutPlan: {
+          connect: {
+            id: 'workoutPlan_456',
           },
         },
-        select: expect.any(Object),
       });
+      expect(updateArgs.select).toBeDefined();
     });
 
     it('detaches a plan when workoutPlanId is null', async () => {
@@ -355,22 +346,21 @@ describe('WorkoutSessionsService', () => {
         workoutPlanId: null,
       });
 
-      await (service as any).update(currentUser, workoutSessionRecord.id, {
+      await service.update(currentUser, workoutSessionRecord.id, {
         workoutPlanId: null,
       });
+      const [updateArgs] = prismaMock.workoutSession.update.mock.calls[0];
 
-      expect(prismaMock.workoutSession.update).toHaveBeenCalledWith({
-        where: { id: workoutSessionRecord.id },
-        data: {
-          name: undefined,
-          notes: undefined,
-          endedAt: undefined,
-          workoutPlan: {
-            disconnect: true,
-          },
+      expect(updateArgs.where).toEqual({ id: workoutSessionRecord.id });
+      expect(updateArgs.data).toEqual({
+        name: undefined,
+        notes: undefined,
+        endedAt: undefined,
+        workoutPlan: {
+          disconnect: true,
         },
-        select: expect.any(Object),
       });
+      expect(updateArgs.select).toBeDefined();
     });
 
     it('keeps current plan unchanged when workoutPlanId is omitted', async () => {
@@ -379,27 +369,26 @@ describe('WorkoutSessionsService', () => {
       });
       prismaMock.workoutSession.update.mockResolvedValue(workoutSessionRecord);
 
-      await (service as any).update(currentUser, workoutSessionRecord.id, {
+      await service.update(currentUser, workoutSessionRecord.id, {
         notes: 'Mantener plan actual',
       });
+      const [updateArgs] = prismaMock.workoutSession.update.mock.calls[0];
 
-      expect(prismaMock.workoutSession.update).toHaveBeenCalledWith({
-        where: { id: workoutSessionRecord.id },
-        data: {
-          name: undefined,
-          notes: 'Mantener plan actual',
-          endedAt: undefined,
-          workoutPlan: undefined,
-        },
-        select: expect.any(Object),
+      expect(updateArgs.where).toEqual({ id: workoutSessionRecord.id });
+      expect(updateArgs.data).toEqual({
+        name: undefined,
+        notes: 'Mantener plan actual',
+        endedAt: undefined,
+        workoutPlan: undefined,
       });
+      expect(updateArgs.select).toBeDefined();
     });
 
     it('throws NotFoundException when updating a missing workout session', async () => {
       prismaMock.workoutSession.findUnique.mockResolvedValue(null);
 
       await expect(
-        (service as any).update(
+        service.update(
           currentUser,
           'missing_workoutSession',
           updatedWorkoutSessionDto,
@@ -417,42 +406,38 @@ describe('WorkoutSessionsService', () => {
       );
 
       await expect(
-        (service as any).update(
+        service.update(
           currentUser,
           workoutSessionRecord.id,
           updatedWorkoutSessionDto,
         ),
       ).rejects.toBeInstanceOf(InternalServerErrorException);
     });
-  });
 
-  describe('remove', () => {
     it('verifies existence and returns the deleted workout session', async () => {
       prismaMock.workoutSession.findUnique.mockResolvedValue({
         id: workoutSessionRecord.id,
       });
       prismaMock.workoutSession.delete.mockResolvedValue(workoutSessionRecord);
 
-      const result = await (service as any).remove(
-        currentUser,
-        workoutSessionRecord.id,
-      );
+      const result = await service.remove(currentUser, workoutSessionRecord.id);
+      const [findUniqueArgs] =
+        prismaMock.workoutSession.findUnique.mock.calls[0];
+      const [deleteArgs] = prismaMock.workoutSession.delete.mock.calls[0];
 
-      expect(prismaMock.workoutSession.findUnique).toHaveBeenCalledWith({
+      expect(findUniqueArgs).toEqual({
         where: { id: workoutSessionRecord.id, userId: currentUser.sub },
         select: { id: true, userId: true, endedAt: true },
       });
-      expect(prismaMock.workoutSession.delete).toHaveBeenCalledWith({
-        where: { id: workoutSessionRecord.id },
-        select: expect.objectContaining({
-          id: true,
-          userId: true,
-          workoutPlanId: true,
-          name: true,
-          notes: true,
-          startedAt: true,
-          endedAt: true,
-        }),
+      expect(deleteArgs.where).toEqual({ id: workoutSessionRecord.id });
+      expect(deleteArgs.select).toMatchObject({
+        id: true,
+        userId: true,
+        workoutPlanId: true,
+        name: true,
+        notes: true,
+        startedAt: true,
+        endedAt: true,
       });
       expect(result).toEqual(workoutSessionRecord);
     });
@@ -461,13 +446,11 @@ describe('WorkoutSessionsService', () => {
       prismaMock.workoutSession.findUnique.mockResolvedValue(null);
 
       await expect(
-        (service as any).remove(currentUser, 'missing_workoutSession'),
+        service.remove(currentUser, 'missing_workoutSession'),
       ).rejects.toBeInstanceOf(NotFoundException);
       expect(prismaMock.workoutSession.delete).not.toHaveBeenCalled();
     });
-  });
 
-  describe('completeSession', () => {
     it('marks the session as completed and enqueues the workout.completed job', async () => {
       const completedAt = new Date('2026-03-24T10:00:00.000Z');
       const realDate = global.Date;
@@ -493,25 +476,24 @@ describe('WorkoutSessionsService', () => {
       });
 
       try {
-        const result = await (service as any).completeSession(
+        const result = await service.completeSession(
           currentUser,
           workoutSessionRecord.id,
         );
+        const [updateArgs] = prismaMock.workoutSession.update.mock.calls[0];
 
-        expect(prismaMock.workoutSession.update).toHaveBeenCalledWith({
-          where: { id: workoutSessionRecord.id },
-          data: {
-            endedAt: completedAt,
-          },
-          select: expect.objectContaining({
-            id: true,
-            userId: true,
-            workoutPlanId: true,
-            name: true,
-            notes: true,
-            startedAt: true,
-            endedAt: true,
-          }),
+        expect(updateArgs.where).toEqual({ id: workoutSessionRecord.id });
+        expect(updateArgs.data).toEqual({
+          endedAt: completedAt,
+        });
+        expect(updateArgs.select).toMatchObject({
+          id: true,
+          userId: true,
+          workoutPlanId: true,
+          name: true,
+          notes: true,
+          startedAt: true,
+          endedAt: true,
         });
         expect(
           workoutProducerMock.enqueueWorkoutCompleted,
@@ -536,7 +518,7 @@ describe('WorkoutSessionsService', () => {
       });
 
       await expect(
-        (service as any).completeSession(currentUser, workoutSessionRecord.id),
+        service.completeSession(currentUser, workoutSessionRecord.id),
       ).rejects.toBeInstanceOf(ConflictException);
       expect(prismaMock.workoutSession.update).not.toHaveBeenCalled();
       expect(

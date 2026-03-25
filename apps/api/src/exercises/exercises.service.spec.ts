@@ -37,7 +37,10 @@ describe('ExercisesService', () => {
   const prismaMock: {
     exercise: {
       create: jest.Mock<Promise<ExerciseRecord>, [Prisma.ExerciseCreateArgs]>;
-      findMany: jest.Mock<Promise<ExerciseRecord[]>, [Prisma.ExerciseFindManyArgs]>;
+      findMany: jest.Mock<
+        Promise<ExerciseRecord[]>,
+        [Prisma.ExerciseFindManyArgs]
+      >;
       findUnique: jest.Mock<
         Promise<ExerciseRecord | { id: string } | null>,
         [Prisma.ExerciseFindUniqueArgs]
@@ -47,11 +50,17 @@ describe('ExercisesService', () => {
     };
   } = {
     exercise: {
-      create: jest.fn(),
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
+      create: jest.fn<Promise<ExerciseRecord>, [Prisma.ExerciseCreateArgs]>(),
+      findMany: jest.fn<
+        Promise<ExerciseRecord[]>,
+        [Prisma.ExerciseFindManyArgs]
+      >(),
+      findUnique: jest.fn<
+        Promise<ExerciseRecord | { id: string } | null>,
+        [Prisma.ExerciseFindUniqueArgs]
+      >(),
+      update: jest.fn<Promise<ExerciseRecord>, [Prisma.ExerciseUpdateArgs]>(),
+      delete: jest.fn<Promise<ExerciseRecord>, [Prisma.ExerciseDeleteArgs]>(),
     },
   };
 
@@ -105,22 +114,21 @@ describe('ExercisesService', () => {
       prismaMock.exercise.create.mockResolvedValue(exerciseRecord);
 
       const result = await service.create(createExerciseDto);
+      const [createArgs] = prismaMock.exercise.create.mock.calls[0];
 
-      expect(prismaMock.exercise.create).toHaveBeenCalledWith({
-        data: createExerciseDto,
-        select: expect.objectContaining({
-          id: true,
-          name: true,
-          slug: true,
-          description: true,
-          instructions: true,
-          muscleGroup: true,
-          category: true,
-          equipment: true,
-          isCompound: true,
-          createdAt: true,
-          updatedAt: true,
-        }),
+      expect(createArgs.data).toEqual(createExerciseDto);
+      expect(createArgs.select).toMatchObject({
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        instructions: true,
+        muscleGroup: true,
+        category: true,
+        equipment: true,
+        isCompound: true,
+        createdAt: true,
+        updatedAt: true,
       });
       expect(result).toEqual(exerciseRecord);
     });
@@ -136,9 +144,9 @@ describe('ExercisesService', () => {
         }),
       );
 
-      await expect(
-        service.create(createExerciseDto),
-      ).rejects.toBeInstanceOf(ConflictException);
+      await expect(service.create(createExerciseDto)).rejects.toBeInstanceOf(
+        ConflictException,
+      );
     });
   });
 
@@ -149,24 +157,23 @@ describe('ExercisesService', () => {
       prismaMock.exercise.findMany.mockResolvedValue(orderedExercises);
 
       const result = await service.findAll();
+      const [findManyArgs] = prismaMock.exercise.findMany.mock.calls[0];
 
-      expect(prismaMock.exercise.findMany).toHaveBeenCalledWith({
-        select: expect.objectContaining({
-          id: true,
-          name: true,
-          slug: true,
-          description: true,
-          instructions: true,
-          muscleGroup: true,
-          category: true,
-          equipment: true,
-          isCompound: true,
-          createdAt: true,
-          updatedAt: true,
-        }),
-        orderBy: {
-          createdAt: 'desc',
-        },
+      expect(findManyArgs.select).toMatchObject({
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        instructions: true,
+        muscleGroup: true,
+        category: true,
+        equipment: true,
+        isCompound: true,
+        createdAt: true,
+        updatedAt: true,
+      });
+      expect(findManyArgs.orderBy).toEqual({
+        createdAt: 'desc',
       });
       expect(result).toEqual(orderedExercises);
     });
@@ -177,22 +184,21 @@ describe('ExercisesService', () => {
       prismaMock.exercise.findUnique.mockResolvedValue(exerciseRecord);
 
       const result = await service.findOne(exerciseRecord.id);
+      const [findUniqueArgs] = prismaMock.exercise.findUnique.mock.calls[0];
 
-      expect(prismaMock.exercise.findUnique).toHaveBeenCalledWith({
-        where: { id: exerciseRecord.id },
-        select: expect.objectContaining({
-          id: true,
-          name: true,
-          slug: true,
-          description: true,
-          instructions: true,
-          muscleGroup: true,
-          category: true,
-          equipment: true,
-          isCompound: true,
-          createdAt: true,
-          updatedAt: true,
-        }),
+      expect(findUniqueArgs.where).toEqual({ id: exerciseRecord.id });
+      expect(findUniqueArgs.select).toMatchObject({
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        instructions: true,
+        muscleGroup: true,
+        category: true,
+        equipment: true,
+        isCompound: true,
+        createdAt: true,
+        updatedAt: true,
       });
       expect(result).toEqual(exerciseRecord);
     });
@@ -200,9 +206,9 @@ describe('ExercisesService', () => {
     it('throws NotFoundException when the exercise does not exist', async () => {
       prismaMock.exercise.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.findOne('missing_exercise'),
-      ).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.findOne('missing_exercise')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
   });
 
@@ -217,36 +223,36 @@ describe('ExercisesService', () => {
         exerciseRecord.id,
         updatedExerciseDto,
       );
+      const [findUniqueArgs] = prismaMock.exercise.findUnique.mock.calls[0];
+      const [updateArgs] = prismaMock.exercise.update.mock.calls[0];
 
-      expect(prismaMock.exercise.findUnique).toHaveBeenCalledWith({
+      expect(findUniqueArgs).toEqual({
         where: { id: exerciseRecord.id },
         select: { id: true },
       });
-      expect(prismaMock.exercise.update).toHaveBeenCalledWith({
-        where: { id: exerciseRecord.id },
-        data: {
-          name: undefined,
-          slug: undefined,
-          description: updatedExerciseDto.description,
-          instructions: undefined,
-          muscleGroup: undefined,
-          category: undefined,
-          equipment: updatedExerciseDto.equipment,
-          isCompound: undefined,
-        },
-        select: expect.objectContaining({
-          id: true,
-          name: true,
-          slug: true,
-          description: true,
-          instructions: true,
-          muscleGroup: true,
-          category: true,
-          equipment: true,
-          isCompound: true,
-          createdAt: true,
-          updatedAt: true,
-        }),
+      expect(updateArgs.where).toEqual({ id: exerciseRecord.id });
+      expect(updateArgs.data).toEqual({
+        name: undefined,
+        slug: undefined,
+        description: updatedExerciseDto.description,
+        instructions: undefined,
+        muscleGroup: undefined,
+        category: undefined,
+        equipment: updatedExerciseDto.equipment,
+        isCompound: undefined,
+      });
+      expect(updateArgs.select).toMatchObject({
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        instructions: true,
+        muscleGroup: true,
+        category: true,
+        equipment: true,
+        isCompound: true,
+        createdAt: true,
+        updatedAt: true,
       });
       expect(result).toEqual(updatedExerciseRecord);
     });
@@ -288,25 +294,25 @@ describe('ExercisesService', () => {
       prismaMock.exercise.delete.mockResolvedValue(exerciseRecord);
 
       const result = await service.remove(exerciseRecord.id);
+      const [findUniqueArgs] = prismaMock.exercise.findUnique.mock.calls[0];
+      const [deleteArgs] = prismaMock.exercise.delete.mock.calls[0];
 
-      expect(prismaMock.exercise.findUnique).toHaveBeenCalledWith({
+      expect(findUniqueArgs).toEqual({
         where: { id: exerciseRecord.id },
         select: { id: true },
       });
-      expect(prismaMock.exercise.delete).toHaveBeenCalledWith({
-        where: { id: exerciseRecord.id },
-        select: expect.objectContaining({
-          id: true,
-          name: true,
-          slug: true,
-          description: true,
-          instructions: true,
-          muscleGroup: true,
-          equipment: true,
-          isCompound: true,
-          createdAt: true,
-          updatedAt: true,
-        }),
+      expect(deleteArgs.where).toEqual({ id: exerciseRecord.id });
+      expect(deleteArgs.select).toMatchObject({
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        instructions: true,
+        muscleGroup: true,
+        equipment: true,
+        isCompound: true,
+        createdAt: true,
+        updatedAt: true,
       });
       expect(result).toEqual(exerciseRecord);
     });
@@ -314,9 +320,9 @@ describe('ExercisesService', () => {
     it('throws NotFoundException when removing a missing exercise', async () => {
       prismaMock.exercise.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.remove('missing_exercise'),
-      ).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.remove('missing_exercise')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
       expect(prismaMock.exercise.delete).not.toHaveBeenCalled();
     });
   });

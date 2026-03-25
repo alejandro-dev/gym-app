@@ -94,7 +94,7 @@ describe('WorkoutPlansController', () => {
     it('delegates to workoutPlansService.create', async () => {
       workoutPlansServiceMock.create.mockResolvedValue(workoutPlanRecord);
 
-      const result = await (controller as any).create(createWorkoutPlanDto);
+      const result = await controller.create(createWorkoutPlanDto);
 
       expect(workoutPlansServiceMock.create).toHaveBeenCalledWith(
         createWorkoutPlanDto,
@@ -107,7 +107,7 @@ describe('WorkoutPlansController', () => {
     it('delegates to workoutPlansService.findAll', async () => {
       workoutPlansServiceMock.findAll.mockResolvedValue([workoutPlanRecord]);
 
-      const result = await (controller as any).findAll(currentUser, undefined);
+      const result = await controller.findAll(currentUser, undefined);
 
       expect(workoutPlansServiceMock.findAll).toHaveBeenCalledWith(
         currentUser,
@@ -121,7 +121,7 @@ describe('WorkoutPlansController', () => {
     it('delegates to workoutPlansService.findOne', async () => {
       workoutPlansServiceMock.findOne.mockResolvedValue(workoutPlanRecord);
 
-      const result = await (controller as any).findOne(
+      const result = await controller.findOne(
         currentUser,
         workoutPlanRecord.id,
       );
@@ -141,7 +141,7 @@ describe('WorkoutPlansController', () => {
         ...updatedWorkoutPlanDto,
       });
 
-      const result = await (controller as any).update(
+      const result = await controller.update(
         currentUser,
         workoutPlanRecord.id,
         updatedWorkoutPlanDto,
@@ -163,10 +163,7 @@ describe('WorkoutPlansController', () => {
     it('delegates to workoutPlansService.remove', async () => {
       workoutPlansServiceMock.remove.mockResolvedValue(workoutPlanRecord);
 
-      const result = await (controller as any).remove(
-        currentUser,
-        workoutPlanRecord.id,
-      );
+      const result = await controller.remove(currentUser, workoutPlanRecord.id);
 
       expect(workoutPlansServiceMock.remove).toHaveBeenCalledWith(
         currentUser,

@@ -21,7 +21,7 @@ describe('ExercisesController', () => {
 
   const exercisesServiceMock: {
     create: jest.Mock<Promise<typeof exerciseRecord>, [CreateExerciseDto]>;
-    findAll: jest.Mock<Promise<typeof exerciseRecord[]>, []>;
+    findAll: jest.Mock<Promise<Array<typeof exerciseRecord>>, []>;
     findOne: jest.Mock<Promise<typeof exerciseRecord>, [string]>;
     update: jest.Mock<
       Promise<typeof exerciseRecord>,
@@ -29,11 +29,14 @@ describe('ExercisesController', () => {
     >;
     remove: jest.Mock<Promise<typeof exerciseRecord>, [string]>;
   } = {
-    create: jest.fn(),
-    findAll: jest.fn(),
-    findOne: jest.fn(),
-    update: jest.fn(),
-    remove: jest.fn(),
+    create: jest.fn<Promise<typeof exerciseRecord>, [CreateExerciseDto]>(),
+    findAll: jest.fn<Promise<Array<typeof exerciseRecord>>, []>(),
+    findOne: jest.fn<Promise<typeof exerciseRecord>, [string]>(),
+    update: jest.fn<
+      Promise<typeof exerciseRecord>,
+      [string, UpdateExerciseDto]
+    >(),
+    remove: jest.fn<Promise<typeof exerciseRecord>, [string]>(),
   };
 
   const createExerciseDto: CreateExerciseDto = {
@@ -118,7 +121,10 @@ describe('ExercisesController', () => {
         ...updateExerciseDto,
       });
 
-      const result = await controller.update(exerciseRecord.id, updateExerciseDto);
+      const result = await controller.update(
+        exerciseRecord.id,
+        updateExerciseDto,
+      );
 
       expect(exercisesServiceMock.update).toHaveBeenCalledWith(
         exerciseRecord.id,

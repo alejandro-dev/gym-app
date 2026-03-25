@@ -63,33 +63,32 @@ describe('PersonalRecordsService', () => {
   it('creates a personal record and returns the public record', async () => {
     prismaMock.personalRecord.create.mockResolvedValue(personalRecordRecord);
 
-    const result = await (service as any).create(createPersonalRecordDto);
+    const result = await service.create(createPersonalRecordDto);
+    const [createArgs] = prismaMock.personalRecord.create.mock.calls[0];
 
-    expect(prismaMock.personalRecord.create).toHaveBeenCalledWith({
-      data: {
-        user: {
-          connect: {
-            id: createPersonalRecordDto.userId,
-          },
+    expect(createArgs.data).toEqual({
+      user: {
+        connect: {
+          id: createPersonalRecordDto.userId,
         },
-        exercise: {
-          connect: {
-            id: createPersonalRecordDto.exerciseId,
-          },
-        },
-        metric: createPersonalRecordDto.metric,
-        value: createPersonalRecordDto.value,
-        achievedAt: new Date(createPersonalRecordDto.achievedAt),
       },
-      select: expect.objectContaining({
-        id: true,
-        userId: true,
-        exerciseId: true,
-        metric: true,
-        value: true,
-        achievedAt: true,
-        createdAt: true,
-      }),
+      exercise: {
+        connect: {
+          id: createPersonalRecordDto.exerciseId,
+        },
+      },
+      metric: createPersonalRecordDto.metric,
+      value: createPersonalRecordDto.value,
+      achievedAt: new Date(createPersonalRecordDto.achievedAt),
+    });
+    expect(createArgs.select).toMatchObject({
+      id: true,
+      userId: true,
+      exerciseId: true,
+      metric: true,
+      value: true,
+      achievedAt: true,
+      createdAt: true,
     });
     expect(result).toEqual(personalRecordRecord);
   });
@@ -100,7 +99,7 @@ describe('PersonalRecordsService', () => {
     );
 
     await expect(
-      (service as any).create(createPersonalRecordDto),
+      service.create(createPersonalRecordDto),
     ).rejects.toBeInstanceOf(InternalServerErrorException);
   });
 
@@ -109,21 +108,23 @@ describe('PersonalRecordsService', () => {
       personalRecordRecord,
     ]);
 
-    const result = await (service as any).findAll(currentUser);
+    const result = await service.findAll(currentUser);
+    const [findManyArgs] = prismaMock.personalRecord.findMany.mock.calls[0];
 
-    expect(prismaMock.personalRecord.findMany).toHaveBeenCalledWith({
-      select: expect.objectContaining({
-        id: true,
-        userId: true,
-        exerciseId: true,
-        metric: true,
-        value: true,
-        achievedAt: true,
-        createdAt: true,
-      }),
-      orderBy: [{ achievedAt: 'desc' }, { createdAt: 'desc' }],
-      where: { userId: currentUser.sub },
+    expect(findManyArgs.select).toMatchObject({
+      id: true,
+      userId: true,
+      exerciseId: true,
+      metric: true,
+      value: true,
+      achievedAt: true,
+      createdAt: true,
     });
+    expect(findManyArgs.orderBy).toEqual([
+      { achievedAt: 'desc' },
+      { createdAt: 'desc' },
+    ]);
+    expect(findManyArgs.where).toEqual({ userId: currentUser.sub });
     expect(result).toEqual([personalRecordRecord]);
   });
 
@@ -132,15 +133,14 @@ describe('PersonalRecordsService', () => {
       personalRecordRecord,
     );
 
-    const result = await (service as any).findOne(
-      currentUser,
-      personalRecordRecord.id,
-    );
+    const result = await service.findOne(currentUser, personalRecordRecord.id);
+    const [findUniqueArgs] = prismaMock.personalRecord.findUnique.mock.calls[0];
 
-    expect(prismaMock.personalRecord.findUnique).toHaveBeenCalledWith({
-      where: { id: personalRecordRecord.id, userId: currentUser.sub },
-      select: expect.any(Object),
+    expect(findUniqueArgs.where).toEqual({
+      id: personalRecordRecord.id,
+      userId: currentUser.sub,
     });
+    expect(findUniqueArgs.select).toBeDefined();
     expect(result).toEqual(personalRecordRecord);
   });
 
@@ -148,7 +148,7 @@ describe('PersonalRecordsService', () => {
     prismaMock.personalRecord.findUnique.mockResolvedValue(null);
 
     await expect(
-      (service as any).findOne(currentUser, 'missing_personalRecord'),
+      service.findOne(currentUser, 'missing_personalRecord'),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
@@ -160,28 +160,23 @@ describe('PersonalRecordsService', () => {
       ...personalRecordRecord,
       value: 125,
     });
+    const result = await service.update(currentUser, personalRecordRecord.id, {
+      value: 125,
+    });
+    const [findUniqueArgs] = prismaMock.personalRecord.findUnique.mock.calls[0];
+    const [updateArgs] = prismaMock.personalRecord.update.mock.calls[0];
 
-    const result = await (service as any).update(
-      currentUser,
-      personalRecordRecord.id,
-      {
-        value: 125,
-      },
-    );
-
-    expect(prismaMock.personalRecord.findUnique).toHaveBeenCalledWith({
+    expect(findUniqueArgs).toEqual({
       where: { id: personalRecordRecord.id, userId: currentUser.sub },
       select: { id: true },
     });
-    expect(prismaMock.personalRecord.update).toHaveBeenCalledWith({
-      where: { id: personalRecordRecord.id },
-      data: {
-        metric: undefined,
-        value: 125,
-        achievedAt: undefined,
-      },
-      select: expect.any(Object),
+    expect(updateArgs.where).toEqual({ id: personalRecordRecord.id });
+    expect(updateArgs.data).toEqual({
+      metric: undefined,
+      value: 125,
+      achievedAt: undefined,
     });
+    expect(updateArgs.select).toBeDefined();
     expect(result).toEqual({
       ...personalRecordRecord,
       value: 125,
@@ -192,7 +187,7 @@ describe('PersonalRecordsService', () => {
     prismaMock.personalRecord.findUnique.mockResolvedValue(null);
 
     await expect(
-      (service as any).remove(currentUser, 'missing_personalRecord'),
+      service.remove(currentUser, 'missing_personalRecord'),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 });

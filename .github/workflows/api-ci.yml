@@ -48,8 +48,8 @@ jobs:
           node-version: 20
           cache: pnpm
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Install dependencies without scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Generate Prisma client
         run: pnpm --filter api exec prisma generate --schema prisma/schema.prisma

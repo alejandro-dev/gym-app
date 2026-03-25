@@ -109,9 +109,7 @@ describe('WorkoutPlanExerciseController', () => {
         workoutPlanExerciseRecord,
       );
 
-      const result = await (controller as any).create(
-        createWorkoutPlanExerciseDto,
-      );
+      const result = await controller.create(createWorkoutPlanExerciseDto);
 
       expect(workoutPlanExerciseServiceMock.create).toHaveBeenCalledWith(
         createWorkoutPlanExerciseDto,
@@ -126,7 +124,7 @@ describe('WorkoutPlanExerciseController', () => {
         workoutPlanExerciseRecord,
       ]);
 
-      const result = await (controller as any).findAll(currentUser, undefined);
+      const result = await controller.findAll(currentUser, undefined);
 
       expect(workoutPlanExerciseServiceMock.findAll).toHaveBeenCalledWith(
         currentUser,
@@ -142,7 +140,7 @@ describe('WorkoutPlanExerciseController', () => {
         workoutPlanExerciseRecord,
       );
 
-      const result = await (controller as any).findOne(
+      const result = await controller.findOne(
         currentUser,
         workoutPlanExerciseRecord.id,
       );
@@ -162,7 +160,7 @@ describe('WorkoutPlanExerciseController', () => {
         ...updatedWorkoutPlanExerciseDto,
       });
 
-      const result = await (controller as any).update(
+      const result = await controller.update(
         currentUser,
         workoutPlanExerciseRecord.id,
         updatedWorkoutPlanExerciseDto,
@@ -186,7 +184,7 @@ describe('WorkoutPlanExerciseController', () => {
         workoutPlanExerciseRecord,
       );
 
-      const result = await (controller as any).remove(
+      const result = await controller.remove(
         currentUser,
         workoutPlanExerciseRecord.id,
       );

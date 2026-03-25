@@ -7,11 +7,25 @@ import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 
+type AuthResponseBody = {
+  user: {
+    id: string;
+    email: string;
+    role: UserRole;
+  };
+  accessToken: string;
+};
+
+type ExerciseListItem = {
+  id: string;
+};
+
 describe('ExercisesController (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let adminAccessToken: string;
   let userAccessToken: string;
+  const anyString = expect.any(String) as unknown as string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -70,8 +84,9 @@ describe('ExercisesController (e2e)', () => {
       .set('Authorization', `Bearer ${adminAccessToken}`)
       .send(payload)
       .expect(201);
+    const createdExercise = response.body as Record<string, unknown>;
 
-    expect(response.body).toEqual(
+    expect(createdExercise).toEqual(
       expect.objectContaining({
         name: payload.name,
         slug: payload.slug,
@@ -81,9 +96,9 @@ describe('ExercisesController (e2e)', () => {
         category: payload.category,
         equipment: payload.equipment,
         isCompound: payload.isCompound,
-        id: expect.any(String),
-        createdAt: expect.any(String),
-        updatedAt: expect.any(String),
+        id: anyString,
+        createdAt: anyString,
+        updatedAt: anyString,
       }),
     );
   });
@@ -114,11 +129,12 @@ describe('ExercisesController (e2e)', () => {
       .get('/exercises')
       .set('Authorization', `Bearer ${adminAccessToken}`)
       .expect(200);
+    const exercises = response.body as ExerciseListItem[];
 
-    expect(response.body).toHaveLength(2);
-    expect(
-      response.body.map((exercise: { id: string }) => exercise.id),
-    ).toEqual(expect.arrayContaining([firstExercise.id, secondExercise.id]));
+    expect(exercises).toHaveLength(2);
+    expect(exercises.map((exercise) => exercise.id)).toEqual(
+      expect.arrayContaining([firstExercise.id, secondExercise.id]),
+    );
   });
 
   it('returns an exercise by id', async () => {
@@ -250,8 +266,9 @@ describe('ExercisesController (e2e)', () => {
         password,
       })
       .expect(201);
+    const loginBody = loginResponse.body as AuthResponseBody;
 
-    expect(loginResponse.body.user).toEqual(
+    expect(loginBody.user).toEqual(
       expect.objectContaining({
         id: user.id,
         email,
@@ -259,7 +276,7 @@ describe('ExercisesController (e2e)', () => {
       }),
     );
 
-    return loginResponse.body.accessToken as string;
+    return loginBody.accessToken;
   }
 
   function buildCreateExercisePayload(suffix: string) {

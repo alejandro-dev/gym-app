@@ -7,12 +7,27 @@ import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 
+type AuthResponseBody = {
+  user: {
+    id: string;
+    email: string;
+    role: UserRole;
+  };
+  accessToken: string;
+};
+
+type WorkoutSessionListItem = {
+  id: string;
+  workoutPlanId: string | null;
+};
+
 describe('WorkoutSessionsController (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let ownerUserId: string;
   let userAccessToken: string;
   let workoutPlanId: string;
+  const anyString = expect.any(String) as unknown as string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -85,14 +100,15 @@ describe('WorkoutSessionsController (e2e)', () => {
       .set('Authorization', `Bearer ${userAccessToken}`)
       .send(payload)
       .expect(201);
+    const createdSession = response.body as Record<string, unknown>;
 
-    expect(response.body).toEqual(
+    expect(createdSession).toEqual(
       expect.objectContaining({
         userId: ownerUserId,
         workoutPlanId: null,
         name: payload.name,
         notes: null,
-        id: expect.any(String),
+        id: anyString,
       }),
     );
   });
@@ -112,14 +128,15 @@ describe('WorkoutSessionsController (e2e)', () => {
       .set('Authorization', `Bearer ${userAccessToken}`)
       .send(payload)
       .expect(201);
+    const createdSession = response.body as Record<string, unknown>;
 
-    expect(response.body).toEqual(
+    expect(createdSession).toEqual(
       expect.objectContaining({
         userId: ownerUserId,
         workoutPlanId,
         name: payload.name,
         notes: payload.notes,
-        id: expect.any(String),
+        id: anyString,
       }),
     );
   });
@@ -146,12 +163,13 @@ describe('WorkoutSessionsController (e2e)', () => {
       .get('/workout-sessions')
       .set('Authorization', `Bearer ${userAccessToken}`)
       .expect(200);
+    const sessions = response.body as WorkoutSessionListItem[];
 
-    expect(response.body).toHaveLength(2);
-    expect(response.body.map((session: { id: string }) => session.id)).toEqual(
+    expect(sessions).toHaveLength(2);
+    expect(sessions.map((session) => session.id)).toEqual(
       expect.arrayContaining([withoutPlan.id, withPlan.id]),
     );
-    expect(response.body).toEqual(
+    expect(sessions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: withoutPlan.id, workoutPlanId: null }),
         expect.objectContaining({ id: withPlan.id, workoutPlanId }),
@@ -352,12 +370,13 @@ describe('WorkoutSessionsController (e2e)', () => {
       .post('/auth/login')
       .send({ email, password })
       .expect(201);
+    const loginBody = loginResponse.body as AuthResponseBody;
 
-    expect(loginResponse.body.user).toEqual(
+    expect(loginBody.user).toEqual(
       expect.objectContaining({ id: user.id, email, role }),
     );
 
-    return loginResponse.body.accessToken as string;
+    return loginBody.accessToken;
   }
 
   async function cleanDatabase() {

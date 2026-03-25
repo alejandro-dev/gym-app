@@ -12,12 +12,22 @@ import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 
+type AuthResponseBody = {
+  user: {
+    id: string;
+    email: string;
+    role: UserRole;
+  };
+  accessToken: string;
+};
+
 describe('PersonalRecordsController (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let ownerUserId: string;
   let userAccessToken: string;
   let exerciseId: string;
+  const anyString = expect.any(String) as unknown as string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -86,14 +96,15 @@ describe('PersonalRecordsController (e2e)', () => {
       .set('Authorization', `Bearer ${userAccessToken}`)
       .send(payload)
       .expect(201);
+    const createdRecord = response.body as Record<string, unknown>;
 
-    expect(response.body).toEqual(
+    expect(createdRecord).toEqual(
       expect.objectContaining({
         userId: ownerUserId,
         exerciseId,
         metric: payload.metric,
         value: payload.value,
-        id: expect.any(String),
+        id: anyString,
       }),
     );
   });
@@ -270,12 +281,13 @@ describe('PersonalRecordsController (e2e)', () => {
       .post('/auth/login')
       .send({ email, password })
       .expect(201);
+    const loginBody = loginResponse.body as AuthResponseBody;
 
-    expect(loginResponse.body.user).toEqual(
+    expect(loginBody.user).toEqual(
       expect.objectContaining({ id: user.id, email, role }),
     );
 
-    return loginResponse.body.accessToken as string;
+    return loginBody.accessToken;
   }
 
   async function cleanDatabase() {
