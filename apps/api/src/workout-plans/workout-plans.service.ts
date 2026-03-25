@@ -38,7 +38,7 @@ export class WorkoutPlansService {
    * @param userId - Identificador opcional del usuario por el que filtrar cuando el rol lo permite
    * @returns Listado de planes de trabajo accesibles para el usuario autenticado
    */
-  async findAll(user: AuthenticatedUser, userId: string) {
+  async findAll(user: AuthenticatedUser, userId?: string) {
     return await this.prisma.workoutPlan.findMany({
       select: this.workoutPlanSelect,
       where:
