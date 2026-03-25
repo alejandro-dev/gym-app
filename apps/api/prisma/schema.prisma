@@ -26,6 +26,22 @@ enum MuscleGroup {
    CARDIO
 }
 
+enum ExerciseCategory {
+   STRENGTH
+   BODYWEIGHT
+   CARDIO
+}
+
+enum PersonalRecordMetric {
+   ESTIMATED_1RM // mejor 1RM estimado para un ejercicio
+   MAX_WEIGHT // mayor peso movido en una serie de un ejercicio
+   MAX_REPS // mayor número de reps en una serie de un ejercicio
+   MAX_DISTANCE // mayor distancia en una serie de un ejercicio
+   MAX_DURATION // mayor duración en una serie de un ejercicio
+   EXERCISE_VOLUME // mayor volumen total de un ejercicio dentro de una sesión
+   SESSION_VOLUME // mayor volumen total de toda la sesión
+}
+
 model User {
    id           String    @id @default(cuid())
    email        String    @unique
@@ -53,6 +69,7 @@ model Exercise {
    description  String?
    instructions String?
    muscleGroup  MuscleGroup
+   category     ExerciseCategory @default(STRENGTH)
    equipment    String?
    isCompound   Boolean     @default(false)
    createdAt    DateTime    @default(now())
@@ -131,13 +148,13 @@ model WorkoutSet {
 }
 
 model PersonalRecord {
-   id         String   @id @default(cuid())
+   id         String               @id @default(cuid())
    userId     String
    exerciseId String
-   metric     String
+   metric     PersonalRecordMetric
    value      Float
    achievedAt DateTime
-   createdAt  DateTime @default(now())
+   createdAt  DateTime             @default(now())
 
    user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
    exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Restrict)

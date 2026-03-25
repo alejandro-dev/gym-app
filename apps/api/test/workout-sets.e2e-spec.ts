@@ -1,6 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { MuscleGroup, UserRole } from '@prisma/client';
+import { ExerciseCategory, MuscleGroup, UserRole } from '@prisma/client';
 import * as cookieParser from 'cookie-parser';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
@@ -300,6 +300,7 @@ describe('WorkoutSetsController (e2e)', () => {
 				name: `Exercise set ${Date.now()}-a`,
 				slug: `exercise-set-${Date.now()}-a`,
 				muscleGroup: MuscleGroup.LEGS,
+				category: ExerciseCategory.STRENGTH,
 			},
 		});
 		const secondExercise = await prisma.exercise.create({
@@ -307,6 +308,7 @@ describe('WorkoutSetsController (e2e)', () => {
 				name: `Exercise set ${Date.now()}-b`,
 				slug: `exercise-set-${Date.now()}-b`,
 				muscleGroup: MuscleGroup.BACK,
+				category: ExerciseCategory.BODYWEIGHT,
 			},
 		});
 		const workoutSession = await prisma.workoutSession.create({

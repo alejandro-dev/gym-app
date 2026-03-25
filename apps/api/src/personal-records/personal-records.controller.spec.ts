@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserRole } from '@prisma/client';
+import { PersonalRecordMetric, UserRole } from '@prisma/client';
 
 jest.mock('src/auth/guards/access-token.guard', () => ({ AccessTokenGuard: class {} }), {
 	virtual: true,
@@ -38,7 +38,7 @@ describe('PersonalRecordsController', () => {
 		id: 'personalRecord_456',
 		userId: 'user_123',
 		exerciseId: 'exercise_123',
-		metric: 'estimated-1rm',
+		metric: PersonalRecordMetric.ESTIMATED_1RM,
 		value: 120,
 		achievedAt: new Date('2026-03-23T10:00:00.000Z'),
 		createdAt: new Date('2026-03-23T10:05:00.000Z'),
@@ -64,7 +64,7 @@ describe('PersonalRecordsController', () => {
 		const dto = {
 			userId: 'user_123',
 			exerciseId: 'exercise_123',
-			metric: 'estimated-1rm',
+			metric: PersonalRecordMetric.ESTIMATED_1RM,
 			value: 120,
 			achievedAt: '2026-03-23T10:00:00.000Z',
 		};

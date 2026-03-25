@@ -1,6 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { MuscleGroup, UserRole } from '@prisma/client';
+import { ExerciseCategory, MuscleGroup, UserRole } from '@prisma/client';
 import * as cookieParser from 'cookie-parser';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
@@ -349,6 +349,7 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
 				name: `Exercise ${Date.now()}-a`,
 				slug: `exercise-${Date.now()}-a`,
 				muscleGroup: MuscleGroup.LEGS,
+				category: ExerciseCategory.STRENGTH,
 				description: 'First exercise',
 				isCompound: true,
 			},
@@ -359,6 +360,7 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
 				name: `Exercise ${Date.now()}-b`,
 				slug: `exercise-${Date.now()}-b`,
 				muscleGroup: MuscleGroup.BACK,
+				category: ExerciseCategory.BODYWEIGHT,
 				description: 'Second exercise',
 				isCompound: false,
 			},

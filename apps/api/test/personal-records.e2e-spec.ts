@@ -1,6 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { MuscleGroup, UserRole } from '@prisma/client';
+import { ExerciseCategory, MuscleGroup, PersonalRecordMetric, UserRole } from '@prisma/client';
 import * as cookieParser from 'cookie-parser';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
@@ -55,6 +55,7 @@ describe('PersonalRecordsController (e2e)', () => {
 				name: `Exercise record ${Date.now()}`,
 				slug: `exercise-record-${Date.now()}`,
 				muscleGroup: MuscleGroup.CHEST,
+				category: ExerciseCategory.STRENGTH,
 			},
 		});
 
@@ -70,7 +71,7 @@ describe('PersonalRecordsController (e2e)', () => {
 		const payload = {
 			userId: ownerUserId,
 			exerciseId,
-			metric: 'estimated-1rm',
+			metric: PersonalRecordMetric.ESTIMATED_1RM,
 			value: 120,
 			achievedAt: '2026-03-23T10:00:00.000Z',
 		};
@@ -97,7 +98,7 @@ describe('PersonalRecordsController (e2e)', () => {
 			data: {
 				user: { connect: { id: ownerUserId } },
 				exercise: { connect: { id: exerciseId } },
-				metric: 'estimated-1rm',
+				metric: PersonalRecordMetric.ESTIMATED_1RM,
 				value: 120,
 				achievedAt: new Date('2026-03-23T10:00:00.000Z'),
 			},
@@ -122,7 +123,7 @@ describe('PersonalRecordsController (e2e)', () => {
 			data: {
 				user: { connect: { id: ownerUserId } },
 				exercise: { connect: { id: exerciseId } },
-				metric: 'estimated-1rm',
+				metric: PersonalRecordMetric.ESTIMATED_1RM,
 				value: 120,
 				achievedAt: new Date('2026-03-23T10:00:00.000Z'),
 			},
@@ -138,7 +139,7 @@ describe('PersonalRecordsController (e2e)', () => {
 				id: record.id,
 				userId: ownerUserId,
 				exerciseId,
-				metric: 'estimated-1rm',
+				metric: PersonalRecordMetric.ESTIMATED_1RM,
 			}),
 		);
 	});
@@ -155,7 +156,7 @@ describe('PersonalRecordsController (e2e)', () => {
 			data: {
 				user: { connect: { id: ownerUserId } },
 				exercise: { connect: { id: exerciseId } },
-				metric: 'estimated-1rm',
+				metric: PersonalRecordMetric.ESTIMATED_1RM,
 				value: 120,
 				achievedAt: new Date('2026-03-23T10:00:00.000Z'),
 			},
@@ -166,7 +167,7 @@ describe('PersonalRecordsController (e2e)', () => {
 			.set('Authorization', `Bearer ${userAccessToken}`)
 			.send({
 				value: 125,
-				metric: 'one-rep-max',
+				metric: PersonalRecordMetric.MAX_WEIGHT,
 			})
 			.expect(200);
 
@@ -174,7 +175,7 @@ describe('PersonalRecordsController (e2e)', () => {
 			expect.objectContaining({
 				id: record.id,
 				value: 125,
-				metric: 'one-rep-max',
+				metric: PersonalRecordMetric.MAX_WEIGHT,
 			}),
 		);
 	});
@@ -184,7 +185,7 @@ describe('PersonalRecordsController (e2e)', () => {
 			data: {
 				user: { connect: { id: ownerUserId } },
 				exercise: { connect: { id: exerciseId } },
-				metric: 'estimated-1rm',
+				metric: PersonalRecordMetric.ESTIMATED_1RM,
 				value: 120,
 				achievedAt: new Date('2026-03-23T10:00:00.000Z'),
 			},
@@ -213,7 +214,7 @@ describe('PersonalRecordsController (e2e)', () => {
 			data: {
 				user: { connect: { id: ownerUserId } },
 				exercise: { connect: { id: exerciseId } },
-				metric: 'estimated-1rm',
+				metric: PersonalRecordMetric.ESTIMATED_1RM,
 				value: 120,
 				achievedAt: new Date('2026-03-23T10:00:00.000Z'),
 			},

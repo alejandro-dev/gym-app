@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { MuscleGroup } from '@prisma/client';
+import { ExerciseCategory, MuscleGroup } from '@prisma/client';
 
 /**
  * Representacion publica de un ejercicio en respuestas HTTP.
@@ -34,6 +34,10 @@ export class ExerciseResponseDto {
 	@ApiProperty({ enum: MuscleGroup, example: MuscleGroup.LEGS })
 	/** Grupo muscular principal del ejercicio. */
 	muscleGroup!: MuscleGroup;
+
+	@ApiProperty({ enum: ExerciseCategory, example: ExerciseCategory.STRENGTH })
+	/** Categoria funcional del ejercicio para calculo de records personales. */
+	category!: ExerciseCategory;
 
 	@ApiPropertyOptional({ example: 'Barbell', nullable: true })
 	/** Material principal del ejercicio. */

@@ -107,6 +107,7 @@ export class AuthService {
 				weightKg: true,
 				heightCm: true,
 				birthDate: true,
+				hashedRefreshToken: true,
 				createdAt: true,
 				updatedAt: true,
 			},

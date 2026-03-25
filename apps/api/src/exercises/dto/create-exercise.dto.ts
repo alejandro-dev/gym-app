@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { MuscleGroup } from '@prisma/client';
+import { ExerciseCategory, MuscleGroup } from '@prisma/client';
 import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 
 /**
@@ -39,6 +39,11 @@ export class CreateExerciseDto {
 	/** Grupo muscular principal al que pertenece el ejercicio. */
 	@IsEnum(MuscleGroup)
 	muscleGroup!: MuscleGroup;
+
+	@ApiProperty({ enum: ExerciseCategory, example: ExerciseCategory.STRENGTH })
+	/** Categoria funcional del ejercicio para calculo de records personales. */
+	@IsEnum(ExerciseCategory)
+	category!: ExerciseCategory;
 
 	@ApiPropertyOptional({ example: 'Barbell', nullable: true })
 	/** Material o implemento principal necesario para el ejercicio. */

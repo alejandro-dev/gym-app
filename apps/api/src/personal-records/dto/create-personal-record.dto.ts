@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsNumber, IsString } from 'class-validator';
+import { PersonalRecordMetric } from '@prisma/client';
+import { IsDateString, IsEnum, IsNumber, IsString } from 'class-validator';
 
 /**
  * Datos necesarios para crear un record personal.
@@ -15,10 +16,10 @@ export class CreatePersonalRecordDto {
    @IsString()
    exerciseId!: string;
 
-   @ApiProperty({ example: 'estimated-1rm' })
+   @ApiProperty({ enum: PersonalRecordMetric, example: PersonalRecordMetric.ESTIMATED_1RM })
    /** Metrica registrada. */
-   @IsString()
-   metric!: string;
+   @IsEnum(PersonalRecordMetric)
+   metric!: PersonalRecordMetric;
 
    @ApiProperty({ example: 120 })
    /** Valor numerico del record. */

@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { PersonalRecordMetric } from '@prisma/client';
 
 /**
  * Representacion publica de un record personal.
@@ -16,9 +17,9 @@ export class PersonalRecordResponseDto {
    /** Identificador del ejercicio asociado. */
    exerciseId!: string;
 
-   @ApiProperty({ example: 'estimated-1rm' })
+   @ApiProperty({ enum: PersonalRecordMetric, example: PersonalRecordMetric.ESTIMATED_1RM })
    /** Metrica registrada. */
-   metric!: string;
+   metric!: PersonalRecordMetric;
 
    @ApiProperty({ example: 120 })
    /** Valor numerico del record. */

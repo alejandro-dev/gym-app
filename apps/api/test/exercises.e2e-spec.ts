@@ -1,6 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { MuscleGroup, UserRole } from '@prisma/client';
+import { ExerciseCategory, MuscleGroup, UserRole } from '@prisma/client';
 import * as cookieParser from 'cookie-parser';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
@@ -78,6 +78,7 @@ describe('ExercisesController (e2e)', () => {
 				description: payload.description,
 				instructions: payload.instructions,
 				muscleGroup: payload.muscleGroup,
+				category: payload.category,
 				equipment: payload.equipment,
 				isCompound: payload.isCompound,
 				id: expect.any(String),
@@ -268,6 +269,7 @@ describe('ExercisesController (e2e)', () => {
 			description: `Description for ${suffix}`,
 			instructions: `Instructions for ${suffix}`,
 			muscleGroup: MuscleGroup.LEGS,
+			category: ExerciseCategory.STRENGTH,
 			equipment: 'Barbell',
 			isCompound: true,
 		};

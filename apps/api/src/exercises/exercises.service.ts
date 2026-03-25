@@ -32,6 +32,7 @@ export class ExercisesService {
 		description: true,
 		instructions: true,
 		muscleGroup: true,
+		category: true,
 		equipment: true,
 		isCompound: true,
 		createdAt: true,
@@ -144,6 +145,7 @@ export class ExercisesService {
 			description: createExerciseDto.description,
 			instructions: createExerciseDto.instructions,
 			muscleGroup: createExerciseDto.muscleGroup,
+			category: createExerciseDto.category,
 			equipment: createExerciseDto.equipment,
 			isCompound: createExerciseDto.isCompound ?? false,
 		};
@@ -162,6 +164,7 @@ export class ExercisesService {
 			description: updateExerciseDto.description,
 			instructions: updateExerciseDto.instructions,
 			muscleGroup: updateExerciseDto.muscleGroup,
+			category: updateExerciseDto.category,
 			equipment: updateExerciseDto.equipment,
 			isCompound: updateExerciseDto.isCompound,
 		};

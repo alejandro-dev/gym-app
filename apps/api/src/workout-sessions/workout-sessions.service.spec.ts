@@ -2,7 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserRole } from '@prisma/client';
 import { WorkoutSessionsService } from './workout-sessions.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { WorkoutProducer } from '../bullmq/workout.producer';
 import {
+	ConflictException,
 	InternalServerErrorException,
 	NotFoundException,
 } from '@nestjs/common';
@@ -52,6 +54,9 @@ describe('WorkoutSessionsService', () => {
 			delete: jest.fn(),
 		},
 	};
+	const workoutProducerMock = {
+		enqueueWorkoutCompleted: jest.fn(),
+	};
 
 	const createWorkoutSessionDto: CreateWorkoutSessionDto = {
 		userId: 'user_123',
@@ -95,6 +100,10 @@ describe('WorkoutSessionsService', () => {
 				{
 					provide: PrismaService,
 					useValue: prismaMock,
+				},
+				{
+					provide: WorkoutProducer,
+					useValue: workoutProducerMock,
 				},
 			],
 		}).compile();
@@ -278,7 +287,7 @@ describe('WorkoutSessionsService', () => {
 
 			expect(prismaMock.workoutSession.findUnique).toHaveBeenCalledWith({
 				where: { id: workoutSessionRecord.id, userId: currentUser.sub },
-				select: { id: true, userId: true },
+				select: { id: true, userId: true, endedAt: true },
 			});
 			expect(prismaMock.workoutSession.update).toHaveBeenCalledWith({
 				where: { id: workoutSessionRecord.id },
@@ -409,7 +418,7 @@ describe('WorkoutSessionsService', () => {
 
 			expect(prismaMock.workoutSession.findUnique).toHaveBeenCalledWith({
 				where: { id: workoutSessionRecord.id, userId: currentUser.sub },
-				select: { id: true, userId: true },
+				select: { id: true, userId: true, endedAt: true },
 			});
 			expect(prismaMock.workoutSession.delete).toHaveBeenCalledWith({
 				where: { id: workoutSessionRecord.id },
@@ -433,6 +442,77 @@ describe('WorkoutSessionsService', () => {
 				(service as any).remove(currentUser, 'missing_workoutSession'),
 			).rejects.toBeInstanceOf(NotFoundException);
 			expect(prismaMock.workoutSession.delete).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('completeSession', () => {
+		it('marks the session as completed and enqueues the workout.completed job', async () => {
+			const completedAt = new Date('2026-03-24T10:00:00.000Z');
+			const realDate = global.Date;
+
+			global.Date = class extends Date {
+				constructor(value?: string | number | Date) {
+					super(value ?? completedAt);
+				}
+
+				static now() {
+					return completedAt.getTime();
+				}
+			} as DateConstructor;
+
+			prismaMock.workoutSession.findUnique.mockResolvedValue({
+				id: workoutSessionRecord.id,
+				userId: workoutSessionRecord.userId,
+				endedAt: null,
+			});
+			prismaMock.workoutSession.update.mockResolvedValue({
+				...workoutSessionRecord,
+				endedAt: completedAt,
+			});
+
+			try {
+				const result = await (service as any).completeSession(currentUser, workoutSessionRecord.id);
+
+				expect(prismaMock.workoutSession.update).toHaveBeenCalledWith({
+					where: { id: workoutSessionRecord.id },
+					data: {
+						endedAt: completedAt,
+					},
+					select: expect.objectContaining({
+						id: true,
+						userId: true,
+						workoutPlanId: true,
+						name: true,
+						notes: true,
+						startedAt: true,
+						endedAt: true,
+					}),
+				});
+				expect(workoutProducerMock.enqueueWorkoutCompleted).toHaveBeenCalledWith(
+					workoutSessionRecord.id,
+					workoutSessionRecord.userId,
+				);
+				expect(result).toEqual({
+					...workoutSessionRecord,
+					endedAt: completedAt,
+				});
+			} finally {
+				global.Date = realDate;
+			}
+		});
+
+		it('throws ConflictException when the session is already completed', async () => {
+			prismaMock.workoutSession.findUnique.mockResolvedValue({
+				id: workoutSessionRecord.id,
+				userId: workoutSessionRecord.userId,
+				endedAt: workoutSessionRecord.endedAt,
+			});
+
+			await expect(
+				(service as any).completeSession(currentUser, workoutSessionRecord.id),
+			).rejects.toBeInstanceOf(ConflictException);
+			expect(prismaMock.workoutSession.update).not.toHaveBeenCalled();
+			expect(workoutProducerMock.enqueueWorkoutCompleted).not.toHaveBeenCalled();
 		});
 	});
 });

@@ -136,4 +136,25 @@ export class WorkoutSessionsController {
    remove(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string): Promise<WorkoutSessionResponseDto> {
       return this.workoutSessionsService.remove(user, id);
    }
+
+   /**
+    * Completa una sesion de entrenamiento.
+    * 
+    * @param user - Usuario autenticado
+    * @param id - Identificador de la sesion de entrenamiento
+    * @returns Sesion de entrenamiento completada
+    */
+   @ApiOperation({ summary: 'Completar sesion de entrenamiento' })
+   @ApiOkResponse({
+      description: 'Sesion de entrenamiento completada correctamente.',
+      type: WorkoutSessionResponseDto,
+   })
+   @ApiNotFoundResponse({ description: 'Sesion de entrenamiento no encontrada.' })
+   @ApiConflictResponse({
+      description: 'La sesion de entrenamiento ya estaba completada.',
+   })
+   @Post(':id/complete')
+   completeSession(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string): Promise<WorkoutSessionResponseDto> {
+      return this.workoutSessionsService.completeSession(user, id);
+   }
 }

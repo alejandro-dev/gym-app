@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, UserRole } from '@prisma/client';
 import { handlePrismaError } from '../prisma/prisma-error.util';
 import { PrismaService } from '../prisma/prisma.service';
+import { WorkoutProducer } from '../bullmq/workout.producer';
 import { CreateWorkoutSessionDto } from './dto/create-workout-session.dto';
 import { UpdateWorkoutSessionDto } from './dto/update-workout-session.dto';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
@@ -16,7 +17,7 @@ export class WorkoutSessionsService {
     *
     * @param prisma - Cliente de Prisma compartido por la aplicación
     */
-   constructor(private readonly prisma: PrismaService) {}
+   constructor(private readonly prisma: PrismaService, private readonly workoutProducer: WorkoutProducer) {}
 
    /**
     * Selecciona los campos de una sesion de entrenamiento para la consulta.
@@ -97,7 +98,7 @@ export class WorkoutSessionsService {
     */
    async update(user: AuthenticatedUser, id: string, updateWorkoutSessionDto: UpdateWorkoutSessionDto) {
       // Verificamos si la sesion existe
-      await this.ensureWorkoutSessionExists(user, id);
+      await this.getWorkoutSessionForUser(user, id);
 
       try {
          return await this.prisma.workoutSession.update({
@@ -121,12 +122,41 @@ export class WorkoutSessionsService {
     */
    async remove(user: AuthenticatedUser, id: string) {
       // Verificamos si la sesion existe
-      await this.ensureWorkoutSessionExists(user, id);
+      await this.getWorkoutSessionForUser(user, id);
 
       return await this.prisma.workoutSession.delete({
          where: { id },
          select: this.workoutSessionSelect,
       });
+   }
+
+   /**
+    * Completa una sesion de entrenamiento.
+    *
+    * @param user - Usuario autenticado
+    * @param id - Identificador de la sesion de entrenamiento
+    * @returns Sesion de entrenamiento completada
+    * @throws NotFoundException si no existe
+    */
+   async completeSession(user: AuthenticatedUser, id: string) {
+      const existingSession = await this.getWorkoutSessionForUser(user, id);
+
+      if (existingSession.endedAt) {
+         throw new ConflictException(`Workout session with id "${id}" is already completed`);
+      }
+
+      const session = await this.prisma.workoutSession.update({
+         where: { id },
+         data: {
+            endedAt: new Date()
+         },
+         select: this.workoutSessionSelect,
+      });
+
+      // En el canal de workouts, enviamos un mensaje de completado
+      await this.workoutProducer.enqueueWorkoutCompleted(session.id, session.userId);
+
+      return session;
    }
 
    /**
@@ -192,20 +222,21 @@ export class WorkoutSessionsService {
    }
 
    /**
-    * Verifica si la sesion de entrenamiento existe antes de actualizar o eliminar.
+    * Obtiene una sesion de entrenamiento accesible para el usuario autenticado.
     *
     * @param user - Usuario autenticado
     * @param id - Identificador de la sesion de entrenamiento
-    * @returns Promesa resuelta cuando la sesion existe y es accesible para el usuario
+    * @returns Sesion de entrenamiento encontrada
     * @throws NotFoundException si no existe
     */
-   private async ensureWorkoutSessionExists(user: AuthenticatedUser, id: string) {
+   private async getWorkoutSessionForUser(user: AuthenticatedUser, id: string) {
       const workoutSession = await this.prisma.workoutSession.findUnique({
-         where: { id, userId: user.role === UserRole.ADMIN || user.role === UserRole.COACH ? undefined : user.sub },
-         select: { id: true, userId: true },
+         where: { id, userId: user.role === UserRole.USER ? user.sub : undefined },
+         select: { id: true, userId: true, endedAt: true },
       });
 
-      // Si no existe lanza NotFoundException
       if (!workoutSession) throw new NotFoundException(`Workout session with id "${id}" not found`);
+
+      return workoutSession;
    }
 }

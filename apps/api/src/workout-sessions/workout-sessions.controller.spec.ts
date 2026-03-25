@@ -43,6 +43,7 @@ describe('WorkoutSessionsController', () => {
 		findOne: jest.fn(),
 		update: jest.fn(),
 		remove: jest.fn(),
+		completeSession: jest.fn(),
 	};
 
 	const createWorkoutSessionDto: CreateWorkoutSessionDto = {
@@ -184,6 +185,23 @@ describe('WorkoutSessionsController', () => {
 			const result = await (controller as any).remove(currentUser, workoutSessionRecord.id);
 
 			expect(workoutSessionsServiceMock.remove).toHaveBeenCalledWith(
+				currentUser,
+				workoutSessionRecord.id,
+			);
+			expect(result).toEqual(workoutSessionRecord);
+		});
+	});
+
+	describe('completeSession', () => {
+		it('delegates to workoutSessionsService.completeSession', async () => {
+			workoutSessionsServiceMock.completeSession.mockResolvedValue(workoutSessionRecord);
+
+			const result = await (controller as any).completeSession(
+				currentUser,
+				workoutSessionRecord.id,
+			);
+
+			expect(workoutSessionsServiceMock.completeSession).toHaveBeenCalledWith(
 				currentUser,
 				workoutSessionRecord.id,
 			);

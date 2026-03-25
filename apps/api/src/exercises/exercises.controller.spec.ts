@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { MuscleGroup } from '@prisma/client';
+import { ExerciseCategory, MuscleGroup } from '@prisma/client';
 import { ExercisesController } from './exercises.controller';
 import { ExercisesService } from './exercises.service';
 
@@ -9,6 +9,7 @@ type CreateExerciseDto = {
 	description: string | null;
 	instructions: string | null;
 	muscleGroup: MuscleGroup;
+	category: ExerciseCategory;
 	equipment: string | null;
 	isCompound: boolean;
 };
@@ -32,6 +33,7 @@ describe('ExercisesController', () => {
 		description: 'Horizontal pressing movement.',
 		instructions: 'Lower under control and press to lockout.',
 		muscleGroup: MuscleGroup.CHEST,
+		category: ExerciseCategory.STRENGTH,
 		equipment: 'Barbell',
 		isCompound: true,
 	};

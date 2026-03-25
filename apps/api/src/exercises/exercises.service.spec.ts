@@ -3,7 +3,7 @@ import {
 	NotFoundException,
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { MuscleGroup, Prisma } from '@prisma/client';
+import { ExerciseCategory, MuscleGroup, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ExercisesService } from './exercises.service';
 
@@ -13,6 +13,7 @@ type CreateExerciseDto = {
 	description: string | null;
 	instructions: string | null;
 	muscleGroup: MuscleGroup;
+	category: ExerciseCategory;
 	equipment: string | null;
 	isCompound: boolean;
 };
@@ -26,6 +27,7 @@ type ExerciseRecord = {
 	description: string | null;
 	instructions: string | null;
 	muscleGroup: MuscleGroup;
+	category: ExerciseCategory;
 	equipment: string | null;
 	isCompound: boolean;
 	createdAt: Date;
@@ -51,6 +53,7 @@ describe('ExercisesService', () => {
 		description: 'Classic lower-body strength exercise.',
 		instructions: 'Brace, descend below parallel, and drive up.',
 		muscleGroup: MuscleGroup.LEGS,
+		category: ExerciseCategory.STRENGTH,
 		equipment: 'Barbell',
 		isCompound: true,
 	};
@@ -104,6 +107,7 @@ describe('ExercisesService', () => {
 					description: true,
 					instructions: true,
 					muscleGroup: true,
+					category: true,
 					equipment: true,
 					isCompound: true,
 					createdAt: true,
@@ -152,6 +156,7 @@ describe('ExercisesService', () => {
 					description: true,
 					instructions: true,
 					muscleGroup: true,
+					category: true,
 					equipment: true,
 					isCompound: true,
 					createdAt: true,
@@ -180,6 +185,7 @@ describe('ExercisesService', () => {
 					description: true,
 					instructions: true,
 					muscleGroup: true,
+					category: true,
 					equipment: true,
 					isCompound: true,
 					createdAt: true,
@@ -220,6 +226,7 @@ describe('ExercisesService', () => {
 					description: updatedExerciseDto.description,
 					instructions: undefined,
 					muscleGroup: undefined,
+					category: undefined,
 					equipment: updatedExerciseDto.equipment,
 					isCompound: undefined,
 				},
@@ -230,6 +237,7 @@ describe('ExercisesService', () => {
 					description: true,
 					instructions: true,
 					muscleGroup: true,
+					category: true,
 					equipment: true,
 					isCompound: true,
 					createdAt: true,
