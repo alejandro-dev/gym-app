@@ -3,7 +3,7 @@ import { WorkoutPlansController } from './workout-plans.controller';
 import { WorkoutPlansService } from './workout-plans.service';
 
 @Module({
-  controllers: [WorkoutPlansController],
-  providers: [WorkoutPlansService],
+   controllers: [WorkoutPlansController],
+   providers: [WorkoutPlansService],
 })
 export class WorkoutPlansModule {}

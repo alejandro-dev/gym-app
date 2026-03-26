@@ -8,297 +8,297 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 type AuthResponseBody = {
-  user: {
-    id: string;
-    email: string;
-    role: UserRole;
-  };
-  accessToken: string;
+   user: {
+      id: string;
+      email: string;
+      role: UserRole;
+   };
+   accessToken: string;
 };
 
 type ExerciseListItem = {
-  id: string;
+   id: string;
 };
 
 describe('ExercisesController (e2e)', () => {
-  let app: INestApplication<App>;
-  let prisma: PrismaService;
-  let adminAccessToken: string;
-  let userAccessToken: string;
-  const anyString = expect.any(String) as unknown as string;
+   let app: INestApplication<App>;
+   let prisma: PrismaService;
+   let adminAccessToken: string;
+   let userAccessToken: string;
+   const anyString = expect.any(String) as unknown as string;
 
-  beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+   beforeAll(async () => {
+      const moduleFixture: TestingModule = await Test.createTestingModule({
+         imports: [AppModule],
+      }).compile();
 
-    app = moduleFixture.createNestApplication();
-    app.use(cookieParser());
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-      }),
-    );
+      app = moduleFixture.createNestApplication();
+      app.use(cookieParser());
+      app.useGlobalPipes(
+         new ValidationPipe({
+            transform: true,
+            whitelist: true,
+            forbidNonWhitelisted: true,
+         }),
+      );
 
-    prisma = moduleFixture.get(PrismaService);
+      prisma = moduleFixture.get(PrismaService);
 
-    await app.init();
-    await cleanDatabase();
+      await app.init();
+      await cleanDatabase();
 
-    adminAccessToken = await createAuthenticatedUser(UserRole.ADMIN);
-    userAccessToken = await createAuthenticatedUser(UserRole.USER);
-  });
+      adminAccessToken = await createAuthenticatedUser(UserRole.ADMIN);
+      userAccessToken = await createAuthenticatedUser(UserRole.USER);
+   });
 
-  beforeEach(async () => {
-    await prisma.personalRecord.deleteMany();
-    await prisma.workoutSet.deleteMany();
-    await prisma.workoutPlanExercise.deleteMany();
-    await prisma.workoutSession.deleteMany();
-    await prisma.workoutPlan.deleteMany();
-    await prisma.exercise.deleteMany();
-  });
+   beforeEach(async () => {
+      await prisma.personalRecord.deleteMany();
+      await prisma.workoutSet.deleteMany();
+      await prisma.workoutPlanExercise.deleteMany();
+      await prisma.workoutSession.deleteMany();
+      await prisma.workoutPlan.deleteMany();
+      await prisma.exercise.deleteMany();
+   });
 
-  afterAll(async () => {
-    await cleanDatabase();
-    await app.close();
-  });
+   afterAll(async () => {
+      await cleanDatabase();
+      await app.close();
+   });
 
-  it('rejects requests without an access token', async () => {
-    await request(app.getHttpServer()).get('/exercises').expect(401);
-  });
+   it('rejects requests without an access token', async () => {
+      await request(app.getHttpServer()).get('/exercises').expect(401);
+   });
 
-  it('allows authenticated users with USER role to list exercises', async () => {
-    await request(app.getHttpServer())
-      .get('/exercises')
-      .set('Authorization', `Bearer ${userAccessToken}`)
-      .expect(200);
-  });
+   it('allows authenticated users with USER role to list exercises', async () => {
+      await request(app.getHttpServer())
+         .get('/exercises')
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .expect(200);
+   });
 
-  it('creates an exercise', async () => {
-    const payload = buildCreateExercisePayload('back-squat');
+   it('creates an exercise', async () => {
+      const payload = buildCreateExercisePayload('back-squat');
 
-    const response = await request(app.getHttpServer())
-      .post('/exercises')
-      .set('Authorization', `Bearer ${adminAccessToken}`)
-      .send(payload)
-      .expect(201);
-    const createdExercise = response.body as Record<string, unknown>;
+      const response = await request(app.getHttpServer())
+         .post('/exercises')
+         .set('Authorization', `Bearer ${adminAccessToken}`)
+         .send(payload)
+         .expect(201);
+      const createdExercise = response.body as Record<string, unknown>;
 
-    expect(createdExercise).toEqual(
-      expect.objectContaining({
-        name: payload.name,
-        slug: payload.slug,
-        description: payload.description,
-        instructions: payload.instructions,
-        muscleGroup: payload.muscleGroup,
-        category: payload.category,
-        equipment: payload.equipment,
-        isCompound: payload.isCompound,
-        id: anyString,
-        createdAt: anyString,
-        updatedAt: anyString,
-      }),
-    );
-  });
+      expect(createdExercise).toEqual(
+         expect.objectContaining({
+            name: payload.name,
+            slug: payload.slug,
+            description: payload.description,
+            instructions: payload.instructions,
+            muscleGroup: payload.muscleGroup,
+            category: payload.category,
+            equipment: payload.equipment,
+            isCompound: payload.isCompound,
+            id: anyString,
+            createdAt: anyString,
+            updatedAt: anyString,
+         }),
+      );
+   });
 
-  it('returns 409 when creating an exercise with duplicate name or slug', async () => {
-    const payload = buildCreateExercisePayload('deadlift');
+   it('returns 409 when creating an exercise with duplicate name or slug', async () => {
+      const payload = buildCreateExercisePayload('deadlift');
 
-    await prisma.exercise.create({
-      data: payload,
-    });
+      await prisma.exercise.create({
+         data: payload,
+      });
 
-    await request(app.getHttpServer())
-      .post('/exercises')
-      .set('Authorization', `Bearer ${adminAccessToken}`)
-      .send(payload)
-      .expect(409);
-  });
+      await request(app.getHttpServer())
+         .post('/exercises')
+         .set('Authorization', `Bearer ${adminAccessToken}`)
+         .send(payload)
+         .expect(409);
+   });
 
-  it('lists exercises', async () => {
-    const firstExercise = await prisma.exercise.create({
-      data: buildCreateExercisePayload('bench-press'),
-    });
-    const secondExercise = await prisma.exercise.create({
-      data: buildCreateExercisePayload('pull-up'),
-    });
+   it('lists exercises', async () => {
+      const firstExercise = await prisma.exercise.create({
+         data: buildCreateExercisePayload('bench-press'),
+      });
+      const secondExercise = await prisma.exercise.create({
+         data: buildCreateExercisePayload('pull-up'),
+      });
 
-    const response = await request(app.getHttpServer())
-      .get('/exercises')
-      .set('Authorization', `Bearer ${adminAccessToken}`)
-      .expect(200);
-    const exercises = response.body as ExerciseListItem[];
+      const response = await request(app.getHttpServer())
+         .get('/exercises')
+         .set('Authorization', `Bearer ${adminAccessToken}`)
+         .expect(200);
+      const exercises = response.body as ExerciseListItem[];
 
-    expect(exercises).toHaveLength(2);
-    expect(exercises.map((exercise) => exercise.id)).toEqual(
-      expect.arrayContaining([firstExercise.id, secondExercise.id]),
-    );
-  });
+      expect(exercises).toHaveLength(2);
+      expect(exercises.map((exercise) => exercise.id)).toEqual(
+         expect.arrayContaining([firstExercise.id, secondExercise.id]),
+      );
+   });
 
-  it('returns an exercise by id', async () => {
-    const exercise = await prisma.exercise.create({
-      data: buildCreateExercisePayload('romanian-deadlift'),
-    });
+   it('returns an exercise by id', async () => {
+      const exercise = await prisma.exercise.create({
+         data: buildCreateExercisePayload('romanian-deadlift'),
+      });
 
-    const response = await request(app.getHttpServer())
-      .get(`/exercises/${exercise.id}`)
-      .set('Authorization', `Bearer ${adminAccessToken}`)
-      .expect(200);
+      const response = await request(app.getHttpServer())
+         .get(`/exercises/${exercise.id}`)
+         .set('Authorization', `Bearer ${adminAccessToken}`)
+         .expect(200);
 
-    expect(response.body).toEqual(
-      expect.objectContaining({
-        id: exercise.id,
-        name: exercise.name,
-        slug: exercise.slug,
-      }),
-    );
-  });
+      expect(response.body).toEqual(
+         expect.objectContaining({
+            id: exercise.id,
+            name: exercise.name,
+            slug: exercise.slug,
+         }),
+      );
+   });
 
-  it('returns 404 when the exercise does not exist', async () => {
-    await request(app.getHttpServer())
-      .get('/exercises/missing-exercise-id')
-      .set('Authorization', `Bearer ${adminAccessToken}`)
-      .expect(404);
-  });
+   it('returns 404 when the exercise does not exist', async () => {
+      await request(app.getHttpServer())
+         .get('/exercises/missing-exercise-id')
+         .set('Authorization', `Bearer ${adminAccessToken}`)
+         .expect(404);
+   });
 
-  it('updates an exercise', async () => {
-    const exercise = await prisma.exercise.create({
-      data: buildCreateExercisePayload('overhead-press'),
-    });
+   it('updates an exercise', async () => {
+      const exercise = await prisma.exercise.create({
+         data: buildCreateExercisePayload('overhead-press'),
+      });
 
-    const response = await request(app.getHttpServer())
-      .patch(`/exercises/${exercise.id}`)
-      .set('Authorization', `Bearer ${adminAccessToken}`)
-      .send({
-        description: 'Updated overhead pressing exercise.',
-        equipment: 'Dumbbells',
-      })
-      .expect(200);
+      const response = await request(app.getHttpServer())
+         .patch(`/exercises/${exercise.id}`)
+         .set('Authorization', `Bearer ${adminAccessToken}`)
+         .send({
+            description: 'Updated overhead pressing exercise.',
+            equipment: 'Dumbbells',
+         })
+         .expect(200);
 
-    expect(response.body).toEqual(
-      expect.objectContaining({
-        id: exercise.id,
-        description: 'Updated overhead pressing exercise.',
-        equipment: 'Dumbbells',
-      }),
-    );
-  });
+      expect(response.body).toEqual(
+         expect.objectContaining({
+            id: exercise.id,
+            description: 'Updated overhead pressing exercise.',
+            equipment: 'Dumbbells',
+         }),
+      );
+   });
 
-  it('returns 404 when updating a missing exercise', async () => {
-    await request(app.getHttpServer())
-      .patch('/exercises/missing-exercise-id')
-      .set('Authorization', `Bearer ${adminAccessToken}`)
-      .send({ description: 'Does not exist' })
-      .expect(404);
-  });
+   it('returns 404 when updating a missing exercise', async () => {
+      await request(app.getHttpServer())
+         .patch('/exercises/missing-exercise-id')
+         .set('Authorization', `Bearer ${adminAccessToken}`)
+         .send({ description: 'Does not exist' })
+         .expect(404);
+   });
 
-  it('returns 409 when updating to a duplicate slug', async () => {
-    const firstExercise = await prisma.exercise.create({
-      data: buildCreateExercisePayload('front-squat'),
-    });
-    const secondExercise = await prisma.exercise.create({
-      data: buildCreateExercisePayload('leg-press'),
-    });
+   it('returns 409 when updating to a duplicate slug', async () => {
+      const firstExercise = await prisma.exercise.create({
+         data: buildCreateExercisePayload('front-squat'),
+      });
+      const secondExercise = await prisma.exercise.create({
+         data: buildCreateExercisePayload('leg-press'),
+      });
 
-    await request(app.getHttpServer())
-      .patch(`/exercises/${firstExercise.id}`)
-      .set('Authorization', `Bearer ${adminAccessToken}`)
-      .send({ slug: secondExercise.slug })
-      .expect(409);
-  });
+      await request(app.getHttpServer())
+         .patch(`/exercises/${firstExercise.id}`)
+         .set('Authorization', `Bearer ${adminAccessToken}`)
+         .send({ slug: secondExercise.slug })
+         .expect(409);
+   });
 
-  it('deletes an exercise', async () => {
-    const exercise = await prisma.exercise.create({
-      data: buildCreateExercisePayload('hip-thrust'),
-    });
+   it('deletes an exercise', async () => {
+      const exercise = await prisma.exercise.create({
+         data: buildCreateExercisePayload('hip-thrust'),
+      });
 
-    const response = await request(app.getHttpServer())
-      .delete(`/exercises/${exercise.id}`)
-      .set('Authorization', `Bearer ${adminAccessToken}`)
-      .expect(200);
+      const response = await request(app.getHttpServer())
+         .delete(`/exercises/${exercise.id}`)
+         .set('Authorization', `Bearer ${adminAccessToken}`)
+         .expect(200);
 
-    expect(response.body).toEqual(
-      expect.objectContaining({
-        id: exercise.id,
-        name: exercise.name,
-      }),
-    );
+      expect(response.body).toEqual(
+         expect.objectContaining({
+            id: exercise.id,
+            name: exercise.name,
+         }),
+      );
 
-    await expect(
-      prisma.exercise.findUnique({ where: { id: exercise.id } }),
-    ).resolves.toBeNull();
-  });
+      await expect(
+         prisma.exercise.findUnique({ where: { id: exercise.id } }),
+      ).resolves.toBeNull();
+   });
 
-  it('returns 404 when deleting a missing exercise', async () => {
-    await request(app.getHttpServer())
-      .delete('/exercises/missing-exercise-id')
-      .set('Authorization', `Bearer ${adminAccessToken}`)
-      .expect(404);
-  });
+   it('returns 404 when deleting a missing exercise', async () => {
+      await request(app.getHttpServer())
+         .delete('/exercises/missing-exercise-id')
+         .set('Authorization', `Bearer ${adminAccessToken}`)
+         .expect(404);
+   });
 
-  async function createAuthenticatedUser(role: UserRole) {
-    const email = `${role.toLowerCase()}-${Date.now()}-${Math.random()
-      .toString(36)
-      .slice(2)}@example.com`;
-    const password = 'supersecreto123';
+   async function createAuthenticatedUser(role: UserRole) {
+      const email = `${role.toLowerCase()}-${Date.now()}-${Math.random()
+         .toString(36)
+         .slice(2)}@example.com`;
+      const password = 'supersecreto123';
 
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        email,
-        password,
-        username: email.split('@')[0],
-        firstName: role,
-      })
-      .expect(201);
+      await request(app.getHttpServer())
+         .post('/auth/register')
+         .send({
+            email,
+            password,
+            username: email.split('@')[0],
+            firstName: role,
+         })
+         .expect(201);
 
-    const user = await prisma.user.update({
-      where: { email },
-      data: { role },
-    });
+      const user = await prisma.user.update({
+         where: { email },
+         data: { role },
+      });
 
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email,
-        password,
-      })
-      .expect(201);
-    const loginBody = loginResponse.body as AuthResponseBody;
+      const loginResponse = await request(app.getHttpServer())
+         .post('/auth/login')
+         .send({
+            email,
+            password,
+         })
+         .expect(201);
+      const loginBody = loginResponse.body as AuthResponseBody;
 
-    expect(loginBody.user).toEqual(
-      expect.objectContaining({
-        id: user.id,
-        email,
-        role,
-      }),
-    );
+      expect(loginBody.user).toEqual(
+         expect.objectContaining({
+            id: user.id,
+            email,
+            role,
+         }),
+      );
 
-    return loginBody.accessToken;
-  }
+      return loginBody.accessToken;
+   }
 
-  function buildCreateExercisePayload(suffix: string) {
-    return {
-      name: `Exercise ${suffix}`,
-      slug: `exercise-${suffix}`,
-      description: `Description for ${suffix}`,
-      instructions: `Instructions for ${suffix}`,
-      muscleGroup: MuscleGroup.LEGS,
-      category: ExerciseCategory.STRENGTH,
-      equipment: 'Barbell',
-      isCompound: true,
-    };
-  }
+   function buildCreateExercisePayload(suffix: string) {
+      return {
+         name: `Exercise ${suffix}`,
+         slug: `exercise-${suffix}`,
+         description: `Description for ${suffix}`,
+         instructions: `Instructions for ${suffix}`,
+         muscleGroup: MuscleGroup.LEGS,
+         category: ExerciseCategory.STRENGTH,
+         equipment: 'Barbell',
+         isCompound: true,
+      };
+   }
 
-  async function cleanDatabase() {
-    await prisma.personalRecord.deleteMany();
-    await prisma.workoutSet.deleteMany();
-    await prisma.workoutPlanExercise.deleteMany();
-    await prisma.workoutSession.deleteMany();
-    await prisma.workoutPlan.deleteMany();
-    await prisma.exercise.deleteMany();
-    await prisma.user.deleteMany();
-  }
+   async function cleanDatabase() {
+      await prisma.personalRecord.deleteMany();
+      await prisma.workoutSet.deleteMany();
+      await prisma.workoutPlanExercise.deleteMany();
+      await prisma.workoutSession.deleteMany();
+      await prisma.workoutPlan.deleteMany();
+      await prisma.exercise.deleteMany();
+      await prisma.user.deleteMany();
+   }
 });

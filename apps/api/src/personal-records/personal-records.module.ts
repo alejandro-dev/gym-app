@@ -6,7 +6,7 @@ import { PersonalRecordsController } from './personal-records.controller';
  * Modulo de funcionalidad para el dominio de records personales.
  */
 @Module({
-  providers: [PersonalRecordsService],
-  controllers: [PersonalRecordsController],
+   providers: [PersonalRecordsService],
+   controllers: [PersonalRecordsController],
 })
 export class PersonalRecordsModule {}

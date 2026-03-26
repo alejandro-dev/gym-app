@@ -11,49 +11,49 @@ import { UserRegisteredJobData } from './auth.producer';
  */
 @Processor(AUTH_QUEUE)
 export class AuthProcessor extends WorkerHost {
-  private readonly logger = new Logger(AuthProcessor.name);
+   private readonly logger = new Logger(AuthProcessor.name);
 
-  /**
-   * Crea una nueva instancia del procesador de BullMQ.
-   *
-   * @param emailsService - Servicio de envío de e-mails
-   */
-  constructor(
-    private readonly emailsService: EmailsService,
-    private readonly configService: ConfigService,
-  ) {
-    super();
-  }
+   /**
+    * Crea una nueva instancia del procesador de BullMQ.
+    *
+    * @param emailsService - Servicio de envío de e-mails
+    */
+   constructor(
+      private readonly emailsService: EmailsService,
+      private readonly configService: ConfigService,
+   ) {
+      super();
+   }
 
-  async process(job: Job<UserRegisteredJobData>): Promise<void> {
-    switch (job.name) {
-      case AUTH_JOBS.USER_REGISTERED:
-        await this.handleUserRegistered(job);
-        break;
-      default:
-        this.logger.warn(`Job no manejado: ${job.name}`);
-    }
-  }
+   async process(job: Job<UserRegisteredJobData>): Promise<void> {
+      switch (job.name) {
+         case AUTH_JOBS.USER_REGISTERED:
+            await this.handleUserRegistered(job);
+            break;
+         default:
+            this.logger.warn(`Job no manejado: ${job.name}`);
+      }
+   }
 
-  private async handleUserRegistered(job: Job<UserRegisteredJobData>) {
-    const { email, firstName, emailVerificationToken } = job.data;
+   private async handleUserRegistered(job: Job<UserRegisteredJobData>) {
+      const { email, firstName, emailVerificationToken } = job.data;
 
-    // Construimos la URL de verificación de email
-    const appBaseUrl = this.configService.get<string>(
-      'APP_BASE_URL',
-      'http://localhost:3000',
-    );
+      // Construimos la URL de verificación de email
+      const appBaseUrl = this.configService.get<string>(
+         'APP_BASE_URL',
+         'http://localhost:3000',
+      );
 
-    // La URL de verificación de email es la base de la aplicación + el token de verificación
-    const verificationUrl = `${appBaseUrl}/auth/verify-email?token=${emailVerificationToken}`;
+      // La URL de verificación de email es la base de la aplicación + el token de verificación
+      const verificationUrl = `${appBaseUrl}/auth/verify-email?token=${emailVerificationToken}`;
 
-    // Enviamos un e-mail de verificación
-    await this.emailsService.sendWelcomeVerificationEmail({
-      email,
-      firstName,
-      verificationUrl,
-    });
+      // Enviamos un e-mail de verificación
+      await this.emailsService.sendWelcomeVerificationEmail({
+         email,
+         firstName,
+         verificationUrl,
+      });
 
-    this.logger.log(`Correo de verificacion enviado a ${email}`);
-  }
+      this.logger.log(`Correo de verificacion enviado a ${email}`);
+   }
 }

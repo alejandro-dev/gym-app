@@ -8,415 +8,415 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 type AuthResponseBody = {
-  user: {
-    id: string;
-    email: string;
-    role: UserRole;
-  };
-  accessToken: string;
+   user: {
+      id: string;
+      email: string;
+      role: UserRole;
+   };
+   accessToken: string;
 };
 
 type WorkoutPlanExerciseListItem = {
-  id: string;
+   id: string;
 };
 
 describe('WorkoutPlanExerciseController (e2e)', () => {
-  let app: INestApplication<App>;
-  let prisma: PrismaService;
-  let ownerUserId: string;
-  let userAccessToken: string;
-  let workoutPlanId: string;
-  let firstExerciseId: string;
-  let secondExerciseId: string;
-  const anyString = expect.any(String) as unknown as string;
+   let app: INestApplication<App>;
+   let prisma: PrismaService;
+   let ownerUserId: string;
+   let userAccessToken: string;
+   let workoutPlanId: string;
+   let firstExerciseId: string;
+   let secondExerciseId: string;
+   const anyString = expect.any(String) as unknown as string;
 
-  beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+   beforeAll(async () => {
+      const moduleFixture: TestingModule = await Test.createTestingModule({
+         imports: [AppModule],
+      }).compile();
 
-    app = moduleFixture.createNestApplication();
-    app.use(cookieParser());
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-      }),
-    );
+      app = moduleFixture.createNestApplication();
+      app.use(cookieParser());
+      app.useGlobalPipes(
+         new ValidationPipe({
+            transform: true,
+            whitelist: true,
+            forbidNonWhitelisted: true,
+         }),
+      );
 
-    prisma = moduleFixture.get(PrismaService);
+      prisma = moduleFixture.get(PrismaService);
 
-    await app.init();
-    await cleanDatabase();
+      await app.init();
+      await cleanDatabase();
 
-    userAccessToken = await createAuthenticatedUser(UserRole.USER);
-    const user = await prisma.user.findFirstOrThrow({
-      where: { email: { contains: 'user-' } },
-      orderBy: { createdAt: 'desc' },
-    });
-    ownerUserId = user.id;
-  });
+      userAccessToken = await createAuthenticatedUser(UserRole.USER);
+      const user = await prisma.user.findFirstOrThrow({
+         where: { email: { contains: 'user-' } },
+         orderBy: { createdAt: 'desc' },
+      });
+      ownerUserId = user.id;
+   });
 
-  beforeEach(async () => {
-    await prisma.personalRecord.deleteMany();
-    await prisma.workoutSet.deleteMany();
-    await prisma.workoutPlanExercise.deleteMany();
-    await prisma.workoutSession.deleteMany();
-    await prisma.workoutPlan.deleteMany();
-    await prisma.exercise.deleteMany();
+   beforeEach(async () => {
+      await prisma.personalRecord.deleteMany();
+      await prisma.workoutSet.deleteMany();
+      await prisma.workoutPlanExercise.deleteMany();
+      await prisma.workoutSession.deleteMany();
+      await prisma.workoutPlan.deleteMany();
+      await prisma.exercise.deleteMany();
 
-    const dependencies = await createBaseDependencies();
-    workoutPlanId = dependencies.workoutPlanId;
-    firstExerciseId = dependencies.firstExerciseId;
-    secondExerciseId = dependencies.secondExerciseId;
-  });
+      const dependencies = await createBaseDependencies();
+      workoutPlanId = dependencies.workoutPlanId;
+      firstExerciseId = dependencies.firstExerciseId;
+      secondExerciseId = dependencies.secondExerciseId;
+   });
 
-  afterAll(async () => {
-    await cleanDatabase();
-    await app.close();
-  });
+   afterAll(async () => {
+      await cleanDatabase();
+      await app.close();
+   });
 
-  it('creates a workout plan exercise', async () => {
-    const payload = buildCreateWorkoutPlanExercisePayload({
-      exerciseId: firstExerciseId,
-      order: 1,
-    });
+   it('creates a workout plan exercise', async () => {
+      const payload = buildCreateWorkoutPlanExercisePayload({
+         exerciseId: firstExerciseId,
+         order: 1,
+      });
 
-    const response = await request(app.getHttpServer())
-      .post('/workout-plan-exercises')
-      .set('Authorization', `Bearer ${userAccessToken}`)
-      .send(payload)
-      .expect(201);
-    const createdRecord = response.body as Record<string, unknown>;
+      const response = await request(app.getHttpServer())
+         .post('/workout-plan-exercises')
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .send(payload)
+         .expect(201);
+      const createdRecord = response.body as Record<string, unknown>;
 
-    expect(createdRecord).toEqual(
-      expect.objectContaining({
-        workoutPlanId: payload.workoutPlanId,
-        exerciseId: payload.exerciseId,
-        order: payload.order,
-        targetSets: payload.targetSets,
-        targetRepsMin: payload.targetRepsMin,
-        targetRepsMax: payload.targetRepsMax,
-        targetWeightKg: payload.targetWeightKg,
-        restSeconds: payload.restSeconds,
-        notes: payload.notes,
-        id: anyString,
-      }),
-    );
-  });
+      expect(createdRecord).toEqual(
+         expect.objectContaining({
+            workoutPlanId: payload.workoutPlanId,
+            exerciseId: payload.exerciseId,
+            order: payload.order,
+            targetSets: payload.targetSets,
+            targetRepsMin: payload.targetRepsMin,
+            targetRepsMax: payload.targetRepsMax,
+            targetWeightKg: payload.targetWeightKg,
+            restSeconds: payload.restSeconds,
+            notes: payload.notes,
+            id: anyString,
+         }),
+      );
+   });
 
-  it('returns 409 when creating a duplicate order within the same workout plan', async () => {
-    await prisma.workoutPlanExercise.create({
-      data: {
-        workoutPlan: { connect: { id: workoutPlanId } },
-        exercise: { connect: { id: firstExerciseId } },
-        order: 1,
-      },
-    });
+   it('returns 409 when creating a duplicate order within the same workout plan', async () => {
+      await prisma.workoutPlanExercise.create({
+         data: {
+            workoutPlan: { connect: { id: workoutPlanId } },
+            exercise: { connect: { id: firstExerciseId } },
+            order: 1,
+         },
+      });
 
-    await request(app.getHttpServer())
-      .post('/workout-plan-exercises')
-      .set('Authorization', `Bearer ${userAccessToken}`)
-      .send(
-        buildCreateWorkoutPlanExercisePayload({
-          exerciseId: secondExerciseId,
-          order: 1,
-        }),
-      )
-      .expect(409);
-  });
+      await request(app.getHttpServer())
+         .post('/workout-plan-exercises')
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .send(
+            buildCreateWorkoutPlanExercisePayload({
+               exerciseId: secondExerciseId,
+               order: 1,
+            }),
+         )
+         .expect(409);
+   });
 
-  it('lists workout plan exercises ordered by workout plan and order', async () => {
-    const firstRecord = await prisma.workoutPlanExercise.create({
-      data: {
-        workoutPlan: { connect: { id: workoutPlanId } },
-        exercise: { connect: { id: firstExerciseId } },
-        order: 1,
-      },
-    });
+   it('lists workout plan exercises ordered by workout plan and order', async () => {
+      const firstRecord = await prisma.workoutPlanExercise.create({
+         data: {
+            workoutPlan: { connect: { id: workoutPlanId } },
+            exercise: { connect: { id: firstExerciseId } },
+            order: 1,
+         },
+      });
 
-    const secondRecord = await prisma.workoutPlanExercise.create({
-      data: {
-        workoutPlan: { connect: { id: workoutPlanId } },
-        exercise: { connect: { id: secondExerciseId } },
-        order: 2,
-      },
-    });
+      const secondRecord = await prisma.workoutPlanExercise.create({
+         data: {
+            workoutPlan: { connect: { id: workoutPlanId } },
+            exercise: { connect: { id: secondExerciseId } },
+            order: 2,
+         },
+      });
 
-    const response = await request(app.getHttpServer())
-      .get('/workout-plan-exercises')
-      .set('Authorization', `Bearer ${userAccessToken}`)
-      .expect(200);
-    const exercises = response.body as WorkoutPlanExerciseListItem[];
+      const response = await request(app.getHttpServer())
+         .get('/workout-plan-exercises')
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .expect(200);
+      const exercises = response.body as WorkoutPlanExerciseListItem[];
 
-    expect(exercises).toHaveLength(2);
-    expect(exercises[0]).toEqual(
-      expect.objectContaining({
-        id: firstRecord.id,
-      }),
-    );
-    expect(exercises[1]).toEqual(
-      expect.objectContaining({
-        id: secondRecord.id,
-      }),
-    );
-  });
+      expect(exercises).toHaveLength(2);
+      expect(exercises[0]).toEqual(
+         expect.objectContaining({
+            id: firstRecord.id,
+         }),
+      );
+      expect(exercises[1]).toEqual(
+         expect.objectContaining({
+            id: secondRecord.id,
+         }),
+      );
+   });
 
-  it('returns a workout plan exercise by id', async () => {
-    const workoutPlanExercise = await prisma.workoutPlanExercise.create({
-      data: {
-        workoutPlan: { connect: { id: workoutPlanId } },
-        exercise: { connect: { id: firstExerciseId } },
-        order: 1,
-        targetSets: 4,
-      },
-    });
+   it('returns a workout plan exercise by id', async () => {
+      const workoutPlanExercise = await prisma.workoutPlanExercise.create({
+         data: {
+            workoutPlan: { connect: { id: workoutPlanId } },
+            exercise: { connect: { id: firstExerciseId } },
+            order: 1,
+            targetSets: 4,
+         },
+      });
 
-    const response = await request(app.getHttpServer())
-      .get(`/workout-plan-exercises/${workoutPlanExercise.id}`)
-      .set('Authorization', `Bearer ${userAccessToken}`)
-      .expect(200);
+      const response = await request(app.getHttpServer())
+         .get(`/workout-plan-exercises/${workoutPlanExercise.id}`)
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .expect(200);
 
-    expect(response.body).toEqual(
-      expect.objectContaining({
-        id: workoutPlanExercise.id,
-        workoutPlanId,
-        exerciseId: firstExerciseId,
-        order: 1,
-        targetSets: 4,
-      }),
-    );
-  });
+      expect(response.body).toEqual(
+         expect.objectContaining({
+            id: workoutPlanExercise.id,
+            workoutPlanId,
+            exerciseId: firstExerciseId,
+            order: 1,
+            targetSets: 4,
+         }),
+      );
+   });
 
-  it('returns 404 when the workout plan exercise does not exist', async () => {
-    await request(app.getHttpServer())
-      .get('/workout-plan-exercises/missing-workout-plan-exercise-id')
-      .set('Authorization', `Bearer ${userAccessToken}`)
-      .expect(404);
-  });
+   it('returns 404 when the workout plan exercise does not exist', async () => {
+      await request(app.getHttpServer())
+         .get('/workout-plan-exercises/missing-workout-plan-exercise-id')
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .expect(404);
+   });
 
-  it('updates a workout plan exercise', async () => {
-    const workoutPlanExercise = await prisma.workoutPlanExercise.create({
-      data: {
-        workoutPlan: { connect: { id: workoutPlanId } },
-        exercise: { connect: { id: firstExerciseId } },
-        order: 1,
-        targetSets: 4,
-        notes: 'Initial notes',
-      },
-    });
+   it('updates a workout plan exercise', async () => {
+      const workoutPlanExercise = await prisma.workoutPlanExercise.create({
+         data: {
+            workoutPlan: { connect: { id: workoutPlanId } },
+            exercise: { connect: { id: firstExerciseId } },
+            order: 1,
+            targetSets: 4,
+            notes: 'Initial notes',
+         },
+      });
 
-    const response = await request(app.getHttpServer())
-      .patch(`/workout-plan-exercises/${workoutPlanExercise.id}`)
-      .set('Authorization', `Bearer ${userAccessToken}`)
-      .send({
-        order: 2,
-        targetSets: 5,
-        notes: 'Updated notes',
-      })
-      .expect(200);
+      const response = await request(app.getHttpServer())
+         .patch(`/workout-plan-exercises/${workoutPlanExercise.id}`)
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .send({
+            order: 2,
+            targetSets: 5,
+            notes: 'Updated notes',
+         })
+         .expect(200);
 
-    expect(response.body).toEqual(
-      expect.objectContaining({
-        id: workoutPlanExercise.id,
-        order: 2,
-        targetSets: 5,
-        notes: 'Updated notes',
-      }),
-    );
-  });
+      expect(response.body).toEqual(
+         expect.objectContaining({
+            id: workoutPlanExercise.id,
+            order: 2,
+            targetSets: 5,
+            notes: 'Updated notes',
+         }),
+      );
+   });
 
-  it('returns 400 when trying to update workoutPlanId or exerciseId', async () => {
-    const workoutPlanExercise = await prisma.workoutPlanExercise.create({
-      data: {
-        workoutPlan: { connect: { id: workoutPlanId } },
-        exercise: { connect: { id: firstExerciseId } },
-        order: 1,
-      },
-    });
+   it('returns 400 when trying to update workoutPlanId or exerciseId', async () => {
+      const workoutPlanExercise = await prisma.workoutPlanExercise.create({
+         data: {
+            workoutPlan: { connect: { id: workoutPlanId } },
+            exercise: { connect: { id: firstExerciseId } },
+            order: 1,
+         },
+      });
 
-    await request(app.getHttpServer())
-      .patch(`/workout-plan-exercises/${workoutPlanExercise.id}`)
-      .set('Authorization', `Bearer ${userAccessToken}`)
-      .send({
-        workoutPlanId: 'another-plan-id',
-        exerciseId: 'another-exercise-id',
-      })
-      .expect(400);
-  });
+      await request(app.getHttpServer())
+         .patch(`/workout-plan-exercises/${workoutPlanExercise.id}`)
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .send({
+            workoutPlanId: 'another-plan-id',
+            exerciseId: 'another-exercise-id',
+         })
+         .expect(400);
+   });
 
-  it('returns 404 when updating a missing workout plan exercise', async () => {
-    await request(app.getHttpServer())
-      .patch('/workout-plan-exercises/missing-workout-plan-exercise-id')
-      .set('Authorization', `Bearer ${userAccessToken}`)
-      .send({ notes: 'Does not exist' })
-      .expect(404);
-  });
+   it('returns 404 when updating a missing workout plan exercise', async () => {
+      await request(app.getHttpServer())
+         .patch('/workout-plan-exercises/missing-workout-plan-exercise-id')
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .send({ notes: 'Does not exist' })
+         .expect(404);
+   });
 
-  it('returns 409 when updating to a duplicate order within the same workout plan', async () => {
-    const firstRecord = await prisma.workoutPlanExercise.create({
-      data: {
-        workoutPlan: { connect: { id: workoutPlanId } },
-        exercise: { connect: { id: firstExerciseId } },
-        order: 1,
-      },
-    });
+   it('returns 409 when updating to a duplicate order within the same workout plan', async () => {
+      const firstRecord = await prisma.workoutPlanExercise.create({
+         data: {
+            workoutPlan: { connect: { id: workoutPlanId } },
+            exercise: { connect: { id: firstExerciseId } },
+            order: 1,
+         },
+      });
 
-    await prisma.workoutPlanExercise.create({
-      data: {
-        workoutPlan: { connect: { id: workoutPlanId } },
-        exercise: { connect: { id: secondExerciseId } },
-        order: 2,
-      },
-    });
+      await prisma.workoutPlanExercise.create({
+         data: {
+            workoutPlan: { connect: { id: workoutPlanId } },
+            exercise: { connect: { id: secondExerciseId } },
+            order: 2,
+         },
+      });
 
-    await request(app.getHttpServer())
-      .patch(`/workout-plan-exercises/${firstRecord.id}`)
-      .set('Authorization', `Bearer ${userAccessToken}`)
-      .send({ order: 2 })
-      .expect(409);
-  });
+      await request(app.getHttpServer())
+         .patch(`/workout-plan-exercises/${firstRecord.id}`)
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .send({ order: 2 })
+         .expect(409);
+   });
 
-  it('deletes a workout plan exercise', async () => {
-    const workoutPlanExercise = await prisma.workoutPlanExercise.create({
-      data: {
-        workoutPlan: { connect: { id: workoutPlanId } },
-        exercise: { connect: { id: firstExerciseId } },
-        order: 1,
-      },
-    });
+   it('deletes a workout plan exercise', async () => {
+      const workoutPlanExercise = await prisma.workoutPlanExercise.create({
+         data: {
+            workoutPlan: { connect: { id: workoutPlanId } },
+            exercise: { connect: { id: firstExerciseId } },
+            order: 1,
+         },
+      });
 
-    const response = await request(app.getHttpServer())
-      .delete(`/workout-plan-exercises/${workoutPlanExercise.id}`)
-      .set('Authorization', `Bearer ${userAccessToken}`)
-      .expect(200);
+      const response = await request(app.getHttpServer())
+         .delete(`/workout-plan-exercises/${workoutPlanExercise.id}`)
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .expect(200);
 
-    expect(response.body).toEqual(
-      expect.objectContaining({
-        id: workoutPlanExercise.id,
-        order: workoutPlanExercise.order,
-      }),
-    );
+      expect(response.body).toEqual(
+         expect.objectContaining({
+            id: workoutPlanExercise.id,
+            order: workoutPlanExercise.order,
+         }),
+      );
 
-    await expect(
-      prisma.workoutPlanExercise.findUnique({
-        where: { id: workoutPlanExercise.id },
-      }),
-    ).resolves.toBeNull();
-  });
+      await expect(
+         prisma.workoutPlanExercise.findUnique({
+            where: { id: workoutPlanExercise.id },
+         }),
+      ).resolves.toBeNull();
+   });
 
-  it('returns 404 when deleting a missing workout plan exercise', async () => {
-    await request(app.getHttpServer())
-      .delete('/workout-plan-exercises/missing-workout-plan-exercise-id')
-      .set('Authorization', `Bearer ${userAccessToken}`)
-      .expect(404);
-  });
+   it('returns 404 when deleting a missing workout plan exercise', async () => {
+      await request(app.getHttpServer())
+         .delete('/workout-plan-exercises/missing-workout-plan-exercise-id')
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .expect(404);
+   });
 
-  async function createAuthenticatedUser(role: UserRole) {
-    const email = `${role.toLowerCase()}-${Date.now()}-${Math.random()
-      .toString(36)
-      .slice(2)}@example.com`;
-    const password = 'supersecreto123';
+   async function createAuthenticatedUser(role: UserRole) {
+      const email = `${role.toLowerCase()}-${Date.now()}-${Math.random()
+         .toString(36)
+         .slice(2)}@example.com`;
+      const password = 'supersecreto123';
 
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        email,
-        password,
-        username: email.split('@')[0],
-        firstName: role,
-      })
-      .expect(201);
+      await request(app.getHttpServer())
+         .post('/auth/register')
+         .send({
+            email,
+            password,
+            username: email.split('@')[0],
+            firstName: role,
+         })
+         .expect(201);
 
-    const user = await prisma.user.update({
-      where: { email },
-      data: { role },
-    });
+      const user = await prisma.user.update({
+         where: { email },
+         data: { role },
+      });
 
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({ email, password })
-      .expect(201);
-    const loginBody = loginResponse.body as AuthResponseBody;
+      const loginResponse = await request(app.getHttpServer())
+         .post('/auth/login')
+         .send({ email, password })
+         .expect(201);
+      const loginBody = loginResponse.body as AuthResponseBody;
 
-    expect(loginBody.user).toEqual(
-      expect.objectContaining({ id: user.id, email, role }),
-    );
+      expect(loginBody.user).toEqual(
+         expect.objectContaining({ id: user.id, email, role }),
+      );
 
-    return loginBody.accessToken;
-  }
+      return loginBody.accessToken;
+   }
 
-  async function createBaseDependencies() {
-    const workoutPlan = await prisma.workoutPlan.create({
-      data: {
-        name: `Workout Plan ${Date.now()}`,
-        description: 'Plan for exercise assignments',
-        isActive: true,
-        user: {
-          connect: {
-            id: ownerUserId,
-          },
-        },
-      },
-    });
+   async function createBaseDependencies() {
+      const workoutPlan = await prisma.workoutPlan.create({
+         data: {
+            name: `Workout Plan ${Date.now()}`,
+            description: 'Plan for exercise assignments',
+            isActive: true,
+            user: {
+               connect: {
+                  id: ownerUserId,
+               },
+            },
+         },
+      });
 
-    const firstExercise = await prisma.exercise.create({
-      data: {
-        name: `Exercise ${Date.now()}-a`,
-        slug: `exercise-${Date.now()}-a`,
-        muscleGroup: MuscleGroup.LEGS,
-        category: ExerciseCategory.STRENGTH,
-        description: 'First exercise',
-        isCompound: true,
-      },
-    });
+      const firstExercise = await prisma.exercise.create({
+         data: {
+            name: `Exercise ${Date.now()}-a`,
+            slug: `exercise-${Date.now()}-a`,
+            muscleGroup: MuscleGroup.LEGS,
+            category: ExerciseCategory.STRENGTH,
+            description: 'First exercise',
+            isCompound: true,
+         },
+      });
 
-    const secondExercise = await prisma.exercise.create({
-      data: {
-        name: `Exercise ${Date.now()}-b`,
-        slug: `exercise-${Date.now()}-b`,
-        muscleGroup: MuscleGroup.BACK,
-        category: ExerciseCategory.BODYWEIGHT,
-        description: 'Second exercise',
-        isCompound: false,
-      },
-    });
+      const secondExercise = await prisma.exercise.create({
+         data: {
+            name: `Exercise ${Date.now()}-b`,
+            slug: `exercise-${Date.now()}-b`,
+            muscleGroup: MuscleGroup.BACK,
+            category: ExerciseCategory.BODYWEIGHT,
+            description: 'Second exercise',
+            isCompound: false,
+         },
+      });
 
-    return {
-      workoutPlanId: workoutPlan.id,
-      firstExerciseId: firstExercise.id,
-      secondExerciseId: secondExercise.id,
-    };
-  }
+      return {
+         workoutPlanId: workoutPlan.id,
+         firstExerciseId: firstExercise.id,
+         secondExerciseId: secondExercise.id,
+      };
+   }
 
-  function buildCreateWorkoutPlanExercisePayload({
-    exerciseId,
-    order,
-  }: {
-    exerciseId: string;
-    order: number;
-  }) {
-    return {
-      workoutPlanId,
+   function buildCreateWorkoutPlanExercisePayload({
       exerciseId,
       order,
-      targetSets: 4,
-      targetRepsMin: 8,
-      targetRepsMax: 12,
-      targetWeightKg: 80,
-      restSeconds: 90,
-      notes: 'Mantener tecnica estricta.',
-    };
-  }
+   }: {
+      exerciseId: string;
+      order: number;
+   }) {
+      return {
+         workoutPlanId,
+         exerciseId,
+         order,
+         targetSets: 4,
+         targetRepsMin: 8,
+         targetRepsMax: 12,
+         targetWeightKg: 80,
+         restSeconds: 90,
+         notes: 'Mantener tecnica estricta.',
+      };
+   }
 
-  async function cleanDatabase() {
-    await prisma.personalRecord.deleteMany();
-    await prisma.workoutSet.deleteMany();
-    await prisma.workoutPlanExercise.deleteMany();
-    await prisma.workoutSession.deleteMany();
-    await prisma.workoutPlan.deleteMany();
-    await prisma.exercise.deleteMany();
-    await prisma.user.deleteMany();
-  }
+   async function cleanDatabase() {
+      await prisma.personalRecord.deleteMany();
+      await prisma.workoutSet.deleteMany();
+      await prisma.workoutPlanExercise.deleteMany();
+      await prisma.workoutSession.deleteMany();
+      await prisma.workoutPlan.deleteMany();
+      await prisma.exercise.deleteMany();
+      await prisma.user.deleteMany();
+   }
 });

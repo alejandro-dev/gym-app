@@ -12,12 +12,12 @@ import { AccessTokenStrategy } from './strategies/access-token.strategy';
  * Agrupa controladores, servicios y estrategia JWT para acceso y refresh tokens.
  */
 @Module({
-  imports: [
-    PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({}),
-  ],
-  controllers: [AuthController],
-  providers: [AuthService, AccessTokenStrategy, AccessTokenGuard, RolesGuard],
-  exports: [AuthService],
+   imports: [
+      PassportModule.register({ defaultStrategy: 'jwt' }),
+      JwtModule.register({}),
+   ],
+   controllers: [AuthController],
+   providers: [AuthService, AccessTokenStrategy, AccessTokenGuard, RolesGuard],
+   exports: [AuthService],
 })
 export class AuthModule {}

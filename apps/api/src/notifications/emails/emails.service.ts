@@ -2,16 +2,16 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable, Logger } from '@nestjs/common';
 
 type SendMailData = {
-  to: string;
-  subject: string;
-  text: string;
-  html: string;
+   to: string;
+   subject: string;
+   text: string;
+   html: string;
 };
 
 type WelcomeVerificationEmailData = {
-  email: string;
-  firstName: string | null;
-  verificationUrl: string;
+   email: string;
+   firstName: string | null;
+   verificationUrl: string;
 };
 
 /**
@@ -19,64 +19,66 @@ type WelcomeVerificationEmailData = {
  */
 @Injectable()
 export class EmailsService {
-  private readonly logger = new Logger(EmailsService.name);
+   private readonly logger = new Logger(EmailsService.name);
 
-  /**
-   * Crea una nueva instancia del servicio de e-mails.
-   *
-   * @param mailerService - Servicio de envío de e-mails
-   */
-  constructor(private readonly mailerService: MailerService) {}
+   /**
+    * Crea una nueva instancia del servicio de e-mails.
+    *
+    * @param mailerService - Servicio de envío de e-mails
+    */
+   constructor(private readonly mailerService: MailerService) {}
 
-  /**
-   * Envía un e-mail de verificación de cuenta a un usuario.
-   *
-   * @param data - Datos del e-mail de verificación
-   */
-  async sendWelcomeVerificationEmail(
-    data: WelcomeVerificationEmailData,
-  ): Promise<void> {
-    const subject = 'Bienvenido a Gym App - Verifica tu email';
-    const greeting = data.firstName ? `Hola ${data.firstName},` : 'Hola,';
+   /**
+    * Envía un e-mail de verificación de cuenta a un usuario.
+    *
+    * @param data - Datos del e-mail de verificación
+    */
+   async sendWelcomeVerificationEmail(
+      data: WelcomeVerificationEmailData,
+   ): Promise<void> {
+      const subject = 'Bienvenido a Gym App - Verifica tu email';
+      const greeting = data.firstName ? `Hola ${data.firstName},` : 'Hola,';
 
-    const text = [
-      greeting,
-      '',
-      'Gracias por registrarte en Gym App.',
-      'Para verificar tu correo, usa este enlace:',
-      data.verificationUrl,
-      '',
-      'Si no has creado esta cuenta, puedes ignorar este mensaje.',
-    ].join('\n');
-    const html = this.buildWelcomeVerificationHtml({
-      greeting,
-      verificationUrl: data.verificationUrl,
-    });
+      const text = [
+         greeting,
+         '',
+         'Gracias por registrarte en Gym App.',
+         'Para verificar tu correo, usa este enlace:',
+         data.verificationUrl,
+         '',
+         'Si no has creado esta cuenta, puedes ignorar este mensaje.',
+      ].join('\n');
+      const html = this.buildWelcomeVerificationHtml({
+         greeting,
+         verificationUrl: data.verificationUrl,
+      });
 
-    await this.sendMail({
-      to: data.email,
-      subject,
-      text,
-      html,
-    });
-  }
+      await this.sendMail({
+         to: data.email,
+         subject,
+         text,
+         html,
+      });
+   }
 
-  private async sendMail(data: SendMailData): Promise<void> {
-    await this.mailerService.sendMail({
-      to: data.to,
-      subject: data.subject,
-      text: data.text,
-      html: data.html,
-    });
+   private async sendMail(data: SendMailData): Promise<void> {
+      await this.mailerService.sendMail({
+         to: data.to,
+         subject: data.subject,
+         text: data.text,
+         html: data.html,
+      });
 
-    this.logger.log(`Email enviado a ${data.to} con asunto "${data.subject}"`);
-  }
+      this.logger.log(
+         `Email enviado a ${data.to} con asunto "${data.subject}"`,
+      );
+   }
 
-  private buildWelcomeVerificationHtml(data: {
-    greeting: string;
-    verificationUrl: string;
-  }) {
-    return `
+   private buildWelcomeVerificationHtml(data: {
+      greeting: string;
+      verificationUrl: string;
+   }) {
+      return `
       <!DOCTYPE html>
       <html lang="es">
         <head>
@@ -131,5 +133,5 @@ export class EmailsService {
         </body>
       </html>
     `;
-  }
+   }
 }

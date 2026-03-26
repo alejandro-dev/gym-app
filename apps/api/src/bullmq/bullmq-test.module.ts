@@ -7,20 +7,20 @@ import { WorkoutProducer } from './workout/workout.producer';
  */
 @Global()
 @Module({
-  providers: [
-    {
-      provide: WorkoutProducer,
-      useValue: {
-        enqueueWorkoutCompleted: () => Promise.resolve(),
+   providers: [
+      {
+         provide: WorkoutProducer,
+         useValue: {
+            enqueueWorkoutCompleted: () => Promise.resolve(),
+         },
       },
-    },
-    {
-      provide: AuthProducer,
-      useValue: {
-        enqueueUserRegistered: () => Promise.resolve(),
+      {
+         provide: AuthProducer,
+         useValue: {
+            enqueueUserRegistered: () => Promise.resolve(),
+         },
       },
-    },
-  ],
-  exports: [WorkoutProducer, AuthProducer],
+   ],
+   exports: [WorkoutProducer, AuthProducer],
 })
 export class BullmqTestModule {}

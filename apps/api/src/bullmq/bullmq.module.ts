@@ -11,25 +11,25 @@ import { EmailsModule } from '../notifications/emails/emails.module';
 
 @Global()
 @Module({
-  imports: [
-    BullModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        connection: {
-          host: configService.get<string>('REDIS_HOST'),
-          port: Number(configService.get<string>('REDIS_PORT')),
-        },
+   imports: [
+      BullModule.forRootAsync({
+         inject: [ConfigService],
+         useFactory: (configService: ConfigService) => ({
+            connection: {
+               host: configService.get<string>('REDIS_HOST'),
+               port: Number(configService.get<string>('REDIS_PORT')),
+            },
+         }),
       }),
-    }),
-    BullModule.registerQueue({
-      name: WORKOUT_QUEUE,
-    }),
-    BullModule.registerQueue({
-      name: AUTH_QUEUE,
-    }),
-    EmailsModule,
-  ],
-  providers: [WorkoutProducer, WorkoutProcessor, AuthProducer, AuthProcessor],
-  exports: [BullModule, WorkoutProducer, AuthProducer],
+      BullModule.registerQueue({
+         name: WORKOUT_QUEUE,
+      }),
+      BullModule.registerQueue({
+         name: AUTH_QUEUE,
+      }),
+      EmailsModule,
+   ],
+   providers: [WorkoutProducer, WorkoutProcessor, AuthProducer, AuthProcessor],
+   exports: [BullModule, WorkoutProducer, AuthProducer],
 })
 export class BullmqModule {}

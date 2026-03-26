@@ -6,7 +6,7 @@ import { WorkoutSetsController } from './workout-sets.controller';
  * Modulo de funcionalidad para el dominio de series de entrenamiento.
  */
 @Module({
-  providers: [WorkoutSetsService],
-  controllers: [WorkoutSetsController],
+   providers: [WorkoutSetsService],
+   controllers: [WorkoutSetsController],
 })
 export class WorkoutSetsModule {}
