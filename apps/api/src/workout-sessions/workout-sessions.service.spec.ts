@@ -60,6 +60,7 @@ describe('WorkoutSessionsService', () => {
       findUnique: jest.fn<
         Promise<
           | WorkoutSessionRecord
+          | { id: string }
           | { id: string; userId: string; endedAt: Date | null }
           | null
         >,

@@ -43,7 +43,7 @@ export class WorkoutSetsService {
    * @param userId - Identificador opcional del usuario por el que filtrar cuando el rol lo permite
    * @returns Listado de series accesibles para el usuario autenticado
    */
-  async findAll(user: AuthenticatedUser, userId: string) {
+  async findAll(user: AuthenticatedUser, userId?: string) {
     return await this.prisma.workoutSet.findMany({
       select: this.workoutSetSelect,
       where:

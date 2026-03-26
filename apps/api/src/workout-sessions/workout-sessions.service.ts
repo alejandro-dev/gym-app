@@ -50,7 +50,7 @@ export class WorkoutSessionsService {
    * @param userId - Identificador opcional del usuario por el que filtrar cuando el rol lo permite
    * @returns Listado de sesiones accesibles para el usuario autenticado
    */
-  async findAll(user: AuthenticatedUser, userId: string) {
+  async findAll(user: AuthenticatedUser, userId?: string) {
     return await this.prisma.workoutSession.findMany({
       select: this.workoutSessionSelect,
       where:
