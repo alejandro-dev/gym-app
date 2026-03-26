@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --background: 38 33% 96%;
+    --foreground: 220 18% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 18% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 18% 12%;
+    --primary: 6 77% 53%;
+    --primary-foreground: 38 33% 97%;
+    --secondary: 35 24% 90%;
+    --secondary-foreground: 220 18% 12%;
+    --muted: 36 27% 92%;
+    --muted-foreground: 220 10% 38%;
+    --accent: 40 48% 86%;
+    --accent-foreground: 220 18% 12%;
+    --destructive: 0 78% 56%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 28 18% 82%;
+    --input: 28 18% 82%;
+    --ring: 6 77% 53%;
+    --radius: 1.1rem;
+    --chart-1: 6 77% 53%;
+    --chart-2: 16 80% 46%;
+    --chart-3: 154 50% 30%;
+    --chart-4: 36 86% 58%;
+    --chart-5: 220 18% 18%;
+    --sidebar: 220 21% 10%;
+    --sidebar-foreground: 36 31% 93%;
+    --sidebar-primary: 6 77% 53%;
+    --sidebar-primary-foreground: 38 33% 97%;
+    --sidebar-accent: 220 16% 16%;
+    --sidebar-accent-foreground: 36 31% 93%;
+    --sidebar-border: 220 14% 18%;
+    --sidebar-ring: 6 77% 53%;
+  }
+
+  .dark {
+    --background: 220 20% 8%;
+    --foreground: 36 29% 95%;
+    --card: 220 17% 10%;
+    --card-foreground: 36 29% 95%;
+    --popover: 220 17% 10%;
+    --popover-foreground: 36 29% 95%;
+    --primary: 6 77% 55%;
+    --primary-foreground: 36 29% 96%;
+    --secondary: 220 13% 16%;
+    --secondary-foreground: 36 29% 95%;
+    --muted: 220 12% 14%;
+    --muted-foreground: 34 14% 70%;
+    --accent: 220 12% 16%;
+    --accent-foreground: 36 29% 95%;
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 10% 18%;
+    --input: 220 10% 18%;
+    --ring: 6 77% 55%;
+    --chart-1: 6 77% 55%;
+    --chart-2: 18 78% 50%;
+    --chart-3: 154 44% 38%;
+    --chart-4: 38 84% 58%;
+    --chart-5: 36 29% 90%;
+    --sidebar: 220 22% 7%;
+    --sidebar-foreground: 36 29% 95%;
+    --sidebar-primary: 6 77% 55%;
+    --sidebar-primary-foreground: 36 29% 96%;
+    --sidebar-accent: 220 15% 13%;
+    --sidebar-accent-foreground: 36 29% 95%;
+    --sidebar-border: 220 12% 16%;
+    --sidebar-ring: 6 77% 55%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    background: hsl(var(--background));
+  }
+
+  body {
+    min-height: 100%;
+    background:
+      radial-gradient(circle at top, hsl(var(--accent) / 0.55), transparent 28%),
+      linear-gradient(180deg, hsl(var(--background)) 0%, hsl(38 24% 93%) 100%);
+    color: hsl(var(--foreground));
+    font-family: var(--font-sans), sans-serif;
+  }
+
+  .dark body {
+    background:
+      radial-gradient(circle at top, hsl(var(--primary) / 0.14), transparent 30%),
+      linear-gradient(180deg, hsl(var(--background)) 0%, hsl(220 18% 6%) 100%);
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display), sans-serif;
+    letter-spacing: -0.03em;
+  }
+
+  .dashboard-shell {
+    background:
+      radial-gradient(circle at top right, hsl(var(--primary) / 0.12), transparent 22%),
+      radial-gradient(circle at left, hsl(var(--accent) / 0.7), transparent 18%);
+  }
+}
