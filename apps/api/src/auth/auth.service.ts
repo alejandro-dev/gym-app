@@ -174,7 +174,7 @@ export class AuthService {
             birthDate: true,
             createdAt: true,
             updatedAt: true,
-            emailVerifiedAt: true
+            emailVerifiedAt: true,
          },
       });
 
@@ -188,10 +188,12 @@ export class AuthService {
       );
 
       // Si la contraseña no es válida, lanza una excepción
-      if (!isPasswordValid) throw new UnauthorizedException('Invalid credentials');
+      if (!isPasswordValid)
+         throw new UnauthorizedException('Invalid credentials');
 
       // Verificamos si el usuario ha verificado su email
-      if (!user.emailVerifiedAt) throw new ForbiddenException('Email not verified');
+      if (!user.emailVerifiedAt)
+         throw new ForbiddenException('Email not verified');
 
       // Devolvemos el perfil público del usuario
       const publicUser = {
