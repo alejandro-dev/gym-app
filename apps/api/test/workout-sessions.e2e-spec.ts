@@ -366,7 +366,12 @@ describe('WorkoutSessionsController (e2e)', () => {
 
       const user = await prisma.user.update({
          where: { email },
-         data: { role },
+         data: {
+            role,
+            emailVerifiedAt: new Date(),
+            emailVerificationTokenHash: null,
+            emailVerificationExpiresAt: null,
+         },
       });
 
       const loginResponse = await request(app.getHttpServer())
