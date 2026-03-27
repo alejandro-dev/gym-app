@@ -5,7 +5,6 @@ import {
    IconActivityHeartbeat,
    IconBarbell,
    IconCalendarStats,
-   IconChartBar,
    IconCreditCard,
    IconDashboard,
    IconHelp,
@@ -17,10 +16,10 @@ import {
    IconUsers,
 } from "@tabler/icons-react"
 
-import { NavDocuments } from "@/features/dashboard/components/nav-documents"
-import { NavMain } from "@/features/dashboard/components/nav-main"
-import { NavSecondary } from "@/features/dashboard/components/nav-secondary"
-import { NavUser } from "@/features/dashboard/components/nav-user"
+import { NavDocuments } from "@/features/navigation/components/nav-documents"
+import { NavMain } from "@/features/navigation/components/nav-main"
+import { NavSecondary } from "@/features/navigation/components/nav-secondary"
+import { NavUser } from "@/features/navigation/components/nav-user"
 import {
    Sidebar,
    SidebarContent,
@@ -39,14 +38,14 @@ const data = {
    },
    navMain: [
       {
+         title: "Usuarios",
+         url: "/users",
+         icon: IconUsers,
+      },
+      {
          title: "Resumen",
          url: "#",
          icon: IconDashboard,
-      },
-      {
-         title: "Socios",
-         url: "#",
-         icon: IconUsers,
       },
       {
          title: "Clases",

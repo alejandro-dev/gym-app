@@ -104,3 +104,34 @@ jobs:
 
       - name: Run Personal Records e2e tests
         run: pnpm --filter api exec jest --config ./test/jest-e2e.json --runInBand test/personal-records.e2e-spec.ts
+
+  web:
+    name: Build and Lint Web
+    runs-on: ubuntu-latest
+    env:
+      NEST_API_URL: http://localhost:3000
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies without scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Run web lint
+        run: pnpm --filter web lint
+
+      - name: Build web
+        run: pnpm --filter web build

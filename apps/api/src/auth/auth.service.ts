@@ -4,6 +4,7 @@ import {
    UnauthorizedException,
    BadRequestException,
    Logger,
+   ForbiddenException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -154,6 +155,7 @@ export class AuthService {
     * @param loginDto - Credenciales de acceso
     * @returns Usuario autenticado junto con access token y refresh token
     * @throws UnauthorizedException si las credenciales no son validas
+    * @throws ForbiddenException si el usuario no ha verificado su email
     */
    async login(loginDto: LoginDto): Promise<AuthResult> {
       // Consutamos el usuario
@@ -172,6 +174,7 @@ export class AuthService {
             birthDate: true,
             createdAt: true,
             updatedAt: true,
+            emailVerifiedAt: true
          },
       });
 
@@ -185,8 +188,10 @@ export class AuthService {
       );
 
       // Si la contraseña no es válida, lanza una excepción
-      if (!isPasswordValid)
-         throw new UnauthorizedException('Invalid credentials');
+      if (!isPasswordValid) throw new UnauthorizedException('Invalid credentials');
+
+      // Verificamos si el usuario ha verificado su email
+      if (!user.emailVerifiedAt) throw new ForbiddenException('Email not verified');
 
       // Devolvemos el perfil público del usuario
       const publicUser = {

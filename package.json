@@ -9,5 +9,9 @@
     "eslint": "^9.39.4",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "dev back": "",
+    "dev front": ""
   }
 }

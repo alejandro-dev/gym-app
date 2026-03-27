@@ -8,7 +8,7 @@ describe('EmailsService', () => {
       'Verificar email',
    ) as unknown as string;
    const fallbackUrlMatcher = expect.stringContaining(
-      'http://localhost:3000/auth/verify-email?token=fallback-token',
+      'http://localhost:3001/auth/verify-email?token=fallback-token',
    ) as unknown as string;
 
    const mailerServiceMock: {
@@ -40,7 +40,7 @@ describe('EmailsService', () => {
          email: 'alex@example.com',
          firstName: 'Alex',
          verificationUrl:
-            'http://localhost:3000/auth/verify-email?token=abc123',
+            'http://localhost:3001/auth/verify-email?token=abc123',
       });
 
       expect(mailerServiceMock.sendMail).toHaveBeenCalledWith({
@@ -51,7 +51,7 @@ describe('EmailsService', () => {
             '',
             'Gracias por registrarte en Gym App.',
             'Para verificar tu correo, usa este enlace:',
-            'http://localhost:3000/auth/verify-email?token=abc123',
+            'http://localhost:3001/auth/verify-email?token=abc123',
             '',
             'Si no has creado esta cuenta, puedes ignorar este mensaje.',
          ].join('\n'),
@@ -66,7 +66,7 @@ describe('EmailsService', () => {
          email: 'user@example.com',
          firstName: null,
          verificationUrl:
-            'http://localhost:3000/auth/verify-email?token=fallback-token',
+            'http://localhost:3001/auth/verify-email?token=fallback-token',
       });
 
       expect(mailerServiceMock.sendMail).toHaveBeenCalledWith({
@@ -77,7 +77,7 @@ describe('EmailsService', () => {
             '',
             'Gracias por registrarte en Gym App.',
             'Para verificar tu correo, usa este enlace:',
-            'http://localhost:3000/auth/verify-email?token=fallback-token',
+            'http://localhost:3001/auth/verify-email?token=fallback-token',
             '',
             'Si no has creado esta cuenta, puedes ignorar este mensaje.',
          ].join('\n'),

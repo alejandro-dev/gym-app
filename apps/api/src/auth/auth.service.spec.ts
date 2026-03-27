@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+   BadRequestException,
+   ForbiddenException,
+   UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { AuthProducer } from '../bullmq/auth/auth.producer';
@@ -10,6 +14,7 @@ describe('AuthService', () => {
    let service: AuthService;
    const prismaServiceMock = {
       user: {
+         findUnique: jest.fn(),
          findMany: jest.fn(),
          update: jest.fn(),
       },
@@ -55,6 +60,73 @@ describe('AuthService', () => {
       await expect(service.verifyEmail('')).rejects.toBeInstanceOf(
          BadRequestException,
       );
+   });
+
+   it('throws ForbiddenException when the user email is not verified during login', async () => {
+      prismaServiceMock.user.findUnique.mockResolvedValue({
+         id: 'user-1',
+         email: 'alex@example.com',
+         username: 'alex',
+         passwordHash: 'stored-hash',
+         firstName: 'Alex',
+         lastName: 'Doe',
+         role: 'USER',
+         weightKg: null,
+         heightCm: null,
+         birthDate: null,
+         createdAt: new Date('2024-01-01T00:00:00.000Z'),
+         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+         emailVerifiedAt: null,
+      });
+      jest
+         .spyOn(service as never, 'verifyValue')
+         .mockResolvedValueOnce(true as never);
+
+      await expect(
+         service.login({
+            email: 'alex@example.com',
+            password: 'supersecreto123',
+         }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+   });
+
+   it('returns tokens when the user email is verified during login', async () => {
+      const issuedTokens = {
+         user: {
+            id: 'user-1',
+            email: 'alex@example.com',
+            username: 'alex',
+            firstName: 'Alex',
+            lastName: 'Doe',
+            role: 'USER',
+            weightKg: null,
+            heightCm: null,
+            birthDate: null,
+            createdAt: new Date('2024-01-01T00:00:00.000Z'),
+            updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+         },
+         accessToken: 'access-token',
+         refreshToken: 'refresh-token',
+      };
+
+      prismaServiceMock.user.findUnique.mockResolvedValue({
+         ...issuedTokens.user,
+         passwordHash: 'stored-hash',
+         emailVerifiedAt: new Date('2024-01-02T00:00:00.000Z'),
+      });
+      jest
+         .spyOn(service as never, 'verifyValue')
+         .mockResolvedValueOnce(true as never);
+      jest
+         .spyOn(service as never, 'issueTokens')
+         .mockResolvedValueOnce(issuedTokens as never);
+
+      await expect(
+         service.login({
+            email: 'alex@example.com',
+            password: 'supersecreto123',
+         }),
+      ).resolves.toEqual(issuedTokens);
    });
 
    it('verifies email and clears verification fields when token matches', async () => {

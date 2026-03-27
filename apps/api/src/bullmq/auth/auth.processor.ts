@@ -39,13 +39,13 @@ export class AuthProcessor extends WorkerHost {
       const { email, firstName, emailVerificationToken } = job.data;
 
       // Construimos la URL de verificación de email
-      const appBaseUrl = this.configService.get<string>(
-         'APP_BASE_URL',
-         'http://localhost:3000',
+      const frontUrl = this.configService.get<string>(
+         'FRONT_URL',
+         'http://localhost:3001',
       );
 
       // La URL de verificación de email es la base de la aplicación + el token de verificación
-      const verificationUrl = `${appBaseUrl}/auth/verify-email?token=${emailVerificationToken}`;
+      const verificationUrl = `${frontUrl}/auth/verify-email?token=${emailVerificationToken}`;
 
       // Enviamos un e-mail de verificación
       await this.emailsService.sendWelcomeVerificationEmail({

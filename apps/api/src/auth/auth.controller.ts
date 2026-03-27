@@ -12,6 +12,7 @@ import {
    ApiBearerAuth,
    ApiBody,
    ApiCookieAuth,
+   ApiForbiddenResponse,
    ApiOkResponse,
    ApiOperation,
    ApiTags,
@@ -68,6 +69,12 @@ export class AuthController {
     */
    @ApiOperation({ summary: 'Iniciar sesion' })
    @ApiOkResponse({ description: 'Sesion iniciada correctamente.' })
+   @ApiForbiddenResponse({
+      description: 'Email not verified.',
+   })
+   @ApiUnauthorizedResponse({
+      description: 'Invalid credentials.',
+   })
    @Post('login')
    async login(
       @Body() loginDto: LoginDto,

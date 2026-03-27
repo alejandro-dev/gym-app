@@ -1,11 +1,10 @@
 "use client"
 
 import {
-   IconDots,
+   IconDotsVertical,
    IconFolder,
    IconShare3,
    IconTrash,
-   type Icon,
 } from "@tabler/icons-react"
 
 import {
@@ -31,7 +30,7 @@ export function NavDocuments({
    items: {
       name: string
       url: string
-      icon: Icon
+      icon: React.ComponentType<{ className?: string }>
    }[]
 }) {
    const { isMobile } = useSidebar()
@@ -50,31 +49,28 @@ export function NavDocuments({
                   </SidebarMenuButton>
                   <DropdownMenu>
                      <DropdownMenuTrigger asChild>
-                        <SidebarMenuAction
-                           showOnHover
-                           className="rounded-sm data-[state=open]:bg-accent"
-                        >
-                           <IconDots />
+                        <SidebarMenuAction showOnHover>
+                           <IconDotsVertical />
                            <span className="sr-only">More</span>
                         </SidebarMenuAction>
                      </DropdownMenuTrigger>
                      <DropdownMenuContent
-                        className="w-24 rounded-lg"
+                        className="w-48 rounded-lg"
                         side={isMobile ? "bottom" : "right"}
                         align={isMobile ? "end" : "start"}
                      >
                         <DropdownMenuItem>
                            <IconFolder />
-                           <span>Abrir</span>
+                           <span>Open</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem>
                            <IconShare3 />
-                           <span>Compartir</span>
+                           <span>Share</span>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem variant="destructive">
                            <IconTrash />
-                           <span>Eliminar</span>
+                           <span>Delete</span>
                         </DropdownMenuItem>
                      </DropdownMenuContent>
                   </DropdownMenu>
@@ -82,8 +78,8 @@ export function NavDocuments({
             ))}
             <SidebarMenuItem>
                <SidebarMenuButton className="text-sidebar-foreground/70">
-                  <IconDots className="text-sidebar-foreground/70" />
-                  <span>Mas</span>
+                  <IconFolder />
+                  <span>More</span>
                </SidebarMenuButton>
             </SidebarMenuItem>
          </SidebarMenu>

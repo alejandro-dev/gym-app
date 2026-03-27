@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -23,6 +23,7 @@ export function useAuthLogin() {
 	const router = useRouter();
 	const [credentials, setCredentials] = useState(EMPTY_CREDENTIALS);
 
+	// Realizamos la petición al service
 	const mutation = useMutation({
 		mutationFn: login,
 		onSuccess: (data) => {
@@ -35,24 +36,29 @@ export function useAuthLogin() {
 		},
 	});
 
+	// Leer datos del formulario y validar
 	const readData = (e: ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
 		setCredentials((current) => ({ ...current, [name]: value }));
 	};
 
+	// Evento de envío del formulario y validación
 	const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
 		e.preventDefault();
 
+		// Validamos el formulario
 		const result = loginSchema.safeParse({
 			email: credentials.email.trim(),
 			password: credentials.password,
 		});
 
+		// Si el formulario no es válido, lanzamos una excepción
 		if (!result.success) {
 			toast.warning(result.error.issues[0]?.message ?? "Invalid form");
 			return;
 		}
 
+		// Realizamos la petición
 		await mutation.mutateAsync(result.data);
 	};
 

@@ -37,7 +37,7 @@ describe('AuthProcessor', () => {
       processor = module.get<AuthProcessor>(AuthProcessor);
    });
 
-   it('builds the verification URL with APP_BASE_URL and sends the welcome email', async () => {
+   it('builds the verification URL with FRONT_URL and sends the welcome email', async () => {
       configServiceMock.get.mockReturnValue('http://localhost:3000');
       emailsServiceMock.sendWelcomeVerificationEmail.mockResolvedValue(
          undefined,
@@ -54,8 +54,8 @@ describe('AuthProcessor', () => {
       } as Job<UserRegisteredJobData>);
 
       expect(configServiceMock.get).toHaveBeenCalledWith(
-         'APP_BASE_URL',
-         'http://localhost:3000',
+         'FRONT_URL',
+         'http://localhost:3001',
       );
       expect(
          emailsServiceMock.sendWelcomeVerificationEmail,
@@ -67,7 +67,7 @@ describe('AuthProcessor', () => {
       });
    });
 
-   it('uses the fallback APP_BASE_URL when config does not provide one', async () => {
+   it('uses the fallback FRONT_URL when config does not provide one', async () => {
       configServiceMock.get.mockImplementation(
          (_key: string, defaultValue?: string) => defaultValue,
       );
@@ -91,7 +91,7 @@ describe('AuthProcessor', () => {
          email: 'user@example.com',
          firstName: null,
          verificationUrl:
-            'http://localhost:3000/auth/verify-email?token=fallback_token',
+            'http://localhost:3001/auth/verify-email?token=fallback_token',
       });
    });
 });

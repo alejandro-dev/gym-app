@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Atkinson_Hyperlegible } from "next/font/google";
+import { Geist } from "next/font/google";
 import { Providers } from "@/components/providers";
 import "./globals.css";
+import { cn } from "@/lib/utils";
 
-const atkinsonHyperlegible = Atkinson_Hyperlegible({
-   variable: "--font-sans",
+const geist = Geist({
    subsets: ["latin"],
-   weight: ["400", "700"],
+   variable: "--font-sans",
 });
 
 export const metadata: Metadata = {
@@ -15,18 +15,19 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
-  children,
+   children,
 }: Readonly<{
-  children: React.ReactNode;
+   children: React.ReactNode;
 }>) {
-  return (
-    <html
-      lang="es"
-      className={`${atkinsonHyperlegible.variable} ${atkinsonHyperlegible.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">
-        <Providers>{children}</Providers>
-      </body>
-    </html>
-  );
+   return (
+      <html
+         lang="es"
+         suppressHydrationWarning
+         className={cn("h-full", "antialiased", "font-sans", geist.variable)}
+      >
+         <body className="min-h-full flex flex-col">
+            <Providers>{children}</Providers>
+         </body>
+      </html>
+   );
 }
