@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
       // Guardar JWT en cookie httpOnly
       const response = NextResponse.json(payload);
-      response.cookies.set("token", payload.token, {
+      response.cookies.set("token", payload.accessToken, {
          httpOnly: true,
          sameSite: "lax",
          secure: process.env.NODE_ENV === "production",
@@ -41,8 +41,8 @@ export async function POST(req: Request) {
       });
 
       // Guardar rol en cookie para que middleware pueda decidir redirecciones sin depender del claim JWT.
-      if (typeof payload?.isAdmin === "boolean") {
-         response.cookies.set("role", payload.isAdmin ? "admin" : "user", {
+      if (typeof payload?.user?.role === "string") {
+         response.cookies.set("role", payload.user.role.toLowerCase(), {
             httpOnly: true,
             sameSite: "lax",
             secure: process.env.NODE_ENV === "production",

@@ -29,7 +29,7 @@ export function useAuthLogin() {
 		onSuccess: (data) => {
 			toast.success("Welcome back");
 			setCredentials(EMPTY_CREDENTIALS);
-			router.push(data.isAdmin ? "/admin/users" : "/dashboard");
+			router.push(data.user.role === "ADMIN" ? "/users" : "/dashboard");
 		},
 		onError: (error) => {
 			toast.error(getStatusErrorMessage(error, LOGIN_ERROR_MESSAGES));

@@ -23,9 +23,10 @@ export default function RootLayout({
       <html
          lang="es"
          suppressHydrationWarning
-         className={cn("h-full", "antialiased", "font-sans", geist.variable)}
+         className={cn("dark", "h-full", "antialiased", "font-sans", geist.variable)}
+         style={{ colorScheme: "dark" }}
       >
-         <body className="min-h-full flex flex-col">
+         <body className="dark min-h-full flex flex-col bg-background text-foreground">
             <Providers>{children}</Providers>
          </body>
       </html>

@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@gym-app/types": ["../../packages/types/index.ts"]
     }
   },
   "include": [

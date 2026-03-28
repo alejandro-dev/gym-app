@@ -1,9 +1,10 @@
 import { fetchJson } from "@/services/httpClient";
+import type { User } from "@gym-app/types";
 
 // Respuesta mínima esperada al iniciar sesión.
 export interface LoginResponse {
-   isAdmin: boolean;
-   token?: string;
+   user: User;
+   accessToken: string;
 }
 
 export interface AuthLoginInput {

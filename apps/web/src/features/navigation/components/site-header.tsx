@@ -26,18 +26,18 @@ export function SiteHeader() {
    }
 
    return (
-      <header className="sticky top-0 z-20 flex h-(--header-height) shrink-0 items-center gap-2 border-b border-border/60 bg-background/75 backdrop-blur-xl transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
-         <div className="flex w-full items-center gap-2 px-4 lg:px-6">
+      <header className="sticky top-0 z-20 flex min-h-20 shrink-0 items-center gap-2 border-b border-border/60 bg-background/75 py-2 backdrop-blur-xl transition-[width,height] ease-linear md:min-h-24">
+         <div className="flex h-full w-full items-center gap-5 px-4 lg:px-6">
             <SidebarTrigger className="-ml-1 rounded-xl border border-border/70 bg-card shadow-sm" />
             <Separator
                orientation="vertical"
-               className="mx-2 data-[orientation=vertical]:h-4"
+               className="mx-3 self-stretch data-[orientation=vertical]:h-auto"
             />
-            <div className="min-w-0">
-               <p className="font-display text-2xl leading-none text-foreground">
+            <div className="min-w-0 space-y-1.5 py-0.5">
+               <p className="font-display text-2xl leading-tight text-foreground">
                   {copy.title}
                </p>
-               <p className="hidden text-sm text-muted-foreground sm:block">
+               <p className="hidden text-sm leading-relaxed text-muted-foreground sm:block">
                   {copy.description}
                </p>
             </div>

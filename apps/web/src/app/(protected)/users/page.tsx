@@ -1,12 +1,13 @@
-export default function UsersPage() {
+import UsersView from "@/features/users/views/users-view";
+import { searchUsers } from "./actions";
+
+export default async function UsersPage() {
+   // Carga inicial de usuarios (SSR)
+	const initialData = await searchUsers({ page: 0, limit: 10 });
+
    return (
-      <div className="px-4 py-4 lg:px-6 md:py-6">
-         <div className="rounded-3xl border border-border/70 bg-card p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-foreground">Users</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-               Aqui podras gestionar el listado de usuarios del gimnasio.
-            </p>
-         </div>
+      <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+         <UsersView initialData={initialData} />
       </div>
    )
 }
