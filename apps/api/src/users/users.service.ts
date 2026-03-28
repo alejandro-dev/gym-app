@@ -226,9 +226,7 @@ export class UsersService {
     * @param user - Usuario seleccionado desde Prisma
     * @returns Usuario listo para respuesta JSON
     */
-   private toPublicUser(
-      user: SelectedUserRecord,
-   ): User {
+   private toPublicUser(user: SelectedUserRecord): User {
       return {
          ...user,
          birthDate: user.birthDate?.toISOString() ?? null,

@@ -50,7 +50,7 @@ export class UsersController {
     * @param page - Numero de pagina base cero
     * @param limit - Cantidad maxima de usuarios por pagina
     * @returns Listado de usuarios
-   */
+    */
    @ApiOperation({ summary: 'Listar usuarios' })
    @ApiQuery({
       name: 'page',
@@ -79,7 +79,9 @@ export class UsersController {
 
       return this.usersService.findAll(
          Number.isNaN(parsedPage) ? 0 : Math.max(parsedPage, 0),
-         Number.isNaN(parsedLimit) ? 10 : Math.min(Math.max(parsedLimit, 1), 100),
+         Number.isNaN(parsedLimit)
+            ? 10
+            : Math.min(Math.max(parsedLimit, 1), 100),
       );
    }
 
@@ -88,7 +90,7 @@ export class UsersController {
     *
     * @param id - Identificador del usuario
     * @returns Usuario encontrado
-   */
+    */
    @ApiOperation({ summary: 'Obtener usuario por id' })
    @ApiOkResponse({
       description: 'Usuario encontrado.',
@@ -106,7 +108,7 @@ export class UsersController {
     *
     * @param createUserDto - Datos de creacion del usuario
     * @returns Usuario creado
-   */
+    */
    @ApiOperation({ summary: 'Crear usuario' })
    @ApiCreatedResponse({
       description: 'Usuario creado correctamente.',
@@ -124,7 +126,7 @@ export class UsersController {
     * @param id - Identificador del usuario
     * @param updateUserDto - Datos de actualizacion parcial
     * @returns Usuario actualizado
-   */
+    */
    @ApiOperation({ summary: 'Actualizar usuario' })
    @ApiOkResponse({
       description: 'Usuario actualizado correctamente.',
@@ -145,7 +147,7 @@ export class UsersController {
     *
     * @param id - Identificador del usuario
     * @returns Usuario eliminado
-   */
+    */
    @ApiOperation({ summary: 'Eliminar usuario' })
    @ApiOkResponse({
       description: 'Usuario eliminado correctamente.',

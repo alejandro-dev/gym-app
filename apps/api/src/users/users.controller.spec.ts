@@ -3,20 +3,45 @@ import type { UsersListResponse, User } from '@gym-app/types';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
+type UsersServiceMock = {
+   findAll: jest.MockedFunction<
+      (page: number, limit: number) => Promise<UsersListResponse>
+   >;
+   findOne: jest.MockedFunction<(id: string) => Promise<User>>;
+   create: jest.MockedFunction<UsersService['create']>;
+   update: jest.MockedFunction<UsersService['update']>;
+   remove: jest.MockedFunction<UsersService['remove']>;
+};
+
 describe('UsersController', () => {
    let controller: UsersController;
-   let usersService: {
-      findAll: jest.Mock<Promise<UsersListResponse>, [number, number]>;
-      findOne: jest.Mock<Promise<User>, [string]>;
-      create: jest.Mock;
-      update: jest.Mock;
-      remove: jest.Mock;
-   };
+   let usersService: UsersServiceMock;
 
    beforeEach(async () => {
       usersService = {
-         findAll: jest.fn(),
-         findOne: jest.fn(),
+         findAll: jest.fn(() =>
+            Promise.resolve({
+               items: [],
+               total: 0,
+               page: 0,
+               limit: 10,
+            }),
+         ),
+         findOne: jest.fn(() =>
+            Promise.resolve({
+               id: 'user_1',
+               email: 'alex@gymapp.dev',
+               username: null,
+               firstName: null,
+               lastName: null,
+               role: 'USER',
+               weightKg: null,
+               heightCm: null,
+               birthDate: null,
+               createdAt: '2026-03-28T10:00:00.000Z',
+               updatedAt: '2026-03-28T10:00:00.000Z',
+            }),
+         ),
          create: jest.fn(),
          update: jest.fn(),
          remove: jest.fn(),
