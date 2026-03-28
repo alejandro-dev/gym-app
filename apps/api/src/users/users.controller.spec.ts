@@ -19,7 +19,7 @@ describe('UsersController', () => {
 
    beforeEach(async () => {
       usersService = {
-         findAll: jest.fn(() =>
+         findAll: jest.fn((_page: number, _limit: number) =>
             Promise.resolve({
                items: [],
                total: 0,
@@ -27,7 +27,7 @@ describe('UsersController', () => {
                limit: 10,
             }),
          ),
-         findOne: jest.fn(() =>
+         findOne: jest.fn((_id: string) =>
             Promise.resolve({
                id: 'user_1',
                email: 'alex@gymapp.dev',
