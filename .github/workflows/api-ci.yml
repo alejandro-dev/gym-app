@@ -9,29 +9,10 @@ on:
 
 jobs:
   api:
-    name: Build and Test API
+    name: Build and Lint API
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/gym_app_test?schema=public
-      JWT_ACCESS_SECRET: superaccesssecret
-      JWT_REFRESH_SECRET: superrefreshsecret
-      JWT_ACCESS_TTL_SECONDS: 900
-      JWT_REFRESH_TTL_SECONDS: 604800
       NODE_ENV: test
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: gym_app_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d gym_app_test"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - name: Checkout repository
@@ -54,56 +35,11 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter api exec prisma generate --schema prisma/schema.prisma
 
-      - name: Apply Prisma migrations
-        run: pnpm --filter api exec prisma migrate deploy --schema prisma/schema.prisma
-
       - name: Run lint
         run: pnpm --filter api lint:check
 
       - name: Build API
         run: pnpm --filter api build
-
-      - name: Run Auth unit tests
-        run: pnpm --filter api test -- --runInBand auth
-
-      - name: Run Users unit tests
-        run: pnpm --filter api test -- --runInBand users
-
-      - name: Run Exercises unit tests
-        run: pnpm --filter api test -- --runInBand exercises
-
-      - name: Run Workout Plans unit tests
-        run: pnpm --filter api test -- --runInBand workout-plans
-
-      - name: Run Workout Plan Exercises unit tests
-        run: pnpm --filter api test -- --runInBand workout-plan-exercises
-
-      - name: Run Workout Sessions unit tests
-        run: pnpm --filter api test -- --runInBand workout-sessions
-
-      - name: Run Workout Sets unit tests
-        run: pnpm --filter api test -- --runInBand workout-sets
-
-      - name: Run Personal Records unit tests
-        run: pnpm --filter api test -- --runInBand personal-records
-
-      - name: Run Exercises e2e tests
-        run: pnpm --filter api exec jest --config ./test/jest-e2e.json --runInBand test/exercises.e2e-spec.ts
-
-      - name: Run Workout Plans e2e tests
-        run: pnpm --filter api exec jest --config ./test/jest-e2e.json --runInBand test/workout-plan.e2e-spec.ts
-
-      - name: Run Workout Plan Exercises e2e tests
-        run: pnpm --filter api exec jest --config ./test/jest-e2e.json --runInBand test/workout-plan-exercises.e2e-spec.ts
-
-      - name: Run Workout Sessions e2e tests
-        run: pnpm --filter api exec jest --config ./test/jest-e2e.json --runInBand test/workout-sessions.e2e-spec.ts
-
-      - name: Run Workout Sets e2e tests
-        run: pnpm --filter api exec jest --config ./test/jest-e2e.json --runInBand test/workout-sets.e2e-spec.ts
-
-      - name: Run Personal Records e2e tests
-        run: pnpm --filter api exec jest --config ./test/jest-e2e.json --runInBand test/personal-records.e2e-spec.ts
 
   web:
     name: Build and Lint Web

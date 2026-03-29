@@ -12,6 +12,9 @@
   },
   "scripts": {
     "dev back": "",
-    "dev front": ""
+    "dev front": "",
+    "db:test:up": "pnpm --filter api db:test:up",
+    "db:test:down": "pnpm --filter api db:test:down",
+    "test:e2e:local": "pnpm --filter api test:e2e:local"
   }
 }

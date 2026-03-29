@@ -1,6 +1,8 @@
 import UsersView from "@/features/users/views/users-view";
 import { searchUsers } from "./actions";
 
+export const dynamic = "force-dynamic";
+
 export default async function UsersPage() {
    // Carga inicial de usuarios (SSR)
 	const initialData = await searchUsers({ page: 0, limit: 10 });

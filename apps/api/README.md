@@ -54,6 +54,10 @@ $ pnpm run test
 # e2e tests
 $ pnpm run test:e2e
 
+# e2e tests with local Docker services
+$ pnpm run db:test:up
+$ pnpm run test:e2e:local
+
 # test coverage
 $ pnpm run test:cov
 ```

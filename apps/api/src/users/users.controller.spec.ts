@@ -19,16 +19,20 @@ describe('UsersController', () => {
 
    beforeEach(async () => {
       usersService = {
-         findAll: jest.fn((_page: number, _limit: number) =>
-            Promise.resolve({
+         findAll: jest.fn((...args: [number, number]) => {
+            void args;
+
+            return Promise.resolve({
                items: [],
                total: 0,
                page: 0,
                limit: 10,
-            }),
-         ),
-         findOne: jest.fn((_id: string) =>
-            Promise.resolve({
+            });
+         }),
+         findOne: jest.fn((...args: [string]) => {
+            void args;
+
+            return Promise.resolve({
                id: 'user_1',
                email: 'alex@gymapp.dev',
                username: null,
@@ -40,8 +44,8 @@ describe('UsersController', () => {
                birthDate: null,
                createdAt: '2026-03-28T10:00:00.000Z',
                updatedAt: '2026-03-28T10:00:00.000Z',
-            }),
-         ),
+            });
+         }),
          create: jest.fn(),
          update: jest.fn(),
          remove: jest.fn(),
