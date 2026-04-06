@@ -1,18 +1,29 @@
-import { redirect } from "next/navigation";
+import { forbidden, redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import type { UserRole } from "@gym-app/types";
 
 // Función para verificar si el usuario está autenticado y redireccionar si no lo está.
 export async function requireUser() {
    const user = await getCurrentUser();
-   if (!user) redirect("/signin");
+   if (!user) redirect("/login");
    return user;
 }
 
 // Función para verificar si el admin está autenticado y redireccionar si no lo está.
 export async function requireAdmin() {
    const user = await requireUser();
-   // if (!user.role === "ADMIN") redirect("/dashboard");
+   if (user.role !== "ADMIN") forbidden();
+   return user;
+}
+
+export async function requireRoles(roles: UserRole[]) {
+   const user = await requireUser();
+
+   if (!roles.includes(user.role)) {
+      forbidden();
+   }
+
    return user;
 }
 

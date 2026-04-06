@@ -8,7 +8,8 @@ export type UserRegisteredJobData = {
    userId: string;
    email: string;
    firstName: string | null;
-   emailVerificationToken: string;
+   emailVerificationToken?: string;
+   temporaryPassword?: string;
 };
 
 /**

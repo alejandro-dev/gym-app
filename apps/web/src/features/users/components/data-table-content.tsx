@@ -36,6 +36,7 @@ type DataTableContentProps<TData> = {
    isLoading: boolean;
    table: TanstackTable<TData>;
    total: number;
+   onAddUser: () => void;
 };
 
 export function DataTableContent<TData>({
@@ -43,6 +44,7 @@ export function DataTableContent<TData>({
    isLoading,
    table,
    total,
+   onAddUser,
 }: DataTableContentProps<TData>) {
    return (
       <Tabs
@@ -51,8 +53,8 @@ export function DataTableContent<TData>({
       >
          <div className="flex items-center justify-between px-4 lg:px-6">
             <div className="ml-auto flex items-center gap-2">
-               <Button variant="outline" size="sm">
-                  <IconPlus />
+               <Button variant="outline" size="sm" onClick={onAddUser}>
+                  <IconPlus data-icon="inline-start" />
                   <span className="hidden lg:inline">Add User</span>
                </Button>
             </div>

@@ -12,10 +12,10 @@ export JWT_ACCESS_TTL_SECONDS="${JWT_ACCESS_TTL_SECONDS:-900}"
 export JWT_REFRESH_TTL_SECONDS="${JWT_REFRESH_TTL_SECONDS:-604800}"
 export NODE_ENV="${NODE_ENV:-test}"
 
-"${SCRIPT_DIR}/test-db-up.sh"
+bash "${SCRIPT_DIR}/test-db-up.sh"
 
 cd "${ROOT_DIR}/apps/api"
 
 pnpm exec prisma generate --schema prisma/schema.prisma
 pnpm exec prisma migrate deploy --schema prisma/schema.prisma
-pnpm run test:e2e -- --runInBand
+pnpm exec jest --config ./test/jest-e2e.json --runInBand

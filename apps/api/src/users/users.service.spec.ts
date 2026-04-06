@@ -1,5 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserRole } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { AccountOnboardingService } from '../auth/account-onboarding.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from './users.service';
 
@@ -7,14 +9,19 @@ describe('UsersService', () => {
    let service: UsersService;
    let prismaService: {
       user: {
+         create: jest.Mock;
          findMany: jest.Mock;
          count: jest.Mock;
       };
+   };
+   const accountOnboardingServiceMock = {
+      enqueueWelcomeEmail: jest.fn(),
    };
 
    beforeEach(async () => {
       prismaService = {
          user: {
+            create: jest.fn(),
             findMany: jest.fn(),
             count: jest.fn(),
          },
@@ -26,6 +33,10 @@ describe('UsersService', () => {
             {
                provide: PrismaService,
                useValue: prismaService,
+            },
+            {
+               provide: AccountOnboardingService,
+               useValue: accountOnboardingServiceMock,
             },
          ],
       }).compile();
@@ -76,6 +87,74 @@ describe('UsersService', () => {
          total: 1,
          page: 0,
          limit: 10,
+      });
+   });
+
+   it('creates an already verified user and enqueues the welcome email with temporary password', async () => {
+      prismaService.user.create.mockResolvedValue({
+         id: 'user_2',
+         email: 'coach@gymapp.dev',
+         username: 'coach',
+         firstName: 'Coach',
+         lastName: 'Admin',
+         role: UserRole.COACH,
+         weightKg: null,
+         heightCm: null,
+         birthDate: null,
+         createdAt: new Date('2026-04-06T10:00:00.000Z'),
+         updatedAt: new Date('2026-04-06T10:00:00.000Z'),
+      });
+      accountOnboardingServiceMock.enqueueWelcomeEmail.mockResolvedValue(
+         undefined,
+      );
+
+      const result = await service.create({
+         email: 'coach@gymapp.dev',
+         firstName: 'Coach',
+         lastName: 'Admin',
+         role: UserRole.COACH,
+      });
+
+      expect(prismaService.user.create).toHaveBeenCalled();
+      const createCalls = prismaService.user.create.mock.calls as Array<
+         [Prisma.UserCreateArgs]
+      >;
+      const [createCall] = createCalls[0] ?? [];
+
+      expect(createCall.data.emailVerifiedAt).toBeInstanceOf(Date);
+      expect(typeof createCall.data.passwordHash).toBe('string');
+      expect(createCall.data.passwordHash).toContain(':');
+
+      const welcomeEmailCalls = accountOnboardingServiceMock.enqueueWelcomeEmail
+         .mock.calls as Array<
+         [
+            {
+               userId: string;
+               email: string;
+               firstName: string | null;
+               temporaryPassword?: string;
+            },
+         ]
+      >;
+      const [welcomeEmailCall] = welcomeEmailCalls[0] ?? [];
+
+      expect(welcomeEmailCall.userId).toBe('user_2');
+      expect(welcomeEmailCall.email).toBe('coach@gymapp.dev');
+      expect(welcomeEmailCall.firstName).toBe('Coach');
+      expect(typeof welcomeEmailCall.temporaryPassword).toBe('string');
+
+      expect(result).toEqual({
+         id: 'user_2',
+         email: 'coach@gymapp.dev',
+         username: 'coach',
+         firstName: 'Coach',
+         lastName: 'Admin',
+         role: UserRole.COACH,
+         weightKg: null,
+         heightCm: null,
+         birthDate: null,
+         createdAt: '2026-04-06T10:00:00.000Z',
+         updatedAt: '2026-04-06T10:00:00.000Z',
       });
    });
 });

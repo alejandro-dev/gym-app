@@ -36,15 +36,25 @@ export class AuthProcessor extends WorkerHost {
    }
 
    private async handleUserRegistered(job: Job<UserRegisteredJobData>) {
-      const { email, firstName, emailVerificationToken } = job.data;
+      const { email, firstName, emailVerificationToken, temporaryPassword } =
+         job.data;
 
-      // Construimos la URL de verificación de email
+      if (temporaryPassword) {
+         await this.emailsService.sendAdminCreatedAccountEmail({
+            email,
+            firstName,
+            temporaryPassword,
+         });
+
+         this.logger.log(`Correo de alta administrativa enviado a ${email}`);
+         return;
+      }
+
+      // Construimos la URL de verificación de email solo para el flujo de registro.
       const frontUrl = this.configService.get<string>(
          'FRONT_URL',
          'http://localhost:3001',
       );
-
-      // La URL de verificación de email es la base de la aplicación + el token de verificación
       const verificationUrl = `${frontUrl}/auth/verify-email?token=${emailVerificationToken}`;
 
       // Enviamos un e-mail de verificación

@@ -6,38 +6,21 @@ import {
    Logger,
    ForbiddenException,
 } from '@nestjs/common';
+import { scrypt as scryptCallback, timingSafeEqual } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Prisma, UserRole } from '@prisma/client';
-import { randomBytes, scrypt as scryptCallback, timingSafeEqual } from 'crypto';
 import { promisify } from 'util';
 import { PrismaService } from '../prisma/prisma.service';
-import { AuthProducer } from '../bullmq/auth/auth.producer';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { AuthTokenPayload } from './interfaces/auth-token-payload.interface';
+import { hashValue } from './utils/hash-value.utils';
+import { AccountOnboardingService } from './account-onboarding.service';
+import type { AuthResult } from './types/auth-result.type';
 
 // Convertimos scrypt de la librería crypto de Node desde formato callback a formato async/await.
 const scrypt = promisify(scryptCallback);
-
-// Define el tipo de resultado de la autenticación
-type AuthResult = {
-   user: {
-      id: string;
-      email: string;
-      username: string | null;
-      firstName: string | null;
-      lastName: string | null;
-      role: UserRole;
-      weightKg: number | null;
-      heightCm: number | null;
-      birthDate: Date | null;
-      createdAt: Date;
-      updatedAt: Date;
-   };
-   accessToken: string;
-   refreshToken: string;
-};
 
 /**
  * Servicio de autenticacion con access token y refresh token.
@@ -55,10 +38,10 @@ export class AuthService {
     * @param authProducer - Producer de BullMQ para el envio de mensajes de verificación de email
     */
    constructor(
-      private readonly prisma: PrismaService,
-      private readonly jwtService: JwtService,
       private readonly configService: ConfigService,
-      private readonly authProducer: AuthProducer,
+      private readonly jwtService: JwtService,
+      private readonly prisma: PrismaService,
+      private readonly accountOnboardingService: AccountOnboardingService,
    ) {}
 
    /**
@@ -88,14 +71,13 @@ export class AuthService {
     */
    async register(registerDto: RegisterDto): Promise<AuthResult> {
       // Hasheamos el password y el token de verificacion de email
-      const passwordHash = await this.hashValue(registerDto.password);
-      const emailVerificationToken = this.generateEmailVerificationToken();
-      const emailVerificationTokenHash = await this.hashValue(
+      const passwordHash = await hashValue(registerDto.password);
+      const {
          emailVerificationToken,
-      );
-
-      // Calculamos la fecha de expiracion del token de verificacion de email
-      const emailVerificationExpiresAt = this.buildEmailVerificationExpiresAt();
+         emailVerificationTokenHash,
+         emailVerificationExpiresAt,
+      } =
+         await this.accountOnboardingService.createEmailVerificationArtifacts();
 
       try {
          const user = await this.prisma.user.create({
@@ -118,23 +100,14 @@ export class AuthService {
          });
 
          // Generamos el token de verificación de email
-         const authResult = await this.issueTokens(user);
-
-         try {
-            // Enviamos un mensaje de verificación de email a la cola
-            await this.authProducer.enqueueUserRegistered({
-               userId: user.id,
-               email: user.email,
-               firstName: user.firstName,
-               emailVerificationToken,
-            });
-         } catch (error) {
-            // Capturamos cualquier error y lo reportamos
-            this.logger.error(
-               `Error encolando verificacion de email para ${user.email}`,
-               error instanceof Error ? error.stack : undefined,
-            );
-         }
+         const authResult =
+            await this.accountOnboardingService.issueTokens(user);
+         await this.accountOnboardingService.enqueueWelcomeEmail({
+            userId: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            emailVerificationToken,
+         });
 
          return authResult;
       } catch (error) {
@@ -210,7 +183,7 @@ export class AuthService {
          updatedAt: user.updatedAt,
       };
 
-      return this.issueTokens(publicUser);
+      return this.accountOnboardingService.issueTokens(publicUser);
    }
 
    /**
@@ -293,7 +266,7 @@ export class AuthService {
          createdAt: user.createdAt,
          updatedAt: user.updatedAt,
       };
-      return this.issueTokens(publicUser);
+      return this.accountOnboardingService.issueTokens(publicUser);
    }
 
    /**
@@ -310,65 +283,6 @@ export class AuthService {
       });
 
       return { message: 'Logged out successfully' };
-   }
-
-   /**
-    * Emite access y refresh token y persiste el refresh token hasheado.
-    *
-    * @param user - Usuario para el que se emiten los tokens
-    * @returns Usuario junto con access token y refresh token
-    */
-   private async issueTokens(user: {
-      id: string;
-      email: string;
-      username: string | null;
-      firstName: string | null;
-      lastName: string | null;
-      role: UserRole;
-      weightKg: number | null;
-      heightCm: number | null;
-      birthDate: Date | null;
-      createdAt: Date;
-      updatedAt: Date;
-   }): Promise<AuthResult> {
-      // Creamos los payloads de acceso y refresco
-      const payload: AuthTokenPayload = {
-         sub: user.id,
-         email: user.email,
-         role: user.role,
-         tokenType: 'access',
-      };
-
-      const refreshPayload: AuthTokenPayload = {
-         ...payload,
-         tokenType: 'refresh',
-      };
-
-      // Firmamos los tokens
-      const [accessToken, refreshToken] = await Promise.all([
-         this.jwtService.signAsync(payload, {
-            secret: this.getAccessTokenSecret(),
-            expiresIn: `${this.getAccessTokenTtlSeconds()}s`,
-         }),
-         this.jwtService.signAsync(refreshPayload, {
-            secret: this.getRefreshTokenSecret(),
-            expiresIn: `${this.getRefreshTokenTtlSeconds()}s`,
-         }),
-      ]);
-
-      // Actualizamos el usuario
-      await this.prisma.user.update({
-         where: { id: user.id },
-         data: {
-            hashedRefreshToken: await this.hashValue(refreshToken),
-         },
-      });
-
-      return {
-         user,
-         accessToken,
-         refreshToken,
-      };
    }
 
    /**
@@ -431,41 +345,6 @@ export class AuthService {
    }
 
    /**
-    * Hash seguro para passwords y refresh tokens.
-    *
-    * @param value - Valor plano a hashear
-    * @returns Hash derivado con salt
-    */
-   private async hashValue(value: string) {
-      const salt = randomBytes(16).toString('hex');
-      const derivedKey = (await scrypt(value, salt, 64)) as Buffer;
-      return `${salt}:${derivedKey.toString('hex')}`;
-   }
-
-   /**
-    * Genera un token de verificacion de email.
-    *
-    * @returns Token de verificacion de email
-    */
-   private generateEmailVerificationToken() {
-      return randomBytes(32).toString('hex');
-   }
-
-   /**
-    * Genera la fecha de expiracion de un token de verificacion de email.
-    *
-    * @returns Fecha de expiracion de un token de verificacion de email
-    */
-   private buildEmailVerificationExpiresAt() {
-      const ttlSeconds = this.configService.get<number>(
-         'EMAIL_VERIFICATION_TTL_SECONDS',
-         60 * 60 * 24,
-      );
-
-      return new Date(Date.now() + ttlSeconds * 1000);
-   }
-
-   /**
     * Verifica un valor plano frente a su hash almacenado.
     *
     * @param value - Valor plano a comprobar
@@ -509,18 +388,6 @@ export class AuthService {
    }
 
    /**
-    * Obtiene el secreto usado para firmar access tokens.
-    *
-    * @returns Secreto para access tokens
-    */
-   private getAccessTokenSecret() {
-      return this.configService.get<string>(
-         'JWT_ACCESS_SECRET',
-         'dev-access-secret-change-me',
-      );
-   }
-
-   /**
     * Obtiene el secreto usado para firmar refresh tokens.
     *
     * @returns Secreto para refresh tokens
@@ -530,23 +397,5 @@ export class AuthService {
          'JWT_REFRESH_SECRET',
          'dev-refresh-secret-change-me',
       );
-   }
-
-   /**
-    * Devuelve la duracion del access token en segundos.
-    *
-    * @returns Tiempo de vida del access token en segundos
-    */
-   private getAccessTokenTtlSeconds() {
-      return this.configService.get<number>('JWT_ACCESS_TTL_SECONDS', 900);
-   }
-
-   /**
-    * Devuelve la duracion del refresh token en segundos.
-    *
-    * @returns Tiempo de vida del refresh token en segundos
-    */
-   private getRefreshTokenTtlSeconds() {
-      return this.configService.get<number>('JWT_REFRESH_TTL_SECONDS', 604800);
    }
 }

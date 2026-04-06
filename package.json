@@ -11,8 +11,8 @@
     "typescript": "^5.9.3"
   },
   "scripts": {
-    "dev back": "",
-    "dev front": "",
+    "dev:back": "pnpm --filter api start:dev",
+    "dev:front": "pnpm --filter web dev",
     "db:test:up": "pnpm --filter api db:test:up",
     "db:test:down": "pnpm --filter api db:test:down",
     "test:e2e:local": "pnpm --filter api test:e2e:local"

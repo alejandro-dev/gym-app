@@ -14,6 +14,12 @@ type WelcomeVerificationEmailData = {
    verificationUrl: string;
 };
 
+type AdminCreatedAccountEmailData = {
+   email: string;
+   firstName: string | null;
+   temporaryPassword: string;
+};
+
 /**
  * Servicio de envio de e-mails.
  */
@@ -51,6 +57,38 @@ export class EmailsService {
       const html = this.buildWelcomeVerificationHtml({
          greeting,
          verificationUrl: data.verificationUrl,
+      });
+
+      await this.sendMail({
+         to: data.email,
+         subject,
+         text,
+         html,
+      });
+   }
+
+   /**
+    * Envía un e-mail de alta administrativa con password temporal.
+    *
+    * @param data - Datos del e-mail de onboarding administrativo
+    */
+   async sendAdminCreatedAccountEmail(
+      data: AdminCreatedAccountEmailData,
+   ): Promise<void> {
+      const subject = 'Tu cuenta de Gym App ha sido creada';
+      const greeting = data.firstName ? `Hola ${data.firstName},` : 'Hola,';
+
+      const text = [
+         greeting,
+         '',
+         'Se ha creado una cuenta para ti en Gym App.',
+         `Tu contraseña temporal es: ${data.temporaryPassword}`,
+         '',
+         'Por seguridad, te recomendamos cambiar la contraseña después del primer acceso.',
+      ].join('\n');
+      const html = this.buildAdminCreatedAccountHtml({
+         greeting,
+         temporaryPassword: data.temporaryPassword,
       });
 
       await this.sendMail({
@@ -123,6 +161,58 @@ export class EmailsService {
                       </p>
                       <p style="margin:0;font-size:13px;line-height:1.7;color:#6b7280;">
                         Si no has creado esta cuenta, puedes ignorar este mensaje.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+      </html>
+    `;
+   }
+
+   private buildAdminCreatedAccountHtml(data: {
+      greeting: string;
+      temporaryPassword: string;
+   }) {
+      return `
+      <!DOCTYPE html>
+      <html lang="es">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Tu cuenta ha sido creada</title>
+        </head>
+        <body style="margin:0;padding:0;background-color:#f4f7fb;font-family:Helvetica,Arial,sans-serif;color:#1f2937;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f7fb;padding:32px 16px;">
+            <tr>
+              <td align="center">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background-color:#ffffff;border:1px solid #e5e7eb;border-radius:20px;overflow:hidden;">
+                  <tr>
+                    <td style="padding:32px 32px 16px;background:linear-gradient(135deg,#111827 0%,#1f2937 100%);color:#ffffff;">
+                      <p style="margin:0;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#cbd5e1;">Gym App</p>
+                      <h1 style="margin:12px 0 0;font-size:28px;line-height:1.2;font-weight:700;">Tu cuenta ya está lista</h1>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:32px;">
+                      <p style="margin:0 0 16px;font-size:16px;line-height:1.7;">${data.greeting}</p>
+                      <p style="margin:0 0 16px;font-size:16px;line-height:1.7;">
+                        Un administrador ha creado una cuenta para ti en <strong>Gym App</strong>.
+                      </p>
+                      <p style="margin:0 0 12px;font-size:14px;line-height:1.7;color:#4b5563;">
+                        Tu contraseña temporal es:
+                      </p>
+                      <p style="margin:0 0 24px;padding:14px 16px;border-radius:12px;background-color:#f3f4f6;font-size:18px;font-weight:700;letter-spacing:0.04em;">
+                        ${data.temporaryPassword}
+                      </p>
+                      <p style="margin:0 0 16px;font-size:16px;line-height:1.7;">
+                        Ya puedes iniciar sesión con esta contraseña temporal.
+                      </p>
+                      <p style="margin:0;font-size:13px;line-height:1.7;color:#6b7280;">
+                        Por seguridad, cambia la contraseña después de tu primer acceso.
                       </p>
                     </td>
                   </tr>

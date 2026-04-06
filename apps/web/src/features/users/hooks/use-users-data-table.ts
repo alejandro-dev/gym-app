@@ -1,13 +1,30 @@
 "use client";
 
-import * as React from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import {
    getCoreRowModel,
    useReactTable,
    type ColumnDef,
    type PaginationState,
 } from "@tanstack/react-table";
+import { toast } from "sonner";
 
+import { getStatusErrorMessage, type StatusMessageMap } from "@/features/auth/lib/auth-errors";
+import {
+   EMPTY_USER_FORM_VALUES,
+   type UserFormValues,
+} from "../components/form-user";
+import { userSchema } from "../schemas/user.schema";
+import {
+   createUser,
+   type CreateUserPayload,
+   type UpdateUserPayload,
+   updateUser,
+} from "@/services/usersService";
+import type { User } from "@gym-app/types";
+
+// Tipo para los parámetros del hook useUsersDataTable.
 type UseUsersDataTableParams<TData> = {
    columns: ColumnDef<TData>[];
    data: TData[];
@@ -15,6 +32,26 @@ type UseUsersDataTableParams<TData> = {
    pagination: PaginationState;
    pageCount: number;
    onPaginationChange: React.Dispatch<React.SetStateAction<PaginationState>>;
+};
+
+// Tipo para los datos de la mutación de guardar un usuario.
+type SaveUserMutationInput =
+   | {
+        mode: "create";
+        payload: CreateUserPayload;
+     }
+   | {
+        mode: "edit";
+        userId: string;
+        payload: UpdateUserPayload;
+     };
+
+// Errores de validación de usuario.
+const USER_ERROR_MESSAGES: StatusMessageMap = {
+   400: "Revise los datos del usuario y vuelva a intentarlo",
+   401: "No tienes permiso para realizar esta acción",
+   403: "No tienes permiso para administrar usuarios",
+   409: "Ya existe un usuario con este correo electrónico o nombre de usuario"
 };
 
 export function useUsersDataTable<TData>({
@@ -25,7 +62,137 @@ export function useUsersDataTable<TData>({
    pageCount,
    onPaginationChange,
 }: UseUsersDataTableParams<TData>) {
-   return useReactTable({
+   const queryClient = useQueryClient();
+   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+   const [isDialogOpen, setIsDialogOpen] = useState(false);
+   const [formValues, setFormValues] = useState<UserFormValues>(EMPTY_USER_FORM_VALUES);
+
+   // Restablece los valores del formulario al inicio.
+   const resetForm = () => {
+      setSelectedUser(null);
+      setFormValues(EMPTY_USER_FORM_VALUES);
+   };
+
+   // Mutación para guardar un usuario.
+   const mutation = useMutation({
+      mutationFn: async (input: SaveUserMutationInput) => {
+         if (input.mode === "create") {
+            return createUser(input.payload);
+         }
+
+         return updateUser(input.userId, input.payload);
+      },
+      onSuccess: async (_, input) => {
+         toast.success(
+            input.mode === "create"
+               ? "Usuario creado correctamente"
+               : "Usuario actualizado correctamente",
+         );
+         setIsDialogOpen(false);
+         resetForm();
+         await queryClient.invalidateQueries({ queryKey: ["users"] });
+      },
+      onError: (error) => {
+         toast.error(getStatusErrorMessage(error, USER_ERROR_MESSAGES));
+      },
+   });
+
+   // Abre el diálogo para crear un nuevo usuario.
+   const openCreateDialog = () => {
+      resetForm();
+      setIsDialogOpen(true);
+   };
+
+   // Abre el diálogo para editar un usuario.
+   const openEditDialog = (user: User) => {
+      setSelectedUser(user);
+      setFormValues({
+         email: user.email,
+         username: user.username ?? "",
+         firstName: user.firstName ?? "",
+         lastName: user.lastName ?? "",
+         role: user.role,
+      });
+      setIsDialogOpen(true);
+   };
+
+   // Evento que se activa cuando cambia el estado del diálogo.
+   const handleDialogOpenChange = (open: boolean) => {
+      setIsDialogOpen(open);
+
+      if (!open) {
+         resetForm();
+      }
+   };
+
+   // Evento que se activa cuando cambia el valor de un campo del formulario.
+   const handleFormValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target;
+
+      setFormValues((current) => ({
+         ...current,
+         [name]: value,
+      }));
+   };
+
+   // Evento que se activa cuando cambia el rol del usuario.
+   const handleRoleChange = (role: UserFormValues["role"]) => {
+      setFormValues((current) => ({
+         ...current,
+         role,
+      }));
+   };
+
+   // Evento que se activa al enviar el formulario de creación/edición de usuario.
+   const handleCreateUser = (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+
+      // Validamos el formulario con Zod
+      const result = userSchema.safeParse({
+         email: formValues.email.trim(),
+         username: formValues.username.trim() || undefined,
+         firstName: formValues.firstName.trim() || undefined,
+         lastName: formValues.lastName.trim() || undefined,
+         role: formValues.role,
+      });
+
+      // Si el formulario no es válido, lanzamos una excepción
+      if (!result.success) {
+         toast.warning(result.error.issues[0]?.message ?? "Formulario inválido");
+         return;
+      }
+
+      // Si estamos editando un usuario, actualizamos
+      if (selectedUser) {
+         void mutation.mutateAsync({
+            mode: "edit",
+            userId: selectedUser.id,
+            payload: {
+               email: result.data.email,
+               username: result.data.username ?? null,
+               firstName: result.data.firstName ?? null,
+               lastName: result.data.lastName ?? null,
+               role: result.data.role,
+            },
+         });
+
+         return;
+      }
+
+      // Si no estamos editando un usuario, creamos
+      void mutation.mutateAsync({
+         mode: "create",
+         payload: {
+            email: result.data.email,
+            username: result.data.username,
+            firstName: result.data.firstName,
+            lastName: result.data.lastName,
+            role: result.data.role,
+         },
+      });
+   };
+
+   const table = useReactTable({
       data,
       columns,
       state: {
@@ -37,4 +204,18 @@ export function useUsersDataTable<TData>({
       onPaginationChange,
       getCoreRowModel: getCoreRowModel(),
    });
+
+   return {
+      formValues,
+      handleCreateUser,
+      handleDialogOpenChange,
+      handleFormValueChange,
+      handleRoleChange,
+      isDialogOpen,
+      isSaving: mutation.isPending,
+      openCreateDialog,
+      openEditDialog,
+      selectedUser,
+      table,
+   };
 }

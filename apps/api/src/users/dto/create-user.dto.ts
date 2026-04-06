@@ -7,12 +7,11 @@ import {
    IsNumber,
    IsOptional,
    IsString,
-   MinLength,
 } from 'class-validator';
 
 /**
- * Datos necesarios para crear un usuario.
- * Refleja los campos disponibles en el modelo `User` de Prisma.
+ * Datos necesarios para crear un usuario desde backoffice.
+ * La contraseña temporal se genera en backend y la cuenta queda verificada.
  */
 export class CreateUserDto {
    @ApiProperty({ example: 'alex@example.com' })
@@ -25,12 +24,6 @@ export class CreateUserDto {
    @IsOptional()
    @IsString()
    username?: string;
-
-   @ApiProperty({ example: 'hashed-password-value' })
-   /** Hash de la contrasena almacenado en base de datos. */
-   @IsString()
-   @MinLength(10)
-   passwordHash!: string;
 
    @ApiPropertyOptional({ example: 'Alex' })
    /** Nombre del usuario. */

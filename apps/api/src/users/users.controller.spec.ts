@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { UserRole } from '@prisma/client';
 import type { UsersListResponse, User } from '@gym-app/types';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
@@ -92,5 +93,35 @@ describe('UsersController', () => {
       await controller.findAll('-3', '1000');
 
       expect(usersService.findAll).toHaveBeenCalledWith(0, 100);
+   });
+
+   it('delegates user creation to the service', async () => {
+      usersService.create.mockResolvedValue({
+         id: 'user_2',
+         email: 'coach@gymapp.dev',
+         username: 'coach',
+         firstName: 'Coach',
+         lastName: 'Admin',
+         role: UserRole.COACH,
+         weightKg: null,
+         heightCm: null,
+         birthDate: null,
+         createdAt: '2026-04-06T10:00:00.000Z',
+         updatedAt: '2026-04-06T10:00:00.000Z',
+      });
+
+      await controller.create({
+         email: 'coach@gymapp.dev',
+         firstName: 'Coach',
+         lastName: 'Admin',
+         role: UserRole.COACH,
+      });
+
+      expect(usersService.create).toHaveBeenCalledWith({
+         email: 'coach@gymapp.dev',
+         firstName: 'Coach',
+         lastName: 'Admin',
+         role: UserRole.COACH,
+      });
    });
 });

@@ -1,4 +1,8 @@
-import { Button } from "@/components/ui/button"
+"use client";
+
+import * as React from "react";
+
+import { Button } from "@/components/ui/button";
 import {
    Dialog,
    DialogClose,
@@ -7,45 +11,138 @@ import {
    DialogFooter,
    DialogHeader,
    DialogTitle,
-   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Field, FieldGroup } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dialog";
+import {
+   Select,
+   SelectContent,
+   SelectItem,
+   SelectTrigger,
+   SelectValue,
+} from "@/components/ui/select";
+import { Field, FieldGroup } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import type { UserRole } from "@gym-app/types";
 
-export function DialogDemo() {
+// Type para los valores del formulario de creación de usuario.
+export type UserFormValues = {
+   email: string;
+   username: string;
+   firstName: string;
+   lastName: string;
+   role: UserRole;
+};
+
+// Valores por defecto para el formulario de creación de usuario.
+export const EMPTY_USER_FORM_VALUES: UserFormValues = {
+   email: "",
+   username: "",
+   firstName: "",
+   lastName: "",
+   role: "USER",
+};
+
+// Dialogo para crear o editar un usuario.
+type AddUserDialogProps = {
+   isOpen: boolean;
+   isSaving: boolean;
+   mode: "create" | "edit";
+   onOpenChange: (open: boolean) => void;
+   onRoleChange: (role: UserRole) => void;
+   onSubmit: React.FormEventHandler<HTMLFormElement>;
+   onValueChange: React.ChangeEventHandler<HTMLInputElement>;
+   values: UserFormValues;
+};
+
+export function AddUserDialog({
+   isOpen,
+   isSaving,
+   mode,
+   onOpenChange,
+   onRoleChange,
+   onSubmit,
+   onValueChange,
+   values,
+}: AddUserDialogProps) {
+   const isEditMode = mode === "edit";
+
    return (
-      <Dialog>
-         <form>
-            <DialogTrigger asChild>
-               <Button variant="outline">Open Dialog</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-sm">
+      <Dialog open={isOpen} onOpenChange={onOpenChange}>
+         <DialogContent className="sm:max-w-sm">
+            <form className="flex flex-col gap-4" onSubmit={onSubmit}>
                <DialogHeader>
-                  <DialogTitle>Edit profile</DialogTitle>
+                  <DialogTitle>{isEditMode ? "Edit user" : "Add user"}</DialogTitle>
                   <DialogDescription>
-                     Make changes to your profile here. Click save when you&apos;re
-                     done.
+                     {isEditMode
+                        ? "Update the selected user information."
+                        : "Complete the basic information to create a new user."}
                   </DialogDescription>
                </DialogHeader>
                <FieldGroup>
                   <Field>
-                     <Label htmlFor="name-1">Name</Label>
-                     <Input id="name-1" name="name" defaultValue="Pedro Duarte" />
+                     <Label htmlFor="email">Email<span className="text-destructive">*</span></Label>
+                     <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={values.email}
+                        onChange={onValueChange}
+                        disabled={isEditMode}
+                     />
                   </Field>
                   <Field>
-                     <Label htmlFor="username-1">Username</Label>
-                     <Input id="username-1" name="username" defaultValue="@peduarte" />
+                     <Label htmlFor="firstName">First name</Label>
+                     <Input
+                        id="firstName"
+                        name="firstName"
+                        value={values.firstName}
+                        onChange={onValueChange}
+                     />
+                  </Field>
+                  <Field>
+                     <Label htmlFor="lastName">Last name</Label>
+                     <Input
+                        id="lastName"
+                        name="lastName"
+                        value={values.lastName}
+                        onChange={onValueChange}
+                     />
+                  </Field>
+                  <Field>
+                     <Label htmlFor="username">Username</Label>
+                     <Input
+                        id="username"
+                        name="username"
+                        value={values.username}
+                        onChange={onValueChange}
+                     />
+                  </Field>
+                  <Field>
+                     <Label htmlFor="role">Role</Label>
+                     <Select value={values.role} onValueChange={onRoleChange}>
+                        <SelectTrigger className="w-full">
+                           <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                           <SelectItem value="ADMIN">Admin</SelectItem>
+                           <SelectItem value="COACH">Coach</SelectItem>
+                           <SelectItem value="USER">User</SelectItem>
+                        </SelectContent>
+                     </Select>
                   </Field>
                </FieldGroup>
                <DialogFooter>
                   <DialogClose asChild>
-                     <Button variant="outline">Cancel</Button>
+                     <Button type="button" variant="outline" disabled={isSaving}>
+                        Cancel
+                     </Button>
                   </DialogClose>
-                  <Button type="submit">Save changes</Button>
+                  <Button type="submit" disabled={isSaving}>
+                     {isSaving ? "Saving..." : "Save user"}
+                  </Button>
                </DialogFooter>
-            </DialogContent>
-         </form>
+            </form>
+         </DialogContent>
       </Dialog>
-   )
+   );
 }

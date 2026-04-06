@@ -1,4 +1,8 @@
 import { NextResponse } from "next/server";
+import {
+   readRefreshTokenFromSetCookieHeader,
+   setSessionCookies,
+} from "@/lib/auth-cookies";
 
 export async function POST(req: Request) {
    const body = await req.json();
@@ -31,24 +35,13 @@ export async function POST(req: Request) {
          );
       }
 
-      // Guardar JWT en cookie httpOnly
+      // Si la autenticación es exitosa, establecer las cookies de sesión
       const response = NextResponse.json(payload);
-      response.cookies.set("token", payload.accessToken, {
-         httpOnly: true,
-         sameSite: "lax",
-         secure: process.env.NODE_ENV === "production",
-         path: "/",
-      });
 
-      // Guardar rol en cookie para que middleware pueda decidir redirecciones sin depender del claim JWT.
-      if (typeof payload?.user?.role === "string") {
-         response.cookies.set("role", payload.user.role.toLowerCase(), {
-            httpOnly: true,
-            sameSite: "lax",
-            secure: process.env.NODE_ENV === "production",
-            path: "/",
-         });
-      }
+      // Obtener el token de refresco de la cookie de sesión
+      const refreshToken = readRefreshTokenFromSetCookieHeader(res);
+
+      setSessionCookies(response, payload, refreshToken);
 
       return response;
 

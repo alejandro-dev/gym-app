@@ -4,12 +4,15 @@ import {
    SidebarInset,
    SidebarProvider,
 } from "@/components/ui/sidebar"
+import { requireUser } from "@/lib/authorize"
 
-export default function ProtectedLayout({
+export default async function ProtectedLayout({
    children,
 }: Readonly<{
    children: React.ReactNode
 }>) {
+   await requireUser()
+
    return (
       <SidebarProvider
          style={

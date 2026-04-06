@@ -111,7 +111,8 @@ export class UsersController {
     */
    @ApiOperation({ summary: 'Crear usuario' })
    @ApiCreatedResponse({
-      description: 'Usuario creado correctamente.',
+      description:
+         'Usuario creado correctamente. La cuenta queda verificada y se envía una contraseña temporal por email.',
       type: UserResponseDto,
    })
    @Post()

@@ -1,10 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, UserRole } from '@prisma/client';
+import { AccountOnboardingService } from '../auth/account-onboarding.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { handlePrismaError } from '../prisma/prisma-error.util';
 import type { User, UsersListResponse } from '@gym-app/types';
+import { generateRandomPassword } from './utils/generate-random-password.util';
+import { hashValue } from '../auth/utils/hash-value.utils';
 
 type SelectedUserRecord = {
    id: string;
@@ -27,7 +30,16 @@ type SelectedUserRecord = {
  */
 @Injectable()
 export class UsersService {
-   constructor(private readonly prisma: PrismaService) {}
+   /**
+    * Inyecta el servicio de Prisma para acceso a la base de datos.
+    *
+    * @param prisma - Cliente de Prisma para consultas a la base de datos
+    * @param accountOnboardingService - Servicio compartido para onboarding de cuentas
+    */
+   constructor(
+      private readonly prisma: PrismaService,
+      private readonly accountOnboardingService: AccountOnboardingService,
+   ) {}
 
    /**
     * Selecciona los campos de un usuario para la consulta.
@@ -102,10 +114,25 @@ export class UsersService {
     * @returns Usuario creado
     */
    async create(createUserDto: CreateUserDto): Promise<User> {
+      // Generamos una password temporal segura en backend para no depender
+      // de una contraseña enviada desde el cliente.
+      const temporaryPassword = generateRandomPassword();
+      const passwordHash = await hashValue(temporaryPassword);
+
       try {
          const user = await this.prisma.user.create({
-            data: this.toCreateData(createUserDto),
+            data: this.toCreateData(createUserDto, {
+               passwordHash,
+               emailVerifiedAt: new Date(),
+            }),
             select: this.userSelect,
+         });
+
+         await this.accountOnboardingService.enqueueWelcomeEmail({
+            userId: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            temporaryPassword,
          });
 
          return this.toPublicUser(user);
@@ -177,18 +204,26 @@ export class UsersService {
     * Convierte el DTO de creacion al formato esperado por Prisma.
     *
     * @param createUserDto - Datos de creacion del usuario
+    * @param securityData - Datos internos de seguridad y verificación
     * @returns Datos adaptados a Prisma
     */
-   private toCreateData(createUserDto: CreateUserDto): Prisma.UserCreateInput {
+   private toCreateData(
+      createUserDto: CreateUserDto,
+      securityData: {
+         passwordHash: string;
+         emailVerifiedAt: Date;
+      },
+   ): Prisma.UserCreateInput {
       return {
          email: createUserDto.email,
          username: createUserDto.username,
-         passwordHash: createUserDto.passwordHash,
+         passwordHash: securityData.passwordHash,
          firstName: createUserDto.firstName,
          lastName: createUserDto.lastName,
          role: createUserDto.role ?? UserRole.USER,
          weightKg: createUserDto.weightKg,
          heightCm: createUserDto.heightCm,
+         emailVerifiedAt: securityData.emailVerifiedAt,
          birthDate: createUserDto.birthDate
             ? new Date(createUserDto.birthDate)
             : undefined,

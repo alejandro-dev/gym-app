@@ -8,16 +8,24 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { AuthProducer } from '../bullmq/auth/auth.producer';
 import { PrismaService } from '../prisma/prisma.service';
+import { AccountOnboardingService } from './account-onboarding.service';
 import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
    let service: AuthService;
    const prismaServiceMock = {
       user: {
+         create: jest.fn(),
          findUnique: jest.fn(),
          findMany: jest.fn(),
          update: jest.fn(),
       },
+   };
+
+   const accountOnboardingServiceMock = {
+      createEmailVerificationArtifacts: jest.fn(),
+      enqueueWelcomeEmail: jest.fn(),
+      issueTokens: jest.fn(),
    };
 
    beforeEach(async () => {
@@ -32,7 +40,9 @@ describe('AuthService', () => {
             },
             {
                provide: JwtService,
-               useValue: {},
+               useValue: {
+                  verifyAsync: jest.fn(),
+               },
             },
             {
                provide: ConfigService,
@@ -45,6 +55,10 @@ describe('AuthService', () => {
                useValue: {
                   enqueueUserRegistered: jest.fn(),
                },
+            },
+            {
+               provide: AccountOnboardingService,
+               useValue: accountOnboardingServiceMock,
             },
          ],
       }).compile();
@@ -118,8 +132,8 @@ describe('AuthService', () => {
          .spyOn(service as never, 'verifyValue')
          .mockResolvedValueOnce(true as never);
       jest
-         .spyOn(service as never, 'issueTokens')
-         .mockResolvedValueOnce(issuedTokens as never);
+         .spyOn(accountOnboardingServiceMock, 'issueTokens')
+         .mockResolvedValueOnce(issuedTokens);
 
       await expect(
          service.login({

@@ -8,7 +8,7 @@ on:
   pull_request:
 
 jobs:
-  api:
+  api-lint-build:
     name: Build and Lint API
     runs-on: ubuntu-latest
     env:
@@ -40,6 +40,88 @@ jobs:
 
       - name: Build API
         run: pnpm --filter api build
+
+  api-unit-tests:
+    name: API Unit Tests
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies without scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Generate Prisma client
+        run: pnpm --filter api exec prisma generate --schema prisma/schema.prisma
+
+      - name: Run API unit tests
+        run: pnpm --filter api test:unit
+
+  api-e2e-tests:
+    name: API E2E Tests
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/gym_app_test?schema=public
+      JWT_ACCESS_SECRET: superaccesssecret
+      JWT_REFRESH_SECRET: superrefreshsecret
+      JWT_ACCESS_TTL_SECONDS: 900
+      JWT_REFRESH_TTL_SECONDS: 604800
+      NODE_ENV: test
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: gym_app_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d gym_app_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies without scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Generate Prisma client
+        run: pnpm --filter api exec prisma generate --schema prisma/schema.prisma
+
+      - name: Run Prisma migrations
+        run: pnpm --filter api exec prisma migrate deploy --schema prisma/schema.prisma
+
+      - name: Run API e2e tests
+        run: pnpm --filter api exec jest --config ./test/jest-e2e.json --runInBand
 
   web:
     name: Build and Lint Web

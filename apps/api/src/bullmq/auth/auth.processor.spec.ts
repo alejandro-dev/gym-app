@@ -11,6 +11,7 @@ describe('AuthProcessor', () => {
 
    const emailsServiceMock = {
       sendWelcomeVerificationEmail: jest.fn(),
+      sendAdminCreatedAccountEmail: jest.fn(),
    };
 
    const configServiceMock = {
@@ -92,6 +93,30 @@ describe('AuthProcessor', () => {
          firstName: null,
          verificationUrl:
             'http://localhost:3001/auth/verify-email?token=fallback_token',
+      });
+   });
+
+   it('sends the admin-created email when a temporary password is present', async () => {
+      emailsServiceMock.sendAdminCreatedAccountEmail.mockResolvedValue(
+         undefined,
+      );
+
+      await processor.process({
+         name: AUTH_JOBS.USER_REGISTERED,
+         data: {
+            userId: 'user_789',
+            email: 'coach@example.com',
+            firstName: 'Coach',
+            temporaryPassword: 'TempPass123!',
+         },
+      } as Job<UserRegisteredJobData>);
+
+      expect(
+         emailsServiceMock.sendAdminCreatedAccountEmail,
+      ).toHaveBeenCalledWith({
+         email: 'coach@example.com',
+         firstName: 'Coach',
+         temporaryPassword: 'TempPass123!',
       });
    });
 });
