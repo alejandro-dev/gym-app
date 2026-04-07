@@ -32,7 +32,7 @@ export async function backendFetch<T>(path: string, options?: RequestInit): Prom
    if (res.status === 401 && refreshToken) {
       // Si el access token expiró, intentamos renovarlo una sola vez antes
       // de devolver el 401 al resto de la app.
-      const refreshRes = await fetch(`${process.env.NEST_API_URL}/auth/refresh`, {
+      const refreshRes = await fetch(`${process.env.NEST_API_URL}/api/auth/refresh`, {
          method: "POST",
          headers: { "Content-Type": "application/json" },
          body: JSON.stringify({ refreshToken }),
