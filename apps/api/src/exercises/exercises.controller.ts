@@ -47,13 +47,13 @@ export class ExercisesController {
 
    /**
     * Devuelve el listado de ejercicios.
-    * 
+    *
     * @param page - Numero de pagina base cero
     * @param limit - Cantidad maxima de ejercicios por pagina
     * @param search - Cadena de búsqueda para filtrar ejercicios
     *
     * @returns Listado de ejercicios
-   */
+    */
    @ApiOperation({ summary: 'Listar ejercicios' })
    @ApiQuery({
       name: 'page',

@@ -150,10 +150,10 @@ describe('ExercisesController (e2e)', () => {
    });
 
    it('supports paginating the exercise list', async () => {
-      await prisma.exercise.create({
+      const firstExercise = await prisma.exercise.create({
          data: buildCreateExercisePayload('bench-press'),
       });
-      const secondExercise = await prisma.exercise.create({
+      await prisma.exercise.create({
          data: buildCreateExercisePayload('pull-up'),
       });
 
@@ -167,7 +167,7 @@ describe('ExercisesController (e2e)', () => {
       expect(exercises.page).toBe(1);
       expect(exercises.limit).toBe(1);
       expect(exercises.items).toHaveLength(1);
-      expect(exercises.items[0]?.id).toBe(secondExercise.id);
+      expect(exercises.items[0]?.id).toBe(firstExercise.id);
    });
 
    it('supports searching exercises by name', async () => {

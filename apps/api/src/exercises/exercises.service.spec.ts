@@ -197,9 +197,10 @@ describe('ExercisesService', () => {
             createdAt: true,
             updatedAt: true,
          });
-         expect(findManyArgs.orderBy).toEqual({
-            createdAt: 'desc',
-         });
+         expect(findManyArgs.orderBy).toEqual([
+            { createdAt: 'desc' },
+            { id: 'desc' },
+         ]);
          expect(findManyArgs.where).toEqual({
             OR: [{ name: { contains: 'squat', mode: 'insensitive' } }],
          });

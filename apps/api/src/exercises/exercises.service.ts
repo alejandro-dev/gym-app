@@ -20,7 +20,6 @@ type SelectedExerciseRecord = {
    updatedAt: Date;
 };
 
-
 /**
  * Servicio base para operaciones del dominio de ejercicios.
  */
@@ -52,36 +51,28 @@ export class ExercisesService {
 
    /**
     * Obtiene todos los ejercicios ordenados por fecha de creacion descendente.
-    * 
+    *
     * @param page - Numero de pagina base cero
     * @param limit - Cantidad maxima de ejercicios por pagina
     * @param search - Cadena de búsqueda para filtrar ejercicios
     *
     * @returns Listado de ejercicios
     */
-   async findAll(
-      page: number,
-      limit: number,
-      search: string,
-   ) {
+   async findAll(page: number, limit: number, search: string) {
       try {
          // Si hay una cadena de búsqueda, filtramos los usuarios por nombre.
          const where: Prisma.ExerciseWhereInput | undefined = search
             ? {
-                  // mode: 'insensitive',ignora mayúsculas/minúsculas
-                  OR: [
-                     { name: { contains: search, mode: 'insensitive' } },
-                  ],
-               }
+                 // mode: 'insensitive',ignora mayúsculas/minúsculas
+                 OR: [{ name: { contains: search, mode: 'insensitive' } }],
+              }
             : undefined;
-         
+
          const [exercises, total] = await Promise.all([
             this.prisma.exercise.findMany({
                select: this.exerciseSelect,
                where,
-               orderBy: {
-                  createdAt: 'desc',
-               },
+               orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
                skip: page * limit,
                take: limit,
             }),
@@ -96,7 +87,7 @@ export class ExercisesService {
             page,
             limit,
          };
-      }catch (error) {
+      } catch (error) {
          handlePrismaError(error, 'exercise');
       }
    }
