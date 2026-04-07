@@ -25,7 +25,7 @@ export async function POST(req: Request) {
 
    try {
       // Pedimos a Nest un nuevo access token usando el refresh token actual.
-      const res = await fetch(`${process.env.NEST_API_URL}/auth/refresh`, {
+      const res = await fetch(`${process.env.NEST_API_URL}/api/auth/refresh`, {
          method: "POST",
          headers: { "Content-Type": "application/json" },
          body: JSON.stringify({ refreshToken: decodeURIComponent(refreshToken) }),

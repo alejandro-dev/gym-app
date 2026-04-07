@@ -7,7 +7,7 @@ import { ErrorCode } from "@/services/errors/ErrorCode"
 
 export const getCurrentUser = cache(async (): Promise<User | null> => {
    try {
-      return await backendFetch<User>("/auth/me");
+      return await backendFetch<User>("/api/auth/me");
    } catch (error) {
       if (error instanceof ErrorCode && error.status === 401) {
          return null;

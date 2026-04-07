@@ -12,6 +12,7 @@ export interface User {
    weightKg: number | null;
    heightCm: number | null;
    birthDate: string | null;
+   emailVerifiedAt: string | null;
    createdAt: string;
    updatedAt: string;
 }

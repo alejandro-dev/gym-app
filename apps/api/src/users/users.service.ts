@@ -19,6 +19,7 @@ type SelectedUserRecord = {
    weightKg: number | null;
    heightCm: number | null;
    birthDate: Date | null;
+   emailVerifiedAt: Date | null;
    createdAt: Date;
    updatedAt: Date;
 };
@@ -54,6 +55,7 @@ export class UsersService {
       weightKg: true,
       heightCm: true,
       birthDate: true,
+      emailVerifiedAt: true,
       createdAt: true,
       updatedAt: true,
    } satisfies Prisma.UserSelect;
@@ -61,20 +63,44 @@ export class UsersService {
    /**
     * Obtiene todos los usuarios ordenados por fecha de creacion descendente.
     *
+    * @param page - Numero de pagina base cero
+    * @param limit - Cantidad maxima de usuarios por pagina
+    * @param search - Cadena de búsqueda para filtrar usuarios
+    *
     * @returns Listado de usuarios
     */
-   async findAll(page: number, limit: number): Promise<UsersListResponse> {
+   async findAll(
+      page: number,
+      limit: number,
+      search: string,
+   ): Promise<UsersListResponse> {
       try {
+         // Si hay una cadena de búsqueda, filtramos los usuarios por email, nombre de usuario, nombre y apellidos.
+         const where: Prisma.UserWhereInput | undefined = search
+            ? {
+                 // mode: 'insensitive',ignora mayúsculas/minúsculas
+                 OR: [
+                    { email: { contains: search, mode: 'insensitive' } },
+                    { username: { contains: search, mode: 'insensitive' } },
+                    { firstName: { contains: search, mode: 'insensitive' } },
+                    { lastName: { contains: search, mode: 'insensitive' } },
+                 ],
+              }
+            : undefined;
+
          const [users, total] = await Promise.all([
             this.prisma.user.findMany({
                select: this.userSelect,
+               where,
                orderBy: {
                   createdAt: 'desc',
                },
                skip: page * limit,
                take: limit,
             }),
-            this.prisma.user.count(),
+            this.prisma.user.count({
+               where,
+            }),
          ]);
 
          return {
@@ -267,6 +293,7 @@ export class UsersService {
          birthDate: user.birthDate?.toISOString() ?? null,
          createdAt: user.createdAt.toISOString(),
          updatedAt: user.updatedAt.toISOString(),
+         emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
       };
    }
 }

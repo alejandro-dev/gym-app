@@ -73,6 +73,7 @@ export class UsersController {
    findAll(
       @Query('page') page?: string,
       @Query('limit') limit?: string,
+      @Query('search') search?: string,
    ): Promise<UsersListResponse> {
       const parsedPage = Number.parseInt(page ?? '0', 10);
       const parsedLimit = Number.parseInt(limit ?? '10', 10);
@@ -82,6 +83,7 @@ export class UsersController {
          Number.isNaN(parsedLimit)
             ? 10
             : Math.min(Math.max(parsedLimit, 1), 100),
+         search ?? '',
       );
    }
 

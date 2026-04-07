@@ -25,6 +25,7 @@ describe('ExercisesController (e2e)', () => {
    let prisma: PrismaService;
    let adminAccessToken: string;
    let userAccessToken: string;
+   const apiPath = (path: string) => `/api${path}`;
    const anyString = expect.any(String) as unknown as string;
 
    beforeAll(async () => {
@@ -41,6 +42,7 @@ describe('ExercisesController (e2e)', () => {
             forbidNonWhitelisted: true,
          }),
       );
+      app.setGlobalPrefix('api');
 
       prisma = moduleFixture.get(PrismaService);
 
@@ -66,12 +68,12 @@ describe('ExercisesController (e2e)', () => {
    });
 
    it('rejects requests without an access token', async () => {
-      await request(app.getHttpServer()).get('/exercises').expect(401);
+      await request(app.getHttpServer()).get(apiPath('/exercises')).expect(401);
    });
 
    it('allows authenticated users with USER role to list exercises', async () => {
       await request(app.getHttpServer())
-         .get('/exercises')
+         .get(apiPath('/exercises'))
          .set('Authorization', `Bearer ${userAccessToken}`)
          .expect(200);
    });
@@ -80,7 +82,7 @@ describe('ExercisesController (e2e)', () => {
       const payload = buildCreateExercisePayload('back-squat');
 
       const response = await request(app.getHttpServer())
-         .post('/exercises')
+         .post(apiPath('/exercises'))
          .set('Authorization', `Bearer ${adminAccessToken}`)
          .send(payload)
          .expect(201);
@@ -111,7 +113,7 @@ describe('ExercisesController (e2e)', () => {
       });
 
       await request(app.getHttpServer())
-         .post('/exercises')
+         .post(apiPath('/exercises'))
          .set('Authorization', `Bearer ${adminAccessToken}`)
          .send(payload)
          .expect(409);
@@ -126,7 +128,7 @@ describe('ExercisesController (e2e)', () => {
       });
 
       const response = await request(app.getHttpServer())
-         .get('/exercises')
+         .get(apiPath('/exercises'))
          .set('Authorization', `Bearer ${adminAccessToken}`)
          .expect(200);
       const exercises = response.body as ExerciseListItem[];
@@ -143,7 +145,7 @@ describe('ExercisesController (e2e)', () => {
       });
 
       const response = await request(app.getHttpServer())
-         .get(`/exercises/${exercise.id}`)
+         .get(apiPath(`/exercises/${exercise.id}`))
          .set('Authorization', `Bearer ${adminAccessToken}`)
          .expect(200);
 
@@ -158,7 +160,7 @@ describe('ExercisesController (e2e)', () => {
 
    it('returns 404 when the exercise does not exist', async () => {
       await request(app.getHttpServer())
-         .get('/exercises/missing-exercise-id')
+         .get(apiPath('/exercises/missing-exercise-id'))
          .set('Authorization', `Bearer ${adminAccessToken}`)
          .expect(404);
    });
@@ -169,7 +171,7 @@ describe('ExercisesController (e2e)', () => {
       });
 
       const response = await request(app.getHttpServer())
-         .patch(`/exercises/${exercise.id}`)
+         .patch(apiPath(`/exercises/${exercise.id}`))
          .set('Authorization', `Bearer ${adminAccessToken}`)
          .send({
             description: 'Updated overhead pressing exercise.',
@@ -188,7 +190,7 @@ describe('ExercisesController (e2e)', () => {
 
    it('returns 404 when updating a missing exercise', async () => {
       await request(app.getHttpServer())
-         .patch('/exercises/missing-exercise-id')
+         .patch(apiPath('/exercises/missing-exercise-id'))
          .set('Authorization', `Bearer ${adminAccessToken}`)
          .send({ description: 'Does not exist' })
          .expect(404);
@@ -203,7 +205,7 @@ describe('ExercisesController (e2e)', () => {
       });
 
       await request(app.getHttpServer())
-         .patch(`/exercises/${firstExercise.id}`)
+         .patch(apiPath(`/exercises/${firstExercise.id}`))
          .set('Authorization', `Bearer ${adminAccessToken}`)
          .send({ slug: secondExercise.slug })
          .expect(409);
@@ -215,7 +217,7 @@ describe('ExercisesController (e2e)', () => {
       });
 
       const response = await request(app.getHttpServer())
-         .delete(`/exercises/${exercise.id}`)
+         .delete(apiPath(`/exercises/${exercise.id}`))
          .set('Authorization', `Bearer ${adminAccessToken}`)
          .expect(200);
 
@@ -233,7 +235,7 @@ describe('ExercisesController (e2e)', () => {
 
    it('returns 404 when deleting a missing exercise', async () => {
       await request(app.getHttpServer())
-         .delete('/exercises/missing-exercise-id')
+         .delete(apiPath('/exercises/missing-exercise-id'))
          .set('Authorization', `Bearer ${adminAccessToken}`)
          .expect(404);
    });
@@ -245,7 +247,7 @@ describe('ExercisesController (e2e)', () => {
       const password = 'supersecreto123';
 
       await request(app.getHttpServer())
-         .post('/auth/register')
+         .post(apiPath('/auth/register'))
          .send({
             email,
             password,
@@ -265,7 +267,7 @@ describe('ExercisesController (e2e)', () => {
       });
 
       const loginResponse = await request(app.getHttpServer())
-         .post('/auth/login')
+         .post(apiPath('/auth/login'))
          .send({
             email,
             password,

@@ -13,9 +13,10 @@ export async function GET(req: Request) {
       const queryParams = new URLSearchParams({
          page: searchParams.get("page") ?? "0",
          limit: searchParams.get("limit") ?? "10",
+         search: searchParams.get("search") ?? "",
       });
 
-      const path = `/users?${queryParams.toString()}`;
+      const path = `/api/users?${queryParams.toString()}`;
 
       const data = await backendFetch(path);
       return NextResponse.json(data);
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
    try {
       const body = (await req.json()) as CreateUserPayload;
 
-      const data = await backendFetch("/users", {
+      const data = await backendFetch("/api/users", {
          method: "POST",
          body: JSON.stringify(body),
       });

@@ -7,6 +7,7 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
    const app = await NestFactory.create(AppModule);
+   app.setGlobalPrefix('api');
    app.use(cookieParser());
    app.useGlobalPipes(
       new ValidationPipe({
@@ -27,7 +28,11 @@ async function bootstrap() {
       .build();
 
    const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-   SwaggerModule.setup('docs', app, swaggerDocument);
+   SwaggerModule.setup('docs', app, swaggerDocument, {
+      useGlobalPrefix: false,
+      jsonDocumentUrl: 'docs-json',
+      yamlDocumentUrl: 'docs-yaml',
+   });
 
    await app.listen(process.env.PORT ?? 3000);
 }

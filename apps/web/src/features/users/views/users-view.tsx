@@ -17,16 +17,32 @@ export default function UsersView({ initialData }: UsersViewProps) {
       pageSize: initialData.limit,
    });
 
+   const [search, setSearch] = React.useState("");
+
+   // Creamos la consulta para obtener los usuarios.
    const usersQuery = useQuery({
-      queryKey: ["users", pagination.pageIndex, pagination.pageSize],
+      queryKey: ["users", pagination.pageIndex, pagination.pageSize, search],
       queryFn: () =>
          searchUsers({
             page: pagination.pageIndex,
             limit: pagination.pageSize,
+            search,
          }),
       initialData,
       placeholderData: (previousData) => previousData,
    });
+
+   // Evento que se activa cuando cambia el valor de la búsqueda.
+   const handleSearchChange = (value: string) => {
+      // Actualizamos el valor de la búsqueda.
+      setSearch(value);
+
+      // Reiniciamos la paginación al inicio.
+      setPagination((current) => ({
+         ...current,
+         pageIndex: 0,
+      }));
+   };
 
    return (
       <DataTable
@@ -34,8 +50,10 @@ export default function UsersView({ initialData }: UsersViewProps) {
          isLoading={usersQuery.isFetching}
          pageIndex={pagination.pageIndex}
          pageSize={pagination.pageSize}
+         search={search}
          total={usersQuery.data.total}
          onPaginationChange={setPagination}
+         onSearchChange={handleSearchChange}
       />
    );
 }

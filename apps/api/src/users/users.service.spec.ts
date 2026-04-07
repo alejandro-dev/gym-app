@@ -60,13 +60,27 @@ describe('UsersService', () => {
             weightKg: 82.5,
             heightCm: 178,
             birthDate: new Date('1992-06-14T00:00:00.000Z'),
+            emailVerifiedAt: new Date('2026-03-28T09:00:00.000Z'),
             createdAt: new Date('2026-03-28T10:00:00.000Z'),
             updatedAt: new Date('2026-03-28T12:00:00.000Z'),
          },
       ]);
       prismaService.user.count.mockResolvedValue(1);
 
-      const result = await service.findAll(0, 10);
+      const result = await service.findAll(0, 10, 'alex');
+
+      expect(prismaService.user.findMany).toHaveBeenCalledWith(
+         expect.objectContaining({
+            where: {
+               OR: [
+                  { email: { contains: 'alex', mode: 'insensitive' } },
+                  { username: { contains: 'alex', mode: 'insensitive' } },
+                  { firstName: { contains: 'alex', mode: 'insensitive' } },
+                  { lastName: { contains: 'alex', mode: 'insensitive' } },
+               ],
+            },
+         }),
+      );
 
       expect(result).toEqual({
          items: [
@@ -80,6 +94,7 @@ describe('UsersService', () => {
                weightKg: 82.5,
                heightCm: 178,
                birthDate: '1992-06-14T00:00:00.000Z',
+               emailVerifiedAt: '2026-03-28T09:00:00.000Z',
                createdAt: '2026-03-28T10:00:00.000Z',
                updatedAt: '2026-03-28T12:00:00.000Z',
             },
@@ -101,6 +116,7 @@ describe('UsersService', () => {
          weightKg: null,
          heightCm: null,
          birthDate: null,
+         emailVerifiedAt: new Date('2026-04-06T10:00:00.000Z'),
          createdAt: new Date('2026-04-06T10:00:00.000Z'),
          updatedAt: new Date('2026-04-06T10:00:00.000Z'),
       });
@@ -153,6 +169,7 @@ describe('UsersService', () => {
          weightKg: null,
          heightCm: null,
          birthDate: null,
+         emailVerifiedAt: '2026-04-06T10:00:00.000Z',
          createdAt: '2026-04-06T10:00:00.000Z',
          updatedAt: '2026-04-06T10:00:00.000Z',
       });

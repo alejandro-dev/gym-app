@@ -30,13 +30,16 @@ import {
    TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 
 type DataTableContentProps<TData> = {
    columnsLength: number;
    isLoading: boolean;
    table: TanstackTable<TData>;
    total: number;
+   search: string;
    onAddUser: () => void;
+   onSearchChange: (value: string) => void;
 };
 
 export function DataTableContent<TData>({
@@ -44,19 +47,33 @@ export function DataTableContent<TData>({
    isLoading,
    table,
    total,
+   search,
    onAddUser,
+   onSearchChange,
 }: DataTableContentProps<TData>) {
    return (
       <Tabs
          defaultValue="outline"
          className="w-full flex-col justify-start gap-6"
       >
-         <div className="flex items-center justify-between px-4 lg:px-6">
-            <div className="ml-auto flex items-center gap-2">
-               <Button variant="outline" size="sm" onClick={onAddUser}>
-                  <IconPlus data-icon="inline-start" />
-                  <span className="hidden lg:inline">Add User</span>
-               </Button>
+         <div className="flex items-center justify-between px-4 lg:px-6 py-1">
+            <div className="flex items-center">
+               <Input
+                  placeholder="Filtro..."
+                  value={search}
+                  onChange={(event) =>
+                     onSearchChange(event.currentTarget.value)
+                  }
+                  className="max-w-sm"
+               />
+            </div>
+            <div className="flex items-center justify-between px-4 lg:px-6">
+               <div className="ml-auto flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={onAddUser}>
+                     <IconPlus data-icon="inline-start" />
+                     <span className="hidden lg:inline">Add User</span>
+                  </Button>
+               </div>
             </div>
          </div>
          <TabsContent

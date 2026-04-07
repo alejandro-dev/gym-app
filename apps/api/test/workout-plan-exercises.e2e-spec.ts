@@ -28,6 +28,7 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
    let workoutPlanId: string;
    let firstExerciseId: string;
    let secondExerciseId: string;
+   const apiPath = (path: string) => `/api${path}`;
    const anyString = expect.any(String) as unknown as string;
 
    beforeAll(async () => {
@@ -44,6 +45,7 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
             forbidNonWhitelisted: true,
          }),
       );
+      app.setGlobalPrefix('api');
 
       prisma = moduleFixture.get(PrismaService);
 
@@ -84,7 +86,7 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
       });
 
       const response = await request(app.getHttpServer())
-         .post('/workout-plan-exercises')
+         .post(apiPath('/workout-plan-exercises'))
          .set('Authorization', `Bearer ${userAccessToken}`)
          .send(payload)
          .expect(201);
@@ -116,7 +118,7 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
       });
 
       await request(app.getHttpServer())
-         .post('/workout-plan-exercises')
+         .post(apiPath('/workout-plan-exercises'))
          .set('Authorization', `Bearer ${userAccessToken}`)
          .send(
             buildCreateWorkoutPlanExercisePayload({
@@ -145,7 +147,7 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
       });
 
       const response = await request(app.getHttpServer())
-         .get('/workout-plan-exercises')
+         .get(apiPath('/workout-plan-exercises'))
          .set('Authorization', `Bearer ${userAccessToken}`)
          .expect(200);
       const exercises = response.body as WorkoutPlanExerciseListItem[];
@@ -174,7 +176,7 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
       });
 
       const response = await request(app.getHttpServer())
-         .get(`/workout-plan-exercises/${workoutPlanExercise.id}`)
+         .get(apiPath(`/workout-plan-exercises/${workoutPlanExercise.id}`))
          .set('Authorization', `Bearer ${userAccessToken}`)
          .expect(200);
 
@@ -191,7 +193,9 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
 
    it('returns 404 when the workout plan exercise does not exist', async () => {
       await request(app.getHttpServer())
-         .get('/workout-plan-exercises/missing-workout-plan-exercise-id')
+         .get(
+            apiPath('/workout-plan-exercises/missing-workout-plan-exercise-id'),
+         )
          .set('Authorization', `Bearer ${userAccessToken}`)
          .expect(404);
    });
@@ -208,7 +212,7 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
       });
 
       const response = await request(app.getHttpServer())
-         .patch(`/workout-plan-exercises/${workoutPlanExercise.id}`)
+         .patch(apiPath(`/workout-plan-exercises/${workoutPlanExercise.id}`))
          .set('Authorization', `Bearer ${userAccessToken}`)
          .send({
             order: 2,
@@ -237,7 +241,7 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
       });
 
       await request(app.getHttpServer())
-         .patch(`/workout-plan-exercises/${workoutPlanExercise.id}`)
+         .patch(apiPath(`/workout-plan-exercises/${workoutPlanExercise.id}`))
          .set('Authorization', `Bearer ${userAccessToken}`)
          .send({
             workoutPlanId: 'another-plan-id',
@@ -248,7 +252,9 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
 
    it('returns 404 when updating a missing workout plan exercise', async () => {
       await request(app.getHttpServer())
-         .patch('/workout-plan-exercises/missing-workout-plan-exercise-id')
+         .patch(
+            apiPath('/workout-plan-exercises/missing-workout-plan-exercise-id'),
+         )
          .set('Authorization', `Bearer ${userAccessToken}`)
          .send({ notes: 'Does not exist' })
          .expect(404);
@@ -272,7 +278,7 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
       });
 
       await request(app.getHttpServer())
-         .patch(`/workout-plan-exercises/${firstRecord.id}`)
+         .patch(apiPath(`/workout-plan-exercises/${firstRecord.id}`))
          .set('Authorization', `Bearer ${userAccessToken}`)
          .send({ order: 2 })
          .expect(409);
@@ -288,7 +294,7 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
       });
 
       const response = await request(app.getHttpServer())
-         .delete(`/workout-plan-exercises/${workoutPlanExercise.id}`)
+         .delete(apiPath(`/workout-plan-exercises/${workoutPlanExercise.id}`))
          .set('Authorization', `Bearer ${userAccessToken}`)
          .expect(200);
 
@@ -308,7 +314,9 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
 
    it('returns 404 when deleting a missing workout plan exercise', async () => {
       await request(app.getHttpServer())
-         .delete('/workout-plan-exercises/missing-workout-plan-exercise-id')
+         .delete(
+            apiPath('/workout-plan-exercises/missing-workout-plan-exercise-id'),
+         )
          .set('Authorization', `Bearer ${userAccessToken}`)
          .expect(404);
    });
@@ -320,7 +328,7 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
       const password = 'supersecreto123';
 
       await request(app.getHttpServer())
-         .post('/auth/register')
+         .post(apiPath('/auth/register'))
          .send({
             email,
             password,
@@ -340,7 +348,7 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
       });
 
       const loginResponse = await request(app.getHttpServer())
-         .post('/auth/login')
+         .post(apiPath('/auth/login'))
          .send({ email, password })
          .expect(201);
       const loginBody = loginResponse.body as AuthResponseBody;

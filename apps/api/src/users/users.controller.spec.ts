@@ -6,7 +6,11 @@ import { UsersService } from './users.service';
 
 type UsersServiceMock = {
    findAll: jest.MockedFunction<
-      (page: number, limit: number) => Promise<UsersListResponse>
+      (
+         page: number,
+         limit: number,
+         search: string,
+      ) => Promise<UsersListResponse>
    >;
    findOne: jest.MockedFunction<(id: string) => Promise<User>>;
    create: jest.MockedFunction<UsersService['create']>;
@@ -20,7 +24,7 @@ describe('UsersController', () => {
 
    beforeEach(async () => {
       usersService = {
-         findAll: jest.fn((...args: [number, number]) => {
+         findAll: jest.fn((...args: [number, number, string]) => {
             void args;
 
             return Promise.resolve({
@@ -43,6 +47,7 @@ describe('UsersController', () => {
                weightKg: null,
                heightCm: null,
                birthDate: null,
+               emailVerifiedAt: null,
                createdAt: '2026-03-28T10:00:00.000Z',
                updatedAt: '2026-03-28T10:00:00.000Z',
             });
@@ -79,7 +84,7 @@ describe('UsersController', () => {
 
       await controller.findAll();
 
-      expect(usersService.findAll).toHaveBeenCalledWith(0, 10);
+      expect(usersService.findAll).toHaveBeenCalledWith(0, 10, '');
    });
 
    it('sanitizes invalid pagination values', async () => {
@@ -92,7 +97,20 @@ describe('UsersController', () => {
 
       await controller.findAll('-3', '1000');
 
-      expect(usersService.findAll).toHaveBeenCalledWith(0, 100);
+      expect(usersService.findAll).toHaveBeenCalledWith(0, 100, '');
+   });
+
+   it('forwards the search term to the service', async () => {
+      usersService.findAll.mockResolvedValue({
+         items: [],
+         total: 0,
+         page: 0,
+         limit: 10,
+      });
+
+      await controller.findAll('0', '10', 'alex');
+
+      expect(usersService.findAll).toHaveBeenCalledWith(0, 10, 'alex');
    });
 
    it('delegates user creation to the service', async () => {
@@ -106,6 +124,7 @@ describe('UsersController', () => {
          weightKg: null,
          heightCm: null,
          birthDate: null,
+         emailVerifiedAt: '2026-04-06T10:00:00.000Z',
          createdAt: '2026-04-06T10:00:00.000Z',
          updatedAt: '2026-04-06T10:00:00.000Z',
       });

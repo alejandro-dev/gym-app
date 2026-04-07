@@ -4,6 +4,7 @@ import type { User, UserRole, UsersListResponse } from "@gym-app/types";
 export interface SearchUsersParams {
    page: number;
    limit: number;
+   search?: string;
 };
 
 export interface CreateUserPayload {
@@ -25,12 +26,13 @@ export interface UpdateUserPayload {
 // Construye la URL para listar/buscar usuarios con paginación.
 export function buildUsersSearchPath(params: SearchUsersParams = {
    page: 0,
-   limit: 0
+   limit: 0,
+   search: "",
 }): string {
-   const { page = 0, limit = 10 } = params;
+   const { page = 0, limit = 10, search = "" } = params;
    const queryParams = new URLSearchParams();
 
-   // if (search) queryParams.append("search", search);
+   if (search) queryParams.append("search", search);
    queryParams.append("page", page.toString());
    queryParams.append("limit", limit.toString());
 
@@ -61,5 +63,13 @@ export async function updateUser(id: string, payload: UpdateUserPayload): Promis
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+   });
+}
+
+// Función que elimina un usuario existente.
+export async function deleteUser(id: string): Promise<User> {
+   return fetchJson<User>(`/api/users/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
    });
 }

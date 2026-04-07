@@ -9,7 +9,7 @@ export async function POST(req: Request) {
 
    try{
       // Realizar la solicitud al backend de Spring Boot
-      const res = await fetch(`${process.env.NEST_API_URL}/auth/login`, {
+      const res = await fetch(`${process.env.NEST_API_URL}/api/auth/login`, {
          method: "POST",
          headers: { "Content-Type": "application/json" },
          body: JSON.stringify(body)

@@ -15,9 +15,27 @@ export async function PATCH(req: Request, context: RouteContext) {
       const { id } = await context.params;
       const body = (await req.json()) as UpdateUserPayload;
 
-      const data = await backendFetch(`/users/${id}`, {
+      const data = await backendFetch(`/api/users/${id}`, {
          method: "PATCH",
          body: JSON.stringify(body),
+      });
+
+      return NextResponse.json(data);
+   } catch (e) {
+      if (e instanceof ErrorCode) {
+         return NextResponse.json({ message: e.message }, { status: e.status });
+      }
+
+      return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
+   }
+}
+
+export async function DELETE(_: Request, context: RouteContext) {
+   try {
+      const { id } = await context.params;
+
+      const data = await backendFetch(`/api/users/${id}`, {
+         method: "DELETE",
       });
 
       return NextResponse.json(data);

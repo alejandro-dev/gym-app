@@ -27,6 +27,7 @@ describe('PersonalRecordsController (e2e)', () => {
    let ownerUserId: string;
    let userAccessToken: string;
    let exerciseId: string;
+   const apiPath = (path: string) => `/api${path}`;
    const anyString = expect.any(String) as unknown as string;
 
    beforeAll(async () => {
@@ -43,6 +44,7 @@ describe('PersonalRecordsController (e2e)', () => {
             forbidNonWhitelisted: true,
          }),
       );
+      app.setGlobalPrefix('api');
 
       prisma = moduleFixture.get(PrismaService);
 
@@ -92,7 +94,7 @@ describe('PersonalRecordsController (e2e)', () => {
       };
 
       const response = await request(app.getHttpServer())
-         .post('/personal-records')
+         .post(apiPath('/personal-records'))
          .set('Authorization', `Bearer ${userAccessToken}`)
          .send(payload)
          .expect(201);
@@ -121,7 +123,7 @@ describe('PersonalRecordsController (e2e)', () => {
       });
 
       const response = await request(app.getHttpServer())
-         .get('/personal-records')
+         .get(apiPath('/personal-records'))
          .set('Authorization', `Bearer ${userAccessToken}`)
          .expect(200);
 
@@ -146,7 +148,7 @@ describe('PersonalRecordsController (e2e)', () => {
       });
 
       const response = await request(app.getHttpServer())
-         .get(`/personal-records/${record.id}`)
+         .get(apiPath(`/personal-records/${record.id}`))
          .set('Authorization', `Bearer ${userAccessToken}`)
          .expect(200);
 
@@ -162,7 +164,7 @@ describe('PersonalRecordsController (e2e)', () => {
 
    it('returns 404 when the personal record does not exist', async () => {
       await request(app.getHttpServer())
-         .get('/personal-records/missing-personal-record-id')
+         .get(apiPath('/personal-records/missing-personal-record-id'))
          .set('Authorization', `Bearer ${userAccessToken}`)
          .expect(404);
    });
@@ -179,7 +181,7 @@ describe('PersonalRecordsController (e2e)', () => {
       });
 
       const response = await request(app.getHttpServer())
-         .patch(`/personal-records/${record.id}`)
+         .patch(apiPath(`/personal-records/${record.id}`))
          .set('Authorization', `Bearer ${userAccessToken}`)
          .send({
             value: 125,
@@ -208,7 +210,7 @@ describe('PersonalRecordsController (e2e)', () => {
       });
 
       await request(app.getHttpServer())
-         .patch(`/personal-records/${record.id}`)
+         .patch(apiPath(`/personal-records/${record.id}`))
          .set('Authorization', `Bearer ${userAccessToken}`)
          .send({
             userId: 'another-user-id',
@@ -219,7 +221,7 @@ describe('PersonalRecordsController (e2e)', () => {
 
    it('returns 404 when updating a missing personal record', async () => {
       await request(app.getHttpServer())
-         .patch('/personal-records/missing-personal-record-id')
+         .patch(apiPath('/personal-records/missing-personal-record-id'))
          .set('Authorization', `Bearer ${userAccessToken}`)
          .send({ value: 110 })
          .expect(404);
@@ -237,7 +239,7 @@ describe('PersonalRecordsController (e2e)', () => {
       });
 
       const response = await request(app.getHttpServer())
-         .delete(`/personal-records/${record.id}`)
+         .delete(apiPath(`/personal-records/${record.id}`))
          .set('Authorization', `Bearer ${userAccessToken}`)
          .expect(200);
 
@@ -251,7 +253,7 @@ describe('PersonalRecordsController (e2e)', () => {
 
    it('returns 404 when deleting a missing personal record', async () => {
       await request(app.getHttpServer())
-         .delete('/personal-records/missing-personal-record-id')
+         .delete(apiPath('/personal-records/missing-personal-record-id'))
          .set('Authorization', `Bearer ${userAccessToken}`)
          .expect(404);
    });
@@ -263,7 +265,7 @@ describe('PersonalRecordsController (e2e)', () => {
       const password = 'supersecreto123';
 
       await request(app.getHttpServer())
-         .post('/auth/register')
+         .post(apiPath('/auth/register'))
          .send({
             email,
             password,
@@ -283,7 +285,7 @@ describe('PersonalRecordsController (e2e)', () => {
       });
 
       const loginResponse = await request(app.getHttpServer())
-         .post('/auth/login')
+         .post(apiPath('/auth/login'))
          .send({ email, password })
          .expect(201);
       const loginBody = loginResponse.body as AuthResponseBody;
