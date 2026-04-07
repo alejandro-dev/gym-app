@@ -1,17 +1,16 @@
 "use client";
 
+import { searchExercises } from "@/app/(protected)/exercises/actions";
+import { ExercisesListResponse } from "@gym-app/types";
 import { useQuery } from "@tanstack/react-query";
-
-import { DataTable } from "../components/data-table";
-import { searchUsers } from "@/services/usersService";
-import type { UsersListResponse } from "@gym-app/types";
 import { useState } from "react";
+import { DataTable } from "../components/data-table";
 
-type UsersViewProps = {
-   initialData: UsersListResponse;
+type ExercisesViewProps = {
+   initialData: ExercisesListResponse;
 };
 
-export default function UsersView({ initialData }: UsersViewProps) {
+export default function ExercisesView({ initialData }: ExercisesViewProps) {
    const [pagination, setPagination] = useState({
       pageIndex: initialData.page,
       pageSize: initialData.limit,
@@ -19,11 +18,11 @@ export default function UsersView({ initialData }: UsersViewProps) {
 
    const [search, setSearch] = useState("");
 
-   // Creamos la consulta para obtener los usuarios.
-   const usersQuery = useQuery({
-      queryKey: ["users", pagination.pageIndex, pagination.pageSize, search],
+   // Creamos la consulta para obtener los ejercicios.
+   const exercisesQuery = useQuery({
+      queryKey: ["exercises", pagination.pageIndex, pagination.pageSize, search],
       queryFn: () =>
-         searchUsers({
+         searchExercises({
             page: pagination.pageIndex,
             limit: pagination.pageSize,
             search,
@@ -45,13 +44,13 @@ export default function UsersView({ initialData }: UsersViewProps) {
    };
 
    return (
-      <DataTable
-         data={usersQuery.data.items}
-         isLoading={usersQuery.isFetching}
+         <DataTable
+         data={exercisesQuery.data.items}
+         isLoading={exercisesQuery.isFetching}
          pageIndex={pagination.pageIndex}
          pageSize={pagination.pageSize}
          search={search}
-         total={usersQuery.data.total}
+         total={exercisesQuery.data.total}
          onPaginationChange={setPagination}
          onSearchChange={handleSearchChange}
       />

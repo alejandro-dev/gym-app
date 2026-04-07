@@ -43,6 +43,11 @@ const data = {
          icon: IconUsers,
       },
       {
+         title: "Ejercicios",
+         url: "/exercises",
+         icon: IconBarbell,
+      },
+      {
          title: "Resumen",
          url: "#",
          icon: IconDashboard,

@@ -44,6 +44,7 @@ describe('ExercisesService', () => {
             Promise<ExerciseRecord[]>,
             [Prisma.ExerciseFindManyArgs]
          >;
+         count: jest.Mock<Promise<number>, [Prisma.ExerciseCountArgs?]>;
          findUnique: jest.Mock<
             Promise<ExerciseRecord | { id: string } | null>,
             [Prisma.ExerciseFindUniqueArgs]
@@ -67,6 +68,7 @@ describe('ExercisesService', () => {
             Promise<ExerciseRecord[]>,
             [Prisma.ExerciseFindManyArgs]
          >(),
+         count: jest.fn<Promise<number>, [Prisma.ExerciseCountArgs?]>(),
          findUnique: jest.fn<
             Promise<ExerciseRecord | { id: string } | null>,
             [Prisma.ExerciseFindUniqueArgs]
@@ -172,13 +174,15 @@ describe('ExercisesService', () => {
    });
 
    describe('findAll', () => {
-      it('returns the exercise list in stable read order', async () => {
+      it('returns the paginated exercise list in stable read order', async () => {
          const orderedExercises = [updatedExerciseRecord, exerciseRecord];
 
          prismaMock.exercise.findMany.mockResolvedValue(orderedExercises);
+         prismaMock.exercise.count.mockResolvedValue(2);
 
-         const result = await service.findAll();
+         const result = await service.findAll(1, 5, 'squat');
          const [findManyArgs] = prismaMock.exercise.findMany.mock.calls[0];
+         const [countArgs] = prismaMock.exercise.count.mock.calls[0];
 
          expect(findManyArgs.select).toMatchObject({
             id: true,
@@ -196,7 +200,46 @@ describe('ExercisesService', () => {
          expect(findManyArgs.orderBy).toEqual({
             createdAt: 'desc',
          });
-         expect(result).toEqual(orderedExercises);
+         expect(findManyArgs.where).toEqual({
+            OR: [{ name: { contains: 'squat', mode: 'insensitive' } }],
+         });
+         expect(findManyArgs.skip).toBe(5);
+         expect(findManyArgs.take).toBe(5);
+         expect(countArgs).toEqual({
+            where: {
+               OR: [{ name: { contains: 'squat', mode: 'insensitive' } }],
+            },
+         });
+         expect(result).toEqual({
+            items: [
+               {
+                  ...updatedExerciseRecord,
+                  createdAt: updatedExerciseRecord.createdAt.toISOString(),
+                  updatedAt: updatedExerciseRecord.updatedAt.toISOString(),
+               },
+               {
+                  ...exerciseRecord,
+                  createdAt: exerciseRecord.createdAt.toISOString(),
+                  updatedAt: exerciseRecord.updatedAt.toISOString(),
+               },
+            ],
+            total: 2,
+            page: 1,
+            limit: 5,
+         });
+      });
+
+      it('omits the search filter when no search term is provided', async () => {
+         prismaMock.exercise.findMany.mockResolvedValue([]);
+         prismaMock.exercise.count.mockResolvedValue(0);
+
+         await service.findAll(0, 10, '');
+
+         const [findManyArgs] = prismaMock.exercise.findMany.mock.calls[0];
+         const [countArgs] = prismaMock.exercise.count.mock.calls[0];
+
+         expect(findManyArgs.where).toBeUndefined();
+         expect(countArgs).toEqual({ where: undefined });
       });
    });
 

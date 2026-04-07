@@ -20,6 +20,13 @@ type ExerciseListItem = {
    id: string;
 };
 
+type ExercisesListResponseBody = {
+   items: ExerciseListItem[];
+   total: number;
+   page: number;
+   limit: number;
+};
+
 describe('ExercisesController (e2e)', () => {
    let app: INestApplication<App>;
    let prisma: PrismaService;
@@ -119,7 +126,7 @@ describe('ExercisesController (e2e)', () => {
          .expect(409);
    });
 
-   it('lists exercises', async () => {
+   it('lists exercises with pagination metadata', async () => {
       const firstExercise = await prisma.exercise.create({
          data: buildCreateExercisePayload('bench-press'),
       });
@@ -131,12 +138,58 @@ describe('ExercisesController (e2e)', () => {
          .get(apiPath('/exercises'))
          .set('Authorization', `Bearer ${adminAccessToken}`)
          .expect(200);
-      const exercises = response.body as ExerciseListItem[];
+      const exercises = response.body as ExercisesListResponseBody;
 
-      expect(exercises).toHaveLength(2);
-      expect(exercises.map((exercise) => exercise.id)).toEqual(
+      expect(exercises.total).toBe(2);
+      expect(exercises.page).toBe(0);
+      expect(exercises.limit).toBe(10);
+      expect(exercises.items).toHaveLength(2);
+      expect(exercises.items.map((exercise) => exercise.id)).toEqual(
          expect.arrayContaining([firstExercise.id, secondExercise.id]),
       );
+   });
+
+   it('supports paginating the exercise list', async () => {
+      await prisma.exercise.create({
+         data: buildCreateExercisePayload('bench-press'),
+      });
+      const secondExercise = await prisma.exercise.create({
+         data: buildCreateExercisePayload('pull-up'),
+      });
+
+      const response = await request(app.getHttpServer())
+         .get(apiPath('/exercises?page=1&limit=1'))
+         .set('Authorization', `Bearer ${adminAccessToken}`)
+         .expect(200);
+      const exercises = response.body as ExercisesListResponseBody;
+
+      expect(exercises.total).toBe(2);
+      expect(exercises.page).toBe(1);
+      expect(exercises.limit).toBe(1);
+      expect(exercises.items).toHaveLength(1);
+      expect(exercises.items[0]?.id).toBe(secondExercise.id);
+   });
+
+   it('supports searching exercises by name', async () => {
+      const matchingExercise = await prisma.exercise.create({
+         data: buildCreateExercisePayload('bench-press'),
+      });
+      await prisma.exercise.create({
+         data: buildCreateExercisePayload('pull-up'),
+      });
+
+      const response = await request(app.getHttpServer())
+         .get(apiPath('/exercises?search=bench'))
+         .set('Authorization', `Bearer ${adminAccessToken}`)
+         .expect(200);
+      const exercises = response.body as ExercisesListResponseBody;
+
+      expect(exercises.total).toBe(1);
+      expect(exercises.items).toEqual([
+         expect.objectContaining({
+            id: matchingExercise.id,
+         }),
+      ]);
    });
 
    it('returns an exercise by id', async () => {

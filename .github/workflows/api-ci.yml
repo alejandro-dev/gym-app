@@ -124,7 +124,7 @@ jobs:
         run: pnpm --filter api exec jest --config ./test/jest-e2e.json --runInBand
 
   web:
-    name: Build and Lint Web
+    name: Test, Build and Lint Web
     runs-on: ubuntu-latest
     env:
       NEST_API_URL: http://localhost:3000
@@ -150,6 +150,9 @@ jobs:
 
       - name: Run web lint
         run: pnpm --filter web lint
+
+      - name: Run web tests
+        run: pnpm --filter web test
 
       - name: Build web
         run: pnpm --filter web build

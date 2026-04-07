@@ -202,7 +202,6 @@ export function useUsersDataTable<TData>({
             mode: "edit",
             userId: selectedUser.id,
             payload: {
-               email: result.data.email,
                username: result.data.username ?? null,
                firstName: result.data.firstName ?? null,
                lastName: result.data.lastName ?? null,

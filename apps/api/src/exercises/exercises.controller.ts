@@ -6,6 +6,7 @@ import {
    Param,
    Patch,
    Post,
+   Query,
    UseGuards,
 } from '@nestjs/common';
 import {
@@ -15,6 +16,7 @@ import {
    ApiNotFoundResponse,
    ApiOkResponse,
    ApiOperation,
+   ApiQuery,
    ApiTags,
 } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
@@ -24,7 +26,9 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { ExercisesService } from './exercises.service';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { ExerciseResponseDto } from './dto/exercise-response.dto';
+import { ExercisesListResponseDto } from './dto/exercises-list-response.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
+import { ExercisesListResponse } from '@gym-app/types';
 
 /**
  * Controlador base para exponer endpoints del dominio de ejercicios.
@@ -43,19 +47,53 @@ export class ExercisesController {
 
    /**
     * Devuelve el listado de ejercicios.
+    * 
+    * @param page - Numero de pagina base cero
+    * @param limit - Cantidad maxima de ejercicios por pagina
+    * @param search - Cadena de búsqueda para filtrar ejercicios
     *
     * @returns Listado de ejercicios
-    */
+   */
    @ApiOperation({ summary: 'Listar ejercicios' })
+   @ApiQuery({
+      name: 'page',
+      required: false,
+      description: 'Numero de pagina base cero.',
+      example: 0,
+   })
+   @ApiQuery({
+      name: 'limit',
+      required: false,
+      description: 'Cantidad maxima de ejercicios por pagina.',
+      example: 10,
+   })
+   @ApiQuery({
+      name: 'search',
+      required: false,
+      description: 'Cadena de busqueda para filtrar ejercicios por nombre.',
+      example: 'press',
+   })
    @ApiOkResponse({
-      description: 'Listado de ejercicios.',
-      type: ExerciseResponseDto,
-      isArray: true,
+      description: 'Listado paginado de ejercicios.',
+      type: ExercisesListResponseDto,
    })
    @Get()
    @Roles(UserRole.ADMIN, UserRole.COACH, UserRole.USER)
-   findAll(): Promise<ExerciseResponseDto[]> {
-      return this.exercisesService.findAll();
+   findAll(
+      @Query('page') page?: string,
+      @Query('limit') limit?: string,
+      @Query('search') search?: string,
+   ): Promise<ExercisesListResponse> {
+      const parsedPage = Number.parseInt(page ?? '0', 10);
+      const parsedLimit = Number.parseInt(limit ?? '10', 10);
+
+      return this.exercisesService.findAll(
+         Number.isNaN(parsedPage) ? 0 : Math.max(parsedPage, 0),
+         Number.isNaN(parsedLimit)
+            ? 10
+            : Math.min(Math.max(parsedLimit, 1), 100),
+         search ?? '',
+      );
    }
 
    /**

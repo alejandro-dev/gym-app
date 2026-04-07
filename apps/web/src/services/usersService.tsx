@@ -16,7 +16,6 @@ export interface CreateUserPayload {
 }
 
 export interface UpdateUserPayload {
-   email: string;
    username?: string | null;
    firstName?: string | null;
    lastName?: string | null;

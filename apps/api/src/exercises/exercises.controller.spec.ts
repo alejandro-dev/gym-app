@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExerciseCategory, MuscleGroup } from '@prisma/client';
+import type { ExercisesListResponse } from '@gym-app/types';
 import { ExercisesController } from './exercises.controller';
 import { ExercisesService } from './exercises.service';
 
@@ -19,9 +20,19 @@ type UpdateExerciseDto = Partial<CreateExerciseDto>;
 describe('ExercisesController', () => {
    let controller: ExercisesController;
 
+   const exercisesListResponse: ExercisesListResponse = {
+      items: [],
+      total: 0,
+      page: 0,
+      limit: 10,
+   };
+
    const exercisesServiceMock: {
       create: jest.Mock<Promise<typeof exerciseRecord>, [CreateExerciseDto]>;
-      findAll: jest.Mock<Promise<Array<typeof exerciseRecord>>, []>;
+      findAll: jest.Mock<
+         Promise<ExercisesListResponse>,
+         [number, number, string]
+      >;
       findOne: jest.Mock<Promise<typeof exerciseRecord>, [string]>;
       update: jest.Mock<
          Promise<typeof exerciseRecord>,
@@ -30,7 +41,10 @@ describe('ExercisesController', () => {
       remove: jest.Mock<Promise<typeof exerciseRecord>, [string]>;
    } = {
       create: jest.fn<Promise<typeof exerciseRecord>, [CreateExerciseDto]>(),
-      findAll: jest.fn<Promise<Array<typeof exerciseRecord>>, []>(),
+      findAll: jest.fn<
+         Promise<ExercisesListResponse>,
+         [number, number, string]
+      >(),
       findOne: jest.fn<Promise<typeof exerciseRecord>, [string]>(),
       update: jest.fn<
          Promise<typeof exerciseRecord>,
@@ -91,13 +105,36 @@ describe('ExercisesController', () => {
    });
 
    describe('findAll', () => {
-      it('delegates to exercisesService.findAll', async () => {
-         exercisesServiceMock.findAll.mockResolvedValue([exerciseRecord]);
+      it('uses default pagination values when query params are missing', async () => {
+         exercisesServiceMock.findAll.mockResolvedValue(exercisesListResponse);
 
          const result = await controller.findAll();
 
-         expect(exercisesServiceMock.findAll).toHaveBeenCalledTimes(1);
-         expect(result).toEqual([exerciseRecord]);
+         expect(exercisesServiceMock.findAll).toHaveBeenCalledWith(0, 10, '');
+         expect(result).toEqual(exercisesListResponse);
+      });
+
+      it('sanitizes invalid pagination values', async () => {
+         exercisesServiceMock.findAll.mockResolvedValue({
+            ...exercisesListResponse,
+            limit: 100,
+         });
+
+         await controller.findAll('-3', '1000');
+
+         expect(exercisesServiceMock.findAll).toHaveBeenCalledWith(0, 100, '');
+      });
+
+      it('forwards the search term to the service', async () => {
+         exercisesServiceMock.findAll.mockResolvedValue(exercisesListResponse);
+
+         await controller.findAll('2', '25', 'press');
+
+         expect(exercisesServiceMock.findAll).toHaveBeenCalledWith(
+            2,
+            25,
+            'press',
+         );
       });
    });
 

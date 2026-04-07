@@ -1,9 +1,25 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { ExerciseCategory, MuscleGroup, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import { handlePrismaError } from '../prisma/prisma-error.util';
+import { Exercise } from '@gym-app/types';
+
+type SelectedExerciseRecord = {
+   id: string;
+   name: string;
+   slug: string;
+   description: string | null;
+   instructions: string | null;
+   muscleGroup: MuscleGroup;
+   category: ExerciseCategory;
+   equipment: string | null;
+   isCompound: boolean;
+   createdAt: Date;
+   updatedAt: Date;
+};
+
 
 /**
  * Servicio base para operaciones del dominio de ejercicios.
@@ -36,16 +52,53 @@ export class ExercisesService {
 
    /**
     * Obtiene todos los ejercicios ordenados por fecha de creacion descendente.
+    * 
+    * @param page - Numero de pagina base cero
+    * @param limit - Cantidad maxima de ejercicios por pagina
+    * @param search - Cadena de búsqueda para filtrar ejercicios
     *
     * @returns Listado de ejercicios
     */
-   async findAll() {
-      return this.prisma.exercise.findMany({
-         select: this.exerciseSelect,
-         orderBy: {
-            createdAt: 'desc',
-         },
-      });
+   async findAll(
+      page: number,
+      limit: number,
+      search: string,
+   ) {
+      try {
+         // Si hay una cadena de búsqueda, filtramos los usuarios por nombre.
+         const where: Prisma.ExerciseWhereInput | undefined = search
+            ? {
+                  // mode: 'insensitive',ignora mayúsculas/minúsculas
+                  OR: [
+                     { name: { contains: search, mode: 'insensitive' } },
+                  ],
+               }
+            : undefined;
+         
+         const [exercises, total] = await Promise.all([
+            this.prisma.exercise.findMany({
+               select: this.exerciseSelect,
+               where,
+               orderBy: {
+                  createdAt: 'desc',
+               },
+               skip: page * limit,
+               take: limit,
+            }),
+            this.prisma.exercise.count({
+               where,
+            }),
+         ]);
+
+         return {
+            items: exercises.map((exercise) => this.toPublicUser(exercise)),
+            total,
+            page,
+            limit,
+         };
+      }catch (error) {
+         handlePrismaError(error, 'exercise');
+      }
    }
 
    /**
@@ -184,5 +237,19 @@ export class ExercisesService {
       // Si no existe lanza NotFoundException
       if (!exercise)
          throw new NotFoundException(`Exercise with id "${id}" not found`);
+   }
+
+   /**
+    * Convierte un registro de Prisma al contrato publico serializable de la API.
+    *
+    * @param exercise - Ejercicio seleccionado desde Prisma
+    * @returns Ejercicio listo para respuesta JSON
+    */
+   private toPublicUser(exercise: SelectedExerciseRecord): Exercise {
+      return {
+         ...exercise,
+         createdAt: exercise.createdAt.toISOString(),
+         updatedAt: exercise.updatedAt.toISOString(),
+      };
    }
 }

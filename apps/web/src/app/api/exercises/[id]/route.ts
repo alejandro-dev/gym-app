@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { backendFetch } from "@/services/backend";
 import { ErrorCode } from "@/services/errors/ErrorCode";
-import type { UpdateUserPayload } from "@/services/usersService";
+import { UpdateExercisePayload } from "@/services/exercisesService";
 
 type RouteContext = {
    params: Promise<{
@@ -10,13 +10,13 @@ type RouteContext = {
    }>;
 };
 
-// Ruta API para actualizar un usuario.
+// Ruta API para actualizar un ejercicio.
 export async function PATCH(req: Request, context: RouteContext) {
    try {
       const { id } = await context.params;
-      const body = (await req.json()) as UpdateUserPayload;
+      const body = (await req.json()) as UpdateExercisePayload;
 
-      const data = await backendFetch(`/api/users/${id}`, {
+      const data = await backendFetch(`/api/exercises/${id}`, {
          method: "PATCH",
          body: JSON.stringify(body),
       });
@@ -31,12 +31,12 @@ export async function PATCH(req: Request, context: RouteContext) {
    }
 }
 
-// Ruta API para eliminar un usuario.
+// Ruta API para eliminar un ejercicio.
 export async function DELETE(_: Request, context: RouteContext) {
    try {
       const { id } = await context.params;
 
-      const data = await backendFetch(`/api/users/${id}`, {
+      const data = await backendFetch(`/api/exercises/${id}`, {
          method: "DELETE",
       });
 
