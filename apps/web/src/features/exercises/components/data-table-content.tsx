@@ -10,6 +10,7 @@ import {
    IconChevronsLeft,
    IconChevronsRight,
    IconPlus,
+   IconTrash,
 } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,12 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import {
+   EXERCISE_CATEGORY_VALUES,
+   getExerciseCategoryLabelEs,
+   getMuscleGroupLabelEs,
+   MUSCLE_GROUP_VALUES,
+} from "@gym-app/types";
 
 type DataTableContentProps<TData> = {
    columnsLength: number;
@@ -38,8 +45,13 @@ type DataTableContentProps<TData> = {
    table: TanstackTable<TData>;
    total: number;
    search: string;
+   filterGroupMuscle: string;
+   filterCategory: string;
    onAddUser: () => void;
    onSearchChange: (value: string) => void;
+   onFilterGroupMuscleChange: (value: string) => void;
+   onFilterCategoryChange: (value: string) => void;
+   onClearFilters: () => void;
 };
 
 export function DataTableContent<TData>({
@@ -48,8 +60,13 @@ export function DataTableContent<TData>({
    table,
    total,
    search,
+   filterGroupMuscle,
+   filterCategory,
    onAddUser,
    onSearchChange,
+   onFilterGroupMuscleChange,
+   onFilterCategoryChange,
+   onClearFilters
 }: DataTableContentProps<TData>) {
    return (
       <Tabs
@@ -57,7 +74,7 @@ export function DataTableContent<TData>({
          className="w-full flex-col justify-start gap-6"
       >
          <div className="flex items-center justify-between px-4 lg:px-6 py-1">
-            <div className="flex items-center">
+            <div className="flex gap-5">
                <Input
                   placeholder="Filtro..."
                   value={search}
@@ -66,6 +83,42 @@ export function DataTableContent<TData>({
                   }
                   className="max-w-sm"
                />
+               <Select
+                  value={filterGroupMuscle}
+                  onValueChange={onFilterGroupMuscleChange}
+               >
+                  <SelectTrigger className="w-full">
+                     <SelectValue placeholder="Filtrar por grupo muscular" />
+                  </SelectTrigger>
+                  <SelectContent>
+                     {MUSCLE_GROUP_VALUES.map((muscleGroup) => (
+                        <SelectItem key={muscleGroup} value={muscleGroup}>
+                           {getMuscleGroupLabelEs(muscleGroup)}
+                        </SelectItem>
+                     ))}
+                  </SelectContent>
+               </Select>
+               <Select
+                  value={filterCategory}
+                  onValueChange={onFilterCategoryChange}
+               >
+                  <SelectTrigger className="w-full">
+                     <SelectValue placeholder="Filtrar por categoría" />
+                  </SelectTrigger>
+                  <SelectContent>
+                     {EXERCISE_CATEGORY_VALUES.map((category) => (
+                        <SelectItem key={category} value={category}>
+                           {getExerciseCategoryLabelEs(category)}
+                        </SelectItem>
+                     ))}
+                  </SelectContent>
+               </Select>
+               <div className="ml-auto flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={onClearFilters}>
+                     <IconTrash data-icon="inline-start" />
+                     <span className="hidden lg:inline">Limpiar filtros</span>
+                  </Button>
+               </div>
             </div>
             <div className="flex items-center justify-between px-4 lg:px-6">
                <div className="ml-auto flex items-center gap-2">
@@ -143,7 +196,7 @@ export function DataTableContent<TData>({
                <div className="flex w-full items-center gap-8 lg:w-fit">
                   <div className="hidden items-center gap-2 lg:flex">
                      <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                        Rows per page
+                        Filas por página
                      </Label>
                      <Select
                         value={`${table.getState().pagination.pageSize}`}
@@ -168,7 +221,7 @@ export function DataTableContent<TData>({
                   </div>
                   {/* La paginacion vive en el hook y TanStack calcula el total de paginas. */}
                   <div className="flex w-fit items-center justify-center text-sm font-medium">
-                     Page {table.getState().pagination.pageIndex + 1} of{" "}
+                     Página {table.getState().pagination.pageIndex + 1} de{" "}
                      {table.getPageCount()}
                   </div>
                   <div className="ml-auto flex items-center gap-2 lg:ml-0">
@@ -178,7 +231,7 @@ export function DataTableContent<TData>({
                         onClick={() => table.setPageIndex(0)}
                         disabled={!table.getCanPreviousPage()}
                      >
-                        <span className="sr-only">Go to first page</span>
+                        <span className="sr-only">Ir a la primera página</span>
                         <IconChevronsLeft />
                      </Button>
                      <Button
@@ -188,7 +241,7 @@ export function DataTableContent<TData>({
                         onClick={() => table.previousPage()}
                         disabled={isLoading || !table.getCanPreviousPage()}
                      >
-                        <span className="sr-only">Go to previous page</span>
+                        <span className="sr-only">Ir a la página anterior</span>
                         <IconChevronLeft />
                      </Button>
                      <Button
@@ -198,7 +251,7 @@ export function DataTableContent<TData>({
                         onClick={() => table.nextPage()}
                         disabled={isLoading || !table.getCanNextPage()}
                      >
-                        <span className="sr-only">Go to next page</span>
+                        <span className="sr-only">Ir a la página siguiente</span>
                         <IconChevronRight />
                      </Button>
                      <Button
@@ -208,7 +261,7 @@ export function DataTableContent<TData>({
                         onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                         disabled={isLoading || !table.getCanNextPage()}
                      >
-                        <span className="sr-only">Go to last page</span>
+                        <span className="sr-only">Ir a la última página</span>
                         <IconChevronsRight />
                      </Button>
                   </div>

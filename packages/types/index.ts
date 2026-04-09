@@ -2,6 +2,52 @@ export type UserRole = "USER" | "ADMIN" | "COACH";
 export type MuscleGroup = "CHEST" | "BACK" | "LEGS" | "SHOULDERS" | "ARMS" | "CORE" | "FULL_BODY" | "GLUTES" | "CALVES" | "CARDIO";
 export type ExerciseCategory = "STRENGTH" | "BODYWEIGHT" | "CARDIO"
 
+export const MUSCLE_GROUP_VALUES = [
+   "CHEST",
+   "BACK",
+   "LEGS",
+   "SHOULDERS",
+   "ARMS",
+   "CORE",
+   "FULL_BODY",
+   "GLUTES",
+   "CALVES",
+   "CARDIO",
+] as const satisfies readonly MuscleGroup[];
+
+export const EXERCISE_CATEGORY_VALUES = [
+   "STRENGTH",
+   "BODYWEIGHT",
+   "CARDIO",
+] as const satisfies readonly ExerciseCategory[];
+
+export const MUSCLE_GROUP_LABELS_ES: Record<MuscleGroup, string> = {
+   CHEST: "Pecho",
+   BACK: "Espalda",
+   LEGS: "Piernas",
+   SHOULDERS: "Hombros",
+   ARMS: "Brazos",
+   CORE: "Core",
+   FULL_BODY: "Cuerpo completo",
+   GLUTES: "Glúteos",
+   CALVES: "Gemelos",
+   CARDIO: "Cardio",
+};
+
+export const EXERCISE_CATEGORY_LABELS_ES: Record<ExerciseCategory, string> = {
+   STRENGTH: "Fuerza",
+   BODYWEIGHT: "Peso corporal",
+   CARDIO: "Cardio",
+};
+
+export function getMuscleGroupLabelEs(muscleGroup: MuscleGroup) {
+   return MUSCLE_GROUP_LABELS_ES[muscleGroup];
+}
+
+export function getExerciseCategoryLabelEs(category: ExerciseCategory) {
+   return EXERCISE_CATEGORY_LABELS_ES[category];
+}
+
 // Representa el usuario publico que devuelve la API.
 // Las fechas llegan serializadas como string ISO en las respuestas JSON.
 export interface User {

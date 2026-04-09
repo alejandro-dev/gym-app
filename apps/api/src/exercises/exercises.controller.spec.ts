@@ -31,7 +31,13 @@ describe('ExercisesController', () => {
       create: jest.Mock<Promise<typeof exerciseRecord>, [CreateExerciseDto]>;
       findAll: jest.Mock<
          Promise<ExercisesListResponse>,
-         [number, number, string]
+         [
+            number,
+            number,
+            string,
+            MuscleGroup | undefined,
+            ExerciseCategory | undefined,
+         ]
       >;
       findOne: jest.Mock<Promise<typeof exerciseRecord>, [string]>;
       update: jest.Mock<
@@ -43,7 +49,13 @@ describe('ExercisesController', () => {
       create: jest.fn<Promise<typeof exerciseRecord>, [CreateExerciseDto]>(),
       findAll: jest.fn<
          Promise<ExercisesListResponse>,
-         [number, number, string]
+         [
+            number,
+            number,
+            string,
+            MuscleGroup | undefined,
+            ExerciseCategory | undefined,
+         ]
       >(),
       findOne: jest.fn<Promise<typeof exerciseRecord>, [string]>(),
       update: jest.fn<
@@ -110,7 +122,13 @@ describe('ExercisesController', () => {
 
          const result = await controller.findAll();
 
-         expect(exercisesServiceMock.findAll).toHaveBeenCalledWith(0, 10, '');
+         expect(exercisesServiceMock.findAll).toHaveBeenCalledWith(
+            0,
+            10,
+            '',
+            undefined,
+            undefined,
+         );
          expect(result).toEqual(exercisesListResponse);
       });
 
@@ -122,7 +140,13 @@ describe('ExercisesController', () => {
 
          await controller.findAll('-3', '1000');
 
-         expect(exercisesServiceMock.findAll).toHaveBeenCalledWith(0, 100, '');
+         expect(exercisesServiceMock.findAll).toHaveBeenCalledWith(
+            0,
+            100,
+            '',
+            undefined,
+            undefined,
+         );
       });
 
       it('forwards the search term to the service', async () => {
@@ -134,6 +158,28 @@ describe('ExercisesController', () => {
             2,
             25,
             'press',
+            undefined,
+            undefined,
+         );
+      });
+
+      it('forwards optional muscle group and category filters to the service', async () => {
+         exercisesServiceMock.findAll.mockResolvedValue(exercisesListResponse);
+
+         await controller.findAll(
+            '1',
+            '20',
+            'row',
+            MuscleGroup.BACK,
+            ExerciseCategory.STRENGTH,
+         );
+
+         expect(exercisesServiceMock.findAll).toHaveBeenCalledWith(
+            1,
+            20,
+            'row',
+            MuscleGroup.BACK,
+            ExerciseCategory.STRENGTH,
          );
       });
    });

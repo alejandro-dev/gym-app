@@ -19,7 +19,7 @@ import {
    ApiQuery,
    ApiTags,
 } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
+import { ExerciseCategory, MuscleGroup, UserRole } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AccessTokenGuard } from '../auth/guards/access-token.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -51,6 +51,8 @@ export class ExercisesController {
     * @param page - Numero de pagina base cero
     * @param limit - Cantidad maxima de ejercicios por pagina
     * @param search - Cadena de búsqueda para filtrar ejercicios
+    * @param groupMuscleFilter - Filtro de grupo muscular
+    * @param exerciseCategoryFilter - Filtro de categoria de ejercicio
     *
     * @returns Listado de ejercicios
     */
@@ -73,6 +75,18 @@ export class ExercisesController {
       description: 'Cadena de busqueda para filtrar ejercicios por nombre.',
       example: 'press',
    })
+   @ApiQuery({
+      name: 'muscleGroup',
+      required: false,
+      description: 'Filtro de grupo muscular.',
+      example: 'core',
+   })
+   @ApiQuery({
+      name: 'category',
+      required: false,
+      description: 'Filtro de categoria de ejercicio.',
+      example: 'strength',
+   })
    @ApiOkResponse({
       description: 'Listado paginado de ejercicios.',
       type: ExercisesListResponseDto,
@@ -83,6 +97,8 @@ export class ExercisesController {
       @Query('page') page?: string,
       @Query('limit') limit?: string,
       @Query('search') search?: string,
+      @Query('muscleGroup') groupMuscleFilter?: string,
+      @Query('category') exerciseCategoryFilter?: string,
    ): Promise<ExercisesListResponse> {
       const parsedPage = Number.parseInt(page ?? '0', 10);
       const parsedLimit = Number.parseInt(limit ?? '10', 10);
@@ -93,6 +109,8 @@ export class ExercisesController {
             ? 10
             : Math.min(Math.max(parsedLimit, 1), 100),
          search ?? '',
+         groupMuscleFilter as MuscleGroup,
+         exerciseCategoryFilter as ExerciseCategory,
       );
    }
 

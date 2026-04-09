@@ -24,9 +24,9 @@ export function RegisterView() {
       <div className="flex flex-col gap-6">
          <Card>
             <CardHeader>
-               <CardTitle>Create an account</CardTitle>
+               <CardTitle>Crear una cuenta</CardTitle>
                <CardDescription>
-                  Enter your information below to create your account
+                  Completa el formulario a continuación para crear una nueva cuenta y comenzar tu viaje fitness con nosotros.
                </CardDescription>
             </CardHeader>
             <CardContent>
@@ -48,8 +48,7 @@ export function RegisterView() {
                               required
                            />
                            <FieldDescription>
-                              We&apos;ll use this to contact you. We will not share your email
-                              with anyone else.
+                             Usaremos esta información para ponernos en contacto contigo. No compartiremos tu correo electrónico con nadie más.
                            </FieldDescription>
                         </Field>
                         <Field>
@@ -67,7 +66,7 @@ export function RegisterView() {
                            />
                         </Field>
                         <Field>
-                           <FieldLabel htmlFor="birthDate">Birth date</FieldLabel>
+                           <FieldLabel htmlFor="birthDate">Fecha de nacimiento</FieldLabel>
                            <Input
                               id="birthDate"
                               name="birthDate"
@@ -80,7 +79,7 @@ export function RegisterView() {
                      </div>
                      <Field>
                         <FieldLabel htmlFor="password">
-                           Password <span className="text-destructive">*</span>
+                           Contraseña <span className="text-destructive">*</span>
                         </FieldLabel>
                         <Input
                            id="password"
@@ -92,12 +91,12 @@ export function RegisterView() {
                            required
                         />
                         <FieldDescription>
-                           Must be at least 8 characters long.
+                           Debe tener al menos 8 caracteres.
                         </FieldDescription>
                      </Field>
                      <Field>
                         <FieldLabel htmlFor="confirmPassword">
-                           Confirm Password <span className="text-destructive">*</span>
+                           Confirmar Contraseña <span className="text-destructive">*</span>
                         </FieldLabel>
                         <Input
                            id="confirmPassword"
@@ -108,11 +107,11 @@ export function RegisterView() {
                            disabled={isLoading}
                            required
                         />
-                        <FieldDescription>Please confirm your password.</FieldDescription>
+                        <FieldDescription>Por favor confirma tu contraseña.</FieldDescription>
                      </Field>
                      <div className="grid gap-4 md:grid-cols-2">
                         <Field>
-                           <FieldLabel htmlFor="firstName">First Name</FieldLabel>
+                           <FieldLabel htmlFor="firstName">Nombre</FieldLabel>
                            <Input
                               id="firstName"
                               name="firstName"
@@ -124,7 +123,7 @@ export function RegisterView() {
                            />
                         </Field>
                         <Field>
-                           <FieldLabel htmlFor="lastName">Last Name</FieldLabel>
+                           <FieldLabel htmlFor="lastName">Apellidos</FieldLabel>
                            <Input
                               id="lastName"
                               name="lastName"
@@ -136,7 +135,7 @@ export function RegisterView() {
                            />
                         </Field>
                         <Field>
-                           <FieldLabel htmlFor="weightKg">Weight (kg)</FieldLabel>
+                           <FieldLabel htmlFor="weightKg">Peso (kg)</FieldLabel>
                            <Input
                               id="weightKg"
                               name="weightKg"
@@ -149,7 +148,7 @@ export function RegisterView() {
                            />
                         </Field>
                         <Field>
-                           <FieldLabel htmlFor="heightCm">Height (cm)</FieldLabel>
+                           <FieldLabel htmlFor="heightCm">Altura (cm)</FieldLabel>
                            <Input
                               id="heightCm"
                               name="heightCm"
@@ -164,13 +163,13 @@ export function RegisterView() {
                      </div>
                      <Field>
                         <Button type="submit" disabled={isLoading} className="w-full">
-                           {isLoading ? "Creating account..." : "Create Account"}
+                           {isLoading ? "Creando cuenta..." : "Crear cuenta"}
                         </Button>
                         <Button variant="outline" type="button" className="w-full" disabled={isLoading}>
-                           Sign up with Google
+                           Registrarse con Google
                         </Button>
                         <FieldDescription className="px-6 text-center">
-                           Already have an account? <a href="/login">Sign in</a>
+                           ¿Ya tienes una cuenta? <a href="/login">Inicia sesión</a>
                         </FieldDescription>
                      </Field>
                   </FieldGroup>

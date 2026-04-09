@@ -71,7 +71,7 @@ export function DataTableContent<TData>({
                <div className="ml-auto flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={onAddUser}>
                      <IconPlus data-icon="inline-start" />
-                     <span className="hidden lg:inline">Add User</span>
+                     <span className="hidden lg:inline">Añadir usuario</span>
                   </Button>
                </div>
             </div>
@@ -120,7 +120,7 @@ export function DataTableContent<TData>({
                               colSpan={columnsLength}
                               className="h-24 text-center"
                            >
-                              Loading users...
+                              Cargando usuarios...
                            </TableCell>
                         </TableRow>
                      ) : (
@@ -129,7 +129,7 @@ export function DataTableContent<TData>({
                               colSpan={columnsLength}
                               className="h-24 text-center"
                            >
-                              No results.
+                              No hay resultados.
                            </TableCell>
                         </TableRow>
                      )}
@@ -143,7 +143,7 @@ export function DataTableContent<TData>({
                <div className="flex w-full items-center gap-8 lg:w-fit">
                   <div className="hidden items-center gap-2 lg:flex">
                      <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                        Rows per page
+                        Filas por página
                      </Label>
                      <Select
                         value={`${table.getState().pagination.pageSize}`}
@@ -168,7 +168,7 @@ export function DataTableContent<TData>({
                   </div>
                   {/* La paginacion vive en el hook y TanStack calcula el total de paginas. */}
                   <div className="flex w-fit items-center justify-center text-sm font-medium">
-                     Page {table.getState().pagination.pageIndex + 1} of{" "}
+                     Página {table.getState().pagination.pageIndex + 1} de{" "}
                      {table.getPageCount()}
                   </div>
                   <div className="ml-auto flex items-center gap-2 lg:ml-0">
@@ -178,7 +178,7 @@ export function DataTableContent<TData>({
                         onClick={() => table.setPageIndex(0)}
                         disabled={!table.getCanPreviousPage()}
                      >
-                        <span className="sr-only">Go to first page</span>
+                        <span className="sr-only">Ir a la primera página</span>
                         <IconChevronsLeft />
                      </Button>
                      <Button
@@ -188,7 +188,7 @@ export function DataTableContent<TData>({
                         onClick={() => table.previousPage()}
                         disabled={isLoading || !table.getCanPreviousPage()}
                      >
-                        <span className="sr-only">Go to previous page</span>
+                        <span className="sr-only">Ir a la página anterior</span>
                         <IconChevronLeft />
                      </Button>
                      <Button
@@ -198,7 +198,7 @@ export function DataTableContent<TData>({
                         onClick={() => table.nextPage()}
                         disabled={isLoading || !table.getCanNextPage()}
                      >
-                        <span className="sr-only">Go to next page</span>
+                        <span className="sr-only">Ir a la página siguiente</span>
                         <IconChevronRight />
                      </Button>
                      <Button
@@ -208,7 +208,7 @@ export function DataTableContent<TData>({
                         onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                         disabled={isLoading || !table.getCanNextPage()}
                      >
-                        <span className="sr-only">Go to last page</span>
+                        <span className="sr-only">Ir a la última página</span>
                         <IconChevronsRight />
                      </Button>
                   </div>

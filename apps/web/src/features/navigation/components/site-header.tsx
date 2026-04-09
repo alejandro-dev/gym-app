@@ -16,6 +16,10 @@ const ROUTE_COPY: Record<string, { title: string; description: string }> = {
       title: "Gestion de usuarios",
       description: "Consulta, organiza y administra a los socios del gimnasio",
    },
+   "/exercises": {
+      title: "Gestion de ejercicios",
+      description: "Consulta, organiza y administra los ejercicios del gimnasio",
+   },
 }
 
 export function SiteHeader() {

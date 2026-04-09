@@ -1,4 +1,8 @@
 import z from "zod";
+import {
+  EXERCISE_CATEGORY_VALUES,
+  MUSCLE_GROUP_VALUES,
+} from "@gym-app/types";
 
 const optionalTextField = z.preprocess((value) => {
   if (typeof value !== "string") {
@@ -14,19 +18,8 @@ export const exerciseSchema = z.object({
   slug: z.string().trim().min(1, "Slug es obligatorio"),
   description: optionalTextField,
   instructions: optionalTextField,
-  muscleGroup: z.enum([
-    "CHEST",
-    "BACK",
-    "LEGS",
-    "SHOULDERS",
-    "ARMS",
-    "CORE",
-    "FULL_BODY",
-    "GLUTES",
-    "CALVES",
-    "CARDIO",
-  ]),
-  category: z.enum(["STRENGTH", "BODYWEIGHT", "CARDIO"]),
+  muscleGroup: z.enum(MUSCLE_GROUP_VALUES),
+  category: z.enum(EXERCISE_CATEGORY_VALUES),
   equipment: optionalTextField,
   isCompound: z.boolean(),
 });

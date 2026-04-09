@@ -71,11 +71,11 @@ export function AddUserDialog({
          <DialogContent className="sm:max-w-sm">
             <form className="flex flex-col gap-4" onSubmit={onSubmit}>
                <DialogHeader>
-                  <DialogTitle>{isEditMode ? "Edit user" : "Add user"}</DialogTitle>
+                  <DialogTitle>{isEditMode ? "Editar usuario" : "Añadir usuario"}</DialogTitle>
                   <DialogDescription>
                      {isEditMode
-                        ? "Update the selected user information."
-                        : "Complete the basic information to create a new user."}
+                        ? "Actualiza los datos del usuario."
+                        : "Completa los datos del usuario para crear."}
                   </DialogDescription>
                </DialogHeader>
                <FieldGroup>
@@ -91,7 +91,7 @@ export function AddUserDialog({
                      />
                   </Field>
                   <Field>
-                     <Label htmlFor="firstName">First name</Label>
+                     <Label htmlFor="firstName">Nombre</Label>
                      <Input
                         id="firstName"
                         name="firstName"
@@ -100,7 +100,7 @@ export function AddUserDialog({
                      />
                   </Field>
                   <Field>
-                     <Label htmlFor="lastName">Last name</Label>
+                     <Label htmlFor="lastName">Apellidos</Label>
                      <Input
                         id="lastName"
                         name="lastName"
@@ -118,7 +118,7 @@ export function AddUserDialog({
                      />
                   </Field>
                   <Field>
-                     <Label htmlFor="role">Role</Label>
+                     <Label htmlFor="role">Rol</Label>
                      <Select value={values.role} onValueChange={onRoleChange}>
                         <SelectTrigger className="w-full">
                            <SelectValue placeholder="Select a role" />
@@ -134,11 +134,11 @@ export function AddUserDialog({
                <DialogFooter>
                   <DialogClose asChild>
                      <Button type="button" variant="outline" disabled={isSaving}>
-                        Cancel
+                        Cancelar
                      </Button>
                   </DialogClose>
                   <Button type="submit" disabled={isSaving}>
-                     {isSaving ? "Saving..." : "Save user"}
+                     {isSaving ? "Guardando..." : "Guardar"}
                   </Button>
                </DialogFooter>
             </form>

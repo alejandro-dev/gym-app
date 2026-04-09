@@ -14,6 +14,8 @@ export async function GET(req: Request) {
          page: searchParams.get("page") ?? "0",
          limit: searchParams.get("limit") ?? "10",
          search: searchParams.get("search") ?? "",
+         muscleGroup: searchParams.get("muscleGroup") ?? "",
+         category: searchParams.get("category") ?? "",
       });
 
       const path = `/api/exercises?${queryParams.toString()}`;

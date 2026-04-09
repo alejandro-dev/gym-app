@@ -77,7 +77,7 @@ export function DataTable({
          },
          {
             id: "name",
-            header: "Name",
+            header: "Nombre",
             cell: ({ row }) => {
                const fullName = [row.original.firstName, row.original.lastName]
                   .filter(Boolean)
@@ -88,7 +88,7 @@ export function DataTable({
          },
          {
             accessorKey: "role",
-            header: "Role",
+            header: "Rol",
             cell: ({ row }) => (
                <Badge variant="outline" className="px-1.5 text-muted-foreground">
                   {row.original.role}
@@ -97,7 +97,7 @@ export function DataTable({
          },
          {
             accessorKey: "verifyed",
-            header: "Verified",
+            header: "Verificado",
             cell: ({ row }) => (
                <Badge variant="outline" className="px-1.5 text-muted-foreground">
                   {row.original.emailVerifiedAt !== null ? (
@@ -111,7 +111,7 @@ export function DataTable({
          },
          {
             accessorKey: "createdAt",
-            header: "Created",
+            header: "Creado",
             cell: ({ row }) =>
                new Intl.DateTimeFormat("es-ES", {
                   dateStyle: "medium",
@@ -133,15 +133,15 @@ export function DataTable({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-32">
                      <DropdownMenuItem onClick={() => openEditDialog(row.original)}>
-                        Edit
+                        Editar
                      </DropdownMenuItem>
-                     <DropdownMenuItem>View</DropdownMenuItem>
+                     <DropdownMenuItem>Ver</DropdownMenuItem>
                      <DropdownMenuSeparator />
                      <DropdownMenuItem
                         variant="destructive"
                         onSelect={() => openDeleteDialog(row.original)}
                      >
-                        Delete
+                        Eliminar
                      </DropdownMenuItem>
                   </DropdownMenuContent>
                </DropdownMenu>

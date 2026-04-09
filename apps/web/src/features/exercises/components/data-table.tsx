@@ -12,7 +12,11 @@ import {
    DropdownMenuSeparator,
    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Exercise } from "@gym-app/types";
+import {
+   Exercise,
+   getExerciseCategoryLabelEs,
+   getMuscleGroupLabelEs,
+} from "@gym-app/types";
 import { useExercisesDataTable } from "../hooks/use-exercises-data-table";
 import { DataTableContent } from "./data-table-content";
 import { AddExerciseDialog } from "./form-exercise";
@@ -24,9 +28,14 @@ type DataTableProps = {
    pageIndex: number;
    pageSize: number;
    search: string;
+   filterGroupMuscle: string;
+   filterCategory: string;
    total: number;
    onPaginationChange: React.Dispatch<React.SetStateAction<PaginationState>>;
    onSearchChange: (value: string) => void;
+   onFilterGroupMuscleChange: (value: string) => void;
+   onFilterCategoryChange: (value: string) => void;
+   onClearFilters: () => void;
 };
 
 export function DataTable({
@@ -35,9 +44,14 @@ export function DataTable({
    pageIndex,
    pageSize,
    search,
+   filterGroupMuscle,
+   filterCategory,
    total,
    onPaginationChange,
    onSearchChange,
+   onFilterGroupMuscleChange,
+   onFilterCategoryChange,
+   onClearFilters,
 }: DataTableProps) {
    const pageCount = Math.max(Math.ceil(total / pageSize), 1);
 
@@ -74,14 +88,18 @@ export function DataTable({
             accessorKey: "muscleGroup",
             header: "Grupo muscular",
             cell: ({ row }) => (
-               <div className="font-medium text-foreground">{row.original.muscleGroup}</div>
+               <div className="font-medium text-foreground">
+                  {getMuscleGroupLabelEs(row.original.muscleGroup)}
+               </div>
             ),
          },
          {
             id: "category",
             header: "Categoría",
             cell: ({ row }) => (
-               <div className="font-medium text-foreground">{row.original.category}</div>
+               <div className="font-medium text-foreground">
+                  {getExerciseCategoryLabelEs(row.original.category)}
+               </div>
             ),
          },
          {
@@ -100,15 +118,14 @@ export function DataTable({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-32">
                      <DropdownMenuItem onClick={() => openEditDialog(row.original)}>
-                        Edit
+                        Editar
                      </DropdownMenuItem>
-                     <DropdownMenuItem>View</DropdownMenuItem>
                      <DropdownMenuSeparator />
                      <DropdownMenuItem
                         variant="destructive"
                         onSelect={() => openDeleteDialog(row.original)}
                      >
-                        Delete
+                        Eliminar
                      </DropdownMenuItem>
                   </DropdownMenuContent>
                </DropdownMenu>
@@ -153,7 +170,12 @@ export function DataTable({
             table={table}
             total={total}
             search={search}
+            filterGroupMuscle={filterGroupMuscle}
+            filterCategory={filterCategory}
             onSearchChange={onSearchChange}
+            onFilterGroupMuscleChange={onFilterGroupMuscleChange}
+            onFilterCategoryChange={onFilterCategoryChange}
+            onClearFilters={onClearFilters}
          />
       </>
    );

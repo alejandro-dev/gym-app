@@ -180,7 +180,13 @@ describe('ExercisesService', () => {
          prismaMock.exercise.findMany.mockResolvedValue(orderedExercises);
          prismaMock.exercise.count.mockResolvedValue(2);
 
-         const result = await service.findAll(1, 5, 'squat');
+         const result = await service.findAll(
+            1,
+            5,
+            'squat',
+            undefined as never,
+            undefined as never,
+         );
          const [findManyArgs] = prismaMock.exercise.findMany.mock.calls[0];
          const [countArgs] = prismaMock.exercise.count.mock.calls[0];
 
@@ -202,13 +208,13 @@ describe('ExercisesService', () => {
             { id: 'desc' },
          ]);
          expect(findManyArgs.where).toEqual({
-            OR: [{ name: { contains: 'squat', mode: 'insensitive' } }],
+            name: { contains: 'squat', mode: 'insensitive' },
          });
          expect(findManyArgs.skip).toBe(5);
          expect(findManyArgs.take).toBe(5);
          expect(countArgs).toEqual({
             where: {
-               OR: [{ name: { contains: 'squat', mode: 'insensitive' } }],
+               name: { contains: 'squat', mode: 'insensitive' },
             },
          });
          expect(result).toEqual({
@@ -234,13 +240,48 @@ describe('ExercisesService', () => {
          prismaMock.exercise.findMany.mockResolvedValue([]);
          prismaMock.exercise.count.mockResolvedValue(0);
 
-         await service.findAll(0, 10, '');
+         await service.findAll(
+            0,
+            10,
+            '',
+            undefined as never,
+            undefined as never,
+         );
 
          const [findManyArgs] = prismaMock.exercise.findMany.mock.calls[0];
          const [countArgs] = prismaMock.exercise.count.mock.calls[0];
 
-         expect(findManyArgs.where).toBeUndefined();
-         expect(countArgs).toEqual({ where: undefined });
+         expect(findManyArgs.where).toEqual({});
+         expect(countArgs).toEqual({ where: {} });
+      });
+
+      it('adds muscle group and category filters when they are provided', async () => {
+         prismaMock.exercise.findMany.mockResolvedValue([]);
+         prismaMock.exercise.count.mockResolvedValue(0);
+
+         await service.findAll(
+            0,
+            10,
+            'press',
+            MuscleGroup.CHEST,
+            ExerciseCategory.STRENGTH,
+         );
+
+         const [findManyArgs] = prismaMock.exercise.findMany.mock.calls[0];
+         const [countArgs] = prismaMock.exercise.count.mock.calls[0];
+
+         expect(findManyArgs.where).toEqual({
+            name: { contains: 'press', mode: 'insensitive' },
+            muscleGroup: MuscleGroup.CHEST,
+            category: ExerciseCategory.STRENGTH,
+         });
+         expect(countArgs).toEqual({
+            where: {
+               name: { contains: 'press', mode: 'insensitive' },
+               muscleGroup: MuscleGroup.CHEST,
+               category: ExerciseCategory.STRENGTH,
+            },
+         });
       });
    });
 

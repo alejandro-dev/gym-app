@@ -25,9 +25,9 @@ export default function LoginView() {
          <div className="flex flex-col gap-6">
             <Card>
                <CardHeader>
-                  <CardTitle>Login to your account</CardTitle>
+                  <CardTitle>Inicia sesión con tu cuenta</CardTitle>
                   <CardDescription>
-                     Enter your email below to login to your account
+                     Ingresa tus credenciales para acceder a tu cuenta y disfrutar de nuestros servicios.
                   </CardDescription>
                </CardHeader>
                <CardContent>
@@ -48,12 +48,12 @@ export default function LoginView() {
                         </Field>
                         <Field>
                            <div className="flex items-center">
-                              <FieldLabel htmlFor="password">Password</FieldLabel>
+                              <FieldLabel htmlFor="password">Contraseña</FieldLabel>
                               <a
                                  href="#"
                                  className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                               >
-                                 Forgot your password?
+                                 ¿Olvidaste tu contraseña?
                               </a>
                            </div>
                            <Input
@@ -68,13 +68,13 @@ export default function LoginView() {
                         </Field>
                         <Field>
                            <Button type="submit" disabled={isLoading} className="w-full">
-                              {isLoading ? "Logging in..." : "Login"}
+                              {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
                            </Button>
                            <Button variant="outline" type="button" className="w-full" disabled={isLoading}>
-                              Login with Google
+                              Iniciar sesión con Google
                            </Button>
                            <FieldDescription className="text-center">
-                              Don&apos;t have an account? <a href="/register">Sign up</a>
+                              ¿No tienes una cuenta? <a href="/register">Resgístrate</a>
                            </FieldDescription>
                         </Field>
                      </FieldGroup>

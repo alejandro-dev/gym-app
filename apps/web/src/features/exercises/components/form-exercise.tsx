@@ -30,7 +30,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { ExerciseCategory, MuscleGroup } from "@gym-app/types";
+import {
+   EXERCISE_CATEGORY_VALUES,
+   getExerciseCategoryLabelEs,
+   getMuscleGroupLabelEs,
+   MUSCLE_GROUP_VALUES,
+   type ExerciseCategory,
+   type MuscleGroup,
+} from "@gym-app/types";
 
 // Type para los valores del formulario de creación de ejercicio.
 export type ExerciseFormValues = {
@@ -146,16 +153,11 @@ export function AddExerciseDialog({
                                  <SelectValue placeholder="Seleccionar grupo muscular" />
                               </SelectTrigger>
                               <SelectContent>
-                                 <SelectItem value="CHEST">Pecho</SelectItem>
-                                 <SelectItem value="BACK">Espalda</SelectItem>
-                                 <SelectItem value="LEGS">Piernas</SelectItem>
-                                 <SelectItem value="SHOULDERS">Hombros</SelectItem>
-                                 <SelectItem value="ARMS">Brazos</SelectItem>
-                                 <SelectItem value="CORE">Core</SelectItem>
-                                 <SelectItem value="FULL_BODY">Cuerpo completo</SelectItem>
-                                 <SelectItem value="GLUTES">Glúteos</SelectItem>
-                                 <SelectItem value="CALVES">Gemelos</SelectItem>
-                                 <SelectItem value="CARDIO">Cardio</SelectItem>
+                                 {MUSCLE_GROUP_VALUES.map((muscleGroup) => (
+                                    <SelectItem key={muscleGroup} value={muscleGroup}>
+                                       {getMuscleGroupLabelEs(muscleGroup)}
+                                    </SelectItem>
+                                 ))}
                               </SelectContent>
                            </Select>
                         </Field>
@@ -171,9 +173,11 @@ export function AddExerciseDialog({
                                  <SelectValue placeholder="Seleccionar categoría" />
                               </SelectTrigger>
                               <SelectContent>
-                                 <SelectItem value="STRENGTH">Fuerza</SelectItem>
-                                 <SelectItem value="BODYWEIGHT">Peso corporal</SelectItem>
-                                 <SelectItem value="CARDIO">Cardio</SelectItem>
+                                 {EXERCISE_CATEGORY_VALUES.map((category) => (
+                                    <SelectItem key={category} value={category}>
+                                       {getExerciseCategoryLabelEs(category)}
+                                    </SelectItem>
+                                 ))}
                               </SelectContent>
                            </Select>
                         </Field>

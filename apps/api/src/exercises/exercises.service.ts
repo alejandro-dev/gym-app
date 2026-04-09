@@ -58,15 +58,35 @@ export class ExercisesService {
     *
     * @returns Listado de ejercicios
     */
-   async findAll(page: number, limit: number, search: string) {
+   async findAll(
+      page: number,
+      limit: number,
+      search: string,
+      groupMuscleFilter: MuscleGroup,
+      exerciseCategoryFilter: ExerciseCategory,
+   ) {
       try {
          // Si hay una cadena de búsqueda, filtramos los usuarios por nombre.
-         const where: Prisma.ExerciseWhereInput | undefined = search
+         /*const where: Prisma.ExerciseWhereInput | undefined = search
             ? {
-                 // mode: 'insensitive',ignora mayúsculas/minúsculas
-                 OR: [{ name: { contains: search, mode: 'insensitive' } }],
-              }
-            : undefined;
+               // mode: 'insensitive',ignora mayúsculas/minúsculas
+               OR: [{ name: { contains: search, mode: 'insensitive' } }]
+            } : undefined;*/
+
+         const where: Prisma.ExerciseWhereInput = {
+            ...(search?.trim() && {
+               name: {
+                  contains: search.trim(),
+                  mode: 'insensitive',
+               },
+            }),
+            ...(groupMuscleFilter && {
+               muscleGroup: groupMuscleFilter,
+            }),
+            ...(exerciseCategoryFilter && {
+               category: exerciseCategoryFilter,
+            }),
+         };
 
          const [exercises, total] = await Promise.all([
             this.prisma.exercise.findMany({
