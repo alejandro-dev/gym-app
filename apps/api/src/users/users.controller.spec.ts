@@ -25,16 +25,18 @@ describe('UsersController', () => {
 
    beforeEach(async () => {
       usersService = {
-         findAll: jest.fn((...args: [number, number, string, UserRole | undefined]) => {
-            void args;
+         findAll: jest.fn(
+            (...args: [number, number, string, UserRole | undefined]) => {
+               void args;
 
-            return Promise.resolve({
-               items: [],
-               total: 0,
-               page: 0,
-               limit: 10,
-            });
-         }),
+               return Promise.resolve({
+                  items: [],
+                  total: 0,
+                  page: 0,
+                  limit: 10,
+               });
+            },
+         ),
          findOne: jest.fn((...args: [string]) => {
             void args;
 
@@ -98,12 +100,7 @@ describe('UsersController', () => {
 
       await controller.findAll('-3', '1000');
 
-      expect(usersService.findAll).toHaveBeenCalledWith(
-         0,
-         100,
-         '',
-         undefined,
-      );
+      expect(usersService.findAll).toHaveBeenCalledWith(0, 100, '', undefined);
    });
 
    it('forwards the search term to the service', async () => {

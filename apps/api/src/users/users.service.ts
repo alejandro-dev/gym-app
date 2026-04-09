@@ -91,7 +91,7 @@ export class UsersService {
             ...(roleFilter && {
                role: roleFilter,
             }),
-         }
+         };
 
          const [users, total] = await Promise.all([
             this.prisma.user.findMany({
