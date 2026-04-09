@@ -3,17 +3,21 @@ import { UserRole } from '@prisma/client';
 import type { UsersListResponse, User } from '@gym-app/types';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
+import type { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 
 type UsersServiceMock = {
    findAll: jest.MockedFunction<
       (
+         currentUser: AuthenticatedUser,
          page: number,
          limit: number,
          search: string,
          role: UserRole | undefined,
       ) => Promise<UsersListResponse>
    >;
-   findOne: jest.MockedFunction<(id: string) => Promise<User>>;
+   findOne: jest.MockedFunction<
+      (currentUser: AuthenticatedUser, id: string) => Promise<User>
+   >;
    create: jest.MockedFunction<UsersService['create']>;
    update: jest.MockedFunction<UsersService['update']>;
    remove: jest.MockedFunction<UsersService['remove']>;
@@ -22,11 +26,25 @@ type UsersServiceMock = {
 describe('UsersController', () => {
    let controller: UsersController;
    let usersService: UsersServiceMock;
+   const currentUser: AuthenticatedUser = {
+      sub: 'coach_1',
+      email: 'coach@gymapp.dev',
+      role: UserRole.COACH,
+      tokenType: 'access',
+   };
 
    beforeEach(async () => {
       usersService = {
          findAll: jest.fn(
-            (...args: [number, number, string, UserRole | undefined]) => {
+            (
+               ...args: [
+                  AuthenticatedUser,
+                  number,
+                  number,
+                  string,
+                  UserRole | undefined,
+               ]
+            ) => {
                void args;
 
                return Promise.resolve({
@@ -37,7 +55,7 @@ describe('UsersController', () => {
                });
             },
          ),
-         findOne: jest.fn((...args: [string]) => {
+         findOne: jest.fn((...args: [AuthenticatedUser, string]) => {
             void args;
 
             return Promise.resolve({
@@ -47,6 +65,7 @@ describe('UsersController', () => {
                firstName: null,
                lastName: null,
                role: 'USER',
+               coachId: null,
                weightKg: null,
                heightCm: null,
                birthDate: null,
@@ -85,9 +104,15 @@ describe('UsersController', () => {
          limit: 10,
       });
 
-      await controller.findAll();
+      await controller.findAll(currentUser);
 
-      expect(usersService.findAll).toHaveBeenCalledWith(0, 10, '', undefined);
+      expect(usersService.findAll).toHaveBeenCalledWith(
+         currentUser,
+         0,
+         10,
+         '',
+         undefined,
+      );
    });
 
    it('sanitizes invalid pagination values', async () => {
@@ -98,9 +123,15 @@ describe('UsersController', () => {
          limit: 100,
       });
 
-      await controller.findAll('-3', '1000');
+      await controller.findAll(currentUser, '-3', '1000');
 
-      expect(usersService.findAll).toHaveBeenCalledWith(0, 100, '', undefined);
+      expect(usersService.findAll).toHaveBeenCalledWith(
+         currentUser,
+         0,
+         100,
+         '',
+         undefined,
+      );
    });
 
    it('forwards the search term to the service', async () => {
@@ -111,9 +142,10 @@ describe('UsersController', () => {
          limit: 10,
       });
 
-      await controller.findAll('0', '10', 'alex');
+      await controller.findAll(currentUser, '0', '10', 'alex');
 
       expect(usersService.findAll).toHaveBeenCalledWith(
+         currentUser,
          0,
          10,
          'alex',
@@ -129,9 +161,10 @@ describe('UsersController', () => {
          limit: 10,
       });
 
-      await controller.findAll('0', '10', 'alex', UserRole.ADMIN);
+      await controller.findAll(currentUser, '0', '10', 'alex', UserRole.ADMIN);
 
       expect(usersService.findAll).toHaveBeenCalledWith(
+         currentUser,
          0,
          10,
          'alex',
@@ -147,6 +180,7 @@ describe('UsersController', () => {
          firstName: 'Coach',
          lastName: 'Admin',
          role: UserRole.COACH,
+         coachId: null,
          weightKg: null,
          heightCm: null,
          birthDate: null,
@@ -168,5 +202,11 @@ describe('UsersController', () => {
          lastName: 'Admin',
          role: UserRole.COACH,
       });
+   });
+
+   it('delegates user lookup to the service with the authenticated coach', async () => {
+      await controller.findOne(currentUser, 'user_1');
+
+      expect(usersService.findOne).toHaveBeenCalledWith(currentUser, 'user_1');
    });
 });

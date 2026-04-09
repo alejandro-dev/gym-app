@@ -28,6 +28,7 @@ type DataTableProps = {
    search: string;
    filterRole: string;
    total: number;
+   currentUserRole: string;
    onPaginationChange: React.Dispatch<React.SetStateAction<PaginationState>>;
    onSearchChange: (value: string) => void;
    onFilterRoleChange: (value: string) => void;
@@ -42,6 +43,7 @@ export function DataTable({
    search,
    filterRole,
    total,
+   currentUserRole,
    onPaginationChange,
    onSearchChange,
    onFilterRoleChange,
@@ -92,37 +94,41 @@ export function DataTable({
                return fullName || "-";
             },
          },
-         {
-            accessorKey: "role",
-            header: "Rol",
-            cell: ({ row }) => (
-               <Badge variant="outline" className="px-1.5 text-muted-foreground">
-                  {row.original.role}
-               </Badge>
-            ),
-         },
-         {
-            accessorKey: "verifyed",
-            header: "Verificado",
-            cell: ({ row }) => (
-               <Badge variant="outline" className="px-1.5 text-muted-foreground">
-                  {row.original.emailVerifiedAt !== null ? (
-                     <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />
-                  ) : (
-                     <IconLoader />
-                  )}
-                  {row.original.emailVerifiedAt !== null ? "Verificado": "En proceso"}
-               </Badge>
-            ),
-         },
-         {
-            accessorKey: "createdAt",
-            header: "Creado",
-            cell: ({ row }) =>
-               new Intl.DateTimeFormat("es-ES", {
-                  dateStyle: "medium",
-               }).format(new Date(row.original.createdAt)),
-         },
+         ...(currentUserRole === "ADMIN"
+         ? [
+               {
+                  accessorKey: "role",
+                  header: "Rol",
+                  cell: ({ row }) => (
+                     <Badge variant="outline" className="px-1.5 text-muted-foreground">
+                        {row.original.role}
+                     </Badge>
+                  ),
+               } satisfies ColumnDef<User>,
+               {
+                  accessorKey: "verifyed",
+                  header: "Verificado",
+                  cell: ({ row }) => (
+                     <Badge variant="outline" className="px-1.5 text-muted-foreground">
+                        {row.original.emailVerifiedAt !== null ? (
+                           <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />
+                        ) : (
+                           <IconLoader />
+                        )}
+                        {row.original.emailVerifiedAt !== null ? "Verificado": "En proceso"}
+                     </Badge>
+                  ),
+               } satisfies ColumnDef<User>,
+               {
+                  accessorKey: "createdAt",
+                  header: "Creado",
+                  cell: ({ row }) =>
+                     new Intl.DateTimeFormat("es-ES", {
+                        dateStyle: "medium",
+                     }).format(new Date(row.original.createdAt)),
+               } satisfies ColumnDef<User>,
+            ]
+         : []),
          {
             id: "actions",
             cell: ({ row }) => (
@@ -142,13 +148,17 @@ export function DataTable({
                         Editar
                      </DropdownMenuItem>
                      <DropdownMenuItem>Ver</DropdownMenuItem>
-                     <DropdownMenuSeparator />
-                     <DropdownMenuItem
-                        variant="destructive"
-                        onSelect={() => openDeleteDialog(row.original)}
-                     >
-                        Eliminar
-                     </DropdownMenuItem>
+                     {currentUserRole === "ADMIN" && (
+                        <>
+                           <DropdownMenuSeparator />
+                           <DropdownMenuItem
+                              variant="destructive"
+                              onSelect={() => openDeleteDialog(row.original)}
+                           >
+                              Eliminar
+                           </DropdownMenuItem>
+                        </>
+                     )}
                   </DropdownMenuContent>
                </DropdownMenu>
             ),
@@ -176,13 +186,15 @@ export function DataTable({
             onValueChange={handleFormValueChange}
             values={formValues}
          />
-         <DeleteUserDialog
-            isDeleting={isDeleting}
-            isOpen={isDeleteDialogOpen}
-            user={selectedUser}
-            onConfirm={handleDeleteUser}
-            onOpenChange={handleDeleteDialogOpenChange}
-         />
+         {currentUserRole === "ADMIN" && (
+            <DeleteUserDialog
+               isDeleting={isDeleting}
+               isOpen={isDeleteDialogOpen}
+               user={selectedUser}
+               onConfirm={handleDeleteUser}
+               onOpenChange={handleDeleteDialogOpenChange}
+            />
+         )}
          <DataTableContent
             columnsLength={table.getAllColumns().length}
             isLoading={isLoading}
@@ -191,6 +203,7 @@ export function DataTable({
             total={total}
             search={search}
             filterRole={filterRole}
+            currentUserRole={currentUserRole}
             onSearchChange={onSearchChange}
             onFilterRoleChange={onFilterRoleChange}
             onClearFilters={onClearFilters}

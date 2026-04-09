@@ -70,6 +70,7 @@ describe('WorkoutPlansController', () => {
    const workoutPlanRecord = {
       id: 'workoutPlan_456',
       ...createWorkoutPlanDto,
+      createdById: currentUser.sub,
       createdAt: new Date('2026-03-21T10:00:00.000Z'),
       updatedAt: new Date('2026-03-21T10:00:00.000Z'),
    };
@@ -94,9 +95,13 @@ describe('WorkoutPlansController', () => {
       it('delegates to workoutPlansService.create', async () => {
          workoutPlansServiceMock.create.mockResolvedValue(workoutPlanRecord);
 
-         const result = await controller.create(createWorkoutPlanDto);
+         const result = await controller.create(
+            currentUser,
+            createWorkoutPlanDto,
+         );
 
          expect(workoutPlansServiceMock.create).toHaveBeenCalledWith(
+            currentUser,
             createWorkoutPlanDto,
          );
          expect(result).toEqual(workoutPlanRecord);

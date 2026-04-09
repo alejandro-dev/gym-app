@@ -18,6 +18,7 @@ type AuthResponseBody = {
 
 type WorkoutPlanListItem = {
    id: string;
+   createdById: string;
 };
 
 describe('WorkoutPlansController (e2e)', () => {
@@ -25,6 +26,8 @@ describe('WorkoutPlansController (e2e)', () => {
    let prisma: PrismaService;
    let ownerUserId: string;
    let userAccessToken: string;
+   let coachAccessToken: string;
+   let coachUserId: string;
    const apiPath = (path: string) => `/api${path}`;
    const anyString = expect.any(String) as unknown as string;
 
@@ -50,11 +53,17 @@ describe('WorkoutPlansController (e2e)', () => {
       await cleanDatabase();
 
       userAccessToken = await createAuthenticatedUser(UserRole.USER);
+      coachAccessToken = await createAuthenticatedUser(UserRole.COACH);
       const user = await prisma.user.findFirstOrThrow({
          where: { email: { contains: 'user-' } },
          orderBy: { createdAt: 'desc' },
       });
+      const coach = await prisma.user.findFirstOrThrow({
+         where: { email: { contains: 'coach-' } },
+         orderBy: { createdAt: 'desc' },
+      });
       ownerUserId = user.id;
+      coachUserId = coach.id;
    });
 
    beforeEach(async () => {
@@ -85,6 +94,7 @@ describe('WorkoutPlansController (e2e)', () => {
             name: payload.name,
             description: payload.description,
             userId: payload.userId,
+            createdById: ownerUserId,
             isActive: payload.isActive,
             id: anyString,
             createdAt: anyString,
@@ -104,6 +114,11 @@ describe('WorkoutPlansController (e2e)', () => {
                   id: ownerUserId,
                },
             },
+            createdBy: {
+               connect: {
+                  id: ownerUserId,
+               },
+            },
          },
       });
 
@@ -113,6 +128,11 @@ describe('WorkoutPlansController (e2e)', () => {
             description: 'Second plan',
             isActive: false,
             user: {
+               connect: {
+                  id: ownerUserId,
+               },
+            },
+            createdBy: {
                connect: {
                   id: ownerUserId,
                },
@@ -150,6 +170,11 @@ describe('WorkoutPlansController (e2e)', () => {
                   id: ownerUserId,
                },
             },
+            createdBy: {
+               connect: {
+                  id: ownerUserId,
+               },
+            },
          },
       });
 
@@ -164,6 +189,7 @@ describe('WorkoutPlansController (e2e)', () => {
             name: workoutPlan.name,
             description: workoutPlan.description,
             userId: ownerUserId,
+            createdById: ownerUserId,
          }),
       );
    });
@@ -186,6 +212,11 @@ describe('WorkoutPlansController (e2e)', () => {
                   id: ownerUserId,
                },
             },
+            createdBy: {
+               connect: {
+                  id: ownerUserId,
+               },
+            },
          },
       });
 
@@ -204,6 +235,7 @@ describe('WorkoutPlansController (e2e)', () => {
             description: 'Updated full-body description',
             isActive: false,
             userId: ownerUserId,
+            createdById: ownerUserId,
          }),
       );
    });
@@ -215,6 +247,11 @@ describe('WorkoutPlansController (e2e)', () => {
             description: 'Owner cannot change',
             isActive: true,
             user: {
+               connect: {
+                  id: ownerUserId,
+               },
+            },
+            createdBy: {
                connect: {
                   id: ownerUserId,
                },
@@ -250,6 +287,11 @@ describe('WorkoutPlansController (e2e)', () => {
                   id: ownerUserId,
                },
             },
+            createdBy: {
+               connect: {
+                  id: ownerUserId,
+               },
+            },
          },
       });
 
@@ -274,6 +316,68 @@ describe('WorkoutPlansController (e2e)', () => {
       await request(app.getHttpServer())
          .delete(apiPath('/workout-plans/missing-workout-plan-id'))
          .set('Authorization', `Bearer ${userAccessToken}`)
+         .expect(404);
+   });
+
+   it('prevents a user from creating a workout plan for another user', async () => {
+      await request(app.getHttpServer())
+         .post(apiPath('/workout-plans'))
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .send({
+            name: 'Workout Plan forbidden',
+            description: 'Should not be allowed',
+            userId: coachUserId,
+            isActive: true,
+         })
+         .expect(400);
+   });
+
+   it('allows a coach to create a workout plan for another user', async () => {
+      const response = await request(app.getHttpServer())
+         .post(apiPath('/workout-plans'))
+         .set('Authorization', `Bearer ${coachAccessToken}`)
+         .send({
+            name: 'Workout Plan by coach',
+            description: 'Assigned by coach',
+            userId: ownerUserId,
+            isActive: true,
+         })
+         .expect(201);
+
+      expect(response.body).toEqual(
+         expect.objectContaining({
+            userId: ownerUserId,
+            createdById: coachUserId,
+            name: 'Workout Plan by coach',
+         }),
+      );
+   });
+
+   it('prevents a user from updating a coach-authored workout plan', async () => {
+      const workoutPlan = await prisma.workoutPlan.create({
+         data: {
+            name: 'Workout Plan by coach',
+            description: 'Coach authored',
+            isActive: true,
+            user: {
+               connect: {
+                  id: ownerUserId,
+               },
+            },
+            createdBy: {
+               connect: {
+                  id: coachUserId,
+               },
+            },
+         },
+      });
+
+      await request(app.getHttpServer())
+         .patch(apiPath(`/workout-plans/${workoutPlan.id}`))
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .send({
+            description: 'User should not edit this',
+         })
          .expect(404);
    });
 

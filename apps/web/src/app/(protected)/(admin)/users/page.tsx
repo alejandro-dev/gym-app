@@ -1,14 +1,19 @@
 import { forbidden, redirect } from "next/navigation";
 
 import UsersView from "@/features/users/views/users-view";
-import { requireRoles } from "@/lib/authorize";
+import { requireUser } from "@/lib/authorize";
 import { ErrorCode } from "@/services/errors/ErrorCode";
 import { searchUsers } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 export default async function UsersPage() {
-   await requireRoles(["ADMIN", "COACH"]);
+   // Obtenemos el usuario autenticado para determinar el acceso.
+   const user = await requireUser();
+
+   if (user.role !== "ADMIN") {
+      forbidden();
+   }
 
    let initialData;
 
@@ -30,7 +35,7 @@ export default async function UsersPage() {
 
    return (
       <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-         <UsersView initialData={initialData} />
+         <UsersView initialData={initialData} currentUserRole={user.role} />
       </div>
    )
 }

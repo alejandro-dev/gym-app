@@ -32,6 +32,18 @@ const data = {
          icon: IconBarbell,
       },
    ],
+   navMainCoach: [
+      {
+         title: "Atletas",
+         url: "/athletes",
+         icon: IconUsers,
+      },
+      {
+         title: "Ejercicios",
+         url: "/exercises",
+         icon: IconBarbell,
+      },
+   ],
 }
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
@@ -83,7 +95,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
             </SidebarMenu>
          </SidebarHeader>
          <SidebarContent>
-            <NavMain items={data.navMainAdmin} />
+            <NavMain items={user.role === "ADMIN" ? data.navMainAdmin : data.navMainCoach} />
          </SidebarContent>
          <SidebarFooter>
             <NavUser

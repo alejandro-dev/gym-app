@@ -19,6 +19,7 @@ type UpdateWorkoutPlanDto = Partial<CreateWorkoutPlanDto>;
 type WorkoutPlanRecord = {
    id: string;
    userId: string;
+   createdById: string;
    name: string;
    description: string | null;
    isActive: boolean;
@@ -38,6 +39,12 @@ describe('WorkoutPlansService', () => {
       sub: 'admin_123',
       email: 'admin@example.com',
       role: UserRole.ADMIN,
+      tokenType: 'access' as const,
+   };
+   const coachUser = {
+      sub: 'coach_123',
+      email: 'coach@example.com',
+      role: UserRole.COACH,
       tokenType: 'access' as const,
    };
 
@@ -81,6 +88,7 @@ describe('WorkoutPlansService', () => {
    const workoutPlanRecord: WorkoutPlanRecord = {
       id: 'workoutPlan_123',
       ...createWorkoutPlanDto,
+      createdById: currentUser.sub,
       createdAt: new Date('2026-03-21T10:00:00.000Z'),
       updatedAt: new Date('2026-03-21T10:00:00.000Z'),
    };
@@ -111,7 +119,7 @@ describe('WorkoutPlansService', () => {
       it('creates a workout plan and returns the public record', async () => {
          prismaMock.workoutPlan.create.mockResolvedValue(workoutPlanRecord);
 
-         const result = await service.create(createWorkoutPlanDto);
+         const result = await service.create(currentUser, createWorkoutPlanDto);
          const [createArgs] = prismaMock.workoutPlan.create.mock.calls[0];
 
          expect(createArgs.data).toEqual({
@@ -123,10 +131,16 @@ describe('WorkoutPlansService', () => {
                   id: createWorkoutPlanDto.userId,
                },
             },
+            createdBy: {
+               connect: {
+                  id: currentUser.sub,
+               },
+            },
          });
          expect(createArgs.select).toMatchObject({
             id: true,
             userId: true,
+            createdById: true,
             name: true,
             description: true,
             isActive: true,
@@ -142,8 +156,20 @@ describe('WorkoutPlansService', () => {
          );
 
          await expect(
-            service.create(createWorkoutPlanDto),
+            service.create(currentUser, createWorkoutPlanDto),
          ).rejects.toBeInstanceOf(InternalServerErrorException);
+      });
+
+      it('rejects creating a workout plan for another user when role is USER', async () => {
+         await expect(
+            service.create(currentUser, {
+               ...createWorkoutPlanDto,
+               userId: 'another_user',
+            }),
+         ).rejects.toThrow(
+            'A user can only create workout plans for themselves.',
+         );
+         expect(prismaMock.workoutPlan.create).not.toHaveBeenCalled();
       });
    });
 
@@ -162,6 +188,7 @@ describe('WorkoutPlansService', () => {
          expect(findManyArgs.select).toMatchObject({
             id: true,
             userId: true,
+            createdById: true,
             name: true,
             description: true,
             isActive: true,
@@ -183,6 +210,15 @@ describe('WorkoutPlansService', () => {
 
          expect(findManyArgs.where).toEqual({ userId: 'target_user' });
       });
+
+      it('returns coach-authored plans by default for role COACH', async () => {
+         prismaMock.workoutPlan.findMany.mockResolvedValue([workoutPlanRecord]);
+
+         await service.findAll(coachUser, undefined);
+         const [findManyArgs] = prismaMock.workoutPlan.findMany.mock.calls[0];
+
+         expect(findManyArgs.where).toEqual({ createdById: coachUser.sub });
+      });
    });
 
    describe('findOne', () => {
@@ -198,11 +234,11 @@ describe('WorkoutPlansService', () => {
 
          expect(findUniqueArgs.where).toEqual({
             id: workoutPlanRecord.id,
-            userId: currentUser.sub,
          });
          expect(findUniqueArgs.select).toMatchObject({
             id: true,
             userId: true,
+            createdById: true,
             name: true,
             description: true,
             isActive: true,
@@ -225,6 +261,8 @@ describe('WorkoutPlansService', () => {
       it('verifies existence, updates the workout plan, and returns the updated record', async () => {
          prismaMock.workoutPlan.findUnique.mockResolvedValue({
             id: workoutPlanRecord.id,
+            userId: workoutPlanRecord.userId,
+            createdById: workoutPlanRecord.createdById,
          });
          prismaMock.workoutPlan.update.mockResolvedValue(
             updatedWorkoutPlanRecord,
@@ -240,8 +278,8 @@ describe('WorkoutPlansService', () => {
          const [updateArgs] = prismaMock.workoutPlan.update.mock.calls[0];
 
          expect(findUniqueArgs).toEqual({
-            where: { id: workoutPlanRecord.id, userId: currentUser.sub },
-            select: { id: true, userId: true },
+            where: { id: workoutPlanRecord.id },
+            select: { id: true, userId: true, createdById: true },
          });
          expect(updateArgs.where).toEqual({ id: workoutPlanRecord.id });
          expect(updateArgs.data).toEqual({
@@ -252,6 +290,7 @@ describe('WorkoutPlansService', () => {
          expect(updateArgs.select).toMatchObject({
             id: true,
             userId: true,
+            createdById: true,
             name: true,
             description: true,
             isActive: true,
@@ -277,6 +316,8 @@ describe('WorkoutPlansService', () => {
       it('translates unexpected database errors into InternalServerErrorException', async () => {
          prismaMock.workoutPlan.findUnique.mockResolvedValue({
             id: workoutPlanRecord.id,
+            userId: workoutPlanRecord.userId,
+            createdById: workoutPlanRecord.createdById,
          });
          prismaMock.workoutPlan.update.mockRejectedValue(
             new Error('db unavailable'),
@@ -296,6 +337,8 @@ describe('WorkoutPlansService', () => {
       it('verifies existence and returns the deleted workout plan', async () => {
          prismaMock.workoutPlan.findUnique.mockResolvedValue({
             id: workoutPlanRecord.id,
+            userId: workoutPlanRecord.userId,
+            createdById: workoutPlanRecord.createdById,
          });
          prismaMock.workoutPlan.delete.mockResolvedValue(workoutPlanRecord);
 
@@ -305,13 +348,14 @@ describe('WorkoutPlansService', () => {
          const [deleteArgs] = prismaMock.workoutPlan.delete.mock.calls[0];
 
          expect(findUniqueArgs).toEqual({
-            where: { id: workoutPlanRecord.id, userId: currentUser.sub },
-            select: { id: true, userId: true },
+            where: { id: workoutPlanRecord.id },
+            select: { id: true, userId: true, createdById: true },
          });
          expect(deleteArgs.where).toEqual({ id: workoutPlanRecord.id });
          expect(deleteArgs.select).toMatchObject({
             id: true,
             userId: true,
+            createdById: true,
             name: true,
             description: true,
             isActive: true,

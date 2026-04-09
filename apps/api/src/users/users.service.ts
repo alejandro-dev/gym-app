@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+   BadRequestException,
+   Injectable,
+   NotFoundException,
+} from '@nestjs/common';
 import { Prisma, UserRole } from '@prisma/client';
 import { AccountOnboardingService } from '../auth/account-onboarding.service';
+import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -16,6 +21,7 @@ type SelectedUserRecord = {
    firstName: string | null;
    lastName: string | null;
    role: UserRole;
+   coachId: string | null;
    weightKg: number | null;
    heightCm: number | null;
    birthDate: Date | null;
@@ -52,6 +58,7 @@ export class UsersService {
       firstName: true,
       lastName: true,
       role: true,
+      coachId: true,
       weightKg: true,
       heightCm: true,
       birthDate: true,
@@ -63,14 +70,16 @@ export class UsersService {
    /**
     * Obtiene todos los usuarios ordenados por fecha de creacion descendente.
     *
+    * @param currentUser - Usuario autenticado que determina el alcance de acceso
     * @param page - Numero de pagina base cero
     * @param limit - Cantidad maxima de usuarios por pagina
     * @param search - Cadena de búsqueda para filtrar usuarios
-    * @param role - Rol de usuario para filtrar
+    * @param roleFilter - Rol de usuario para filtrar cuando el acceso lo permite
     *
     * @returns Listado de usuarios
     */
    async findAll(
+      currentUser: AuthenticatedUser,
       page: number,
       limit: number,
       search: string,
@@ -79,6 +88,7 @@ export class UsersService {
       try {
          // Si hay una cadena de búsqueda, filtramos los usuarios por email, nombre de usuario, nombre y apellidos. Si hay un filtro de rol, filtramos por el rol especificado.
          const where: Prisma.UserWhereInput = {
+            ...this.buildUserAccessWhere(currentUser, roleFilter),
             ...(search?.trim() && {
                // mode: 'insensitive',ignora mayúsculas/minúsculas
                OR: [
@@ -87,9 +97,6 @@ export class UsersService {
                   { firstName: { contains: search, mode: 'insensitive' } },
                   { lastName: { contains: search, mode: 'insensitive' } },
                ],
-            }),
-            ...(roleFilter && {
-               role: roleFilter,
             }),
          };
 
@@ -122,11 +129,12 @@ export class UsersService {
    /**
     * Obtiene un usuario por id.
     *
+    * @param currentUser - Usuario autenticado que solicita el recurso
     * @param id - Identificador del usuario
     * @returns Usuario encontrado
     * @throws NotFoundException si no existe
     */
-   async findOne(id: string): Promise<User> {
+   async findOne(currentUser: AuthenticatedUser, id: string): Promise<User> {
       const user = await this.prisma.user.findUnique({
          where: { id },
          select: this.userSelect,
@@ -134,6 +142,7 @@ export class UsersService {
 
       // Si no existe lanza NotFoundException
       if (!user) throw new NotFoundException(`User with id "${id}" not found`);
+      this.assertCanAccessUser(currentUser, user);
 
       return this.toPublicUser(user);
    }
@@ -149,6 +158,10 @@ export class UsersService {
       // de una contraseña enviada desde el cliente.
       const temporaryPassword = generateRandomPassword();
       const passwordHash = await hashValue(temporaryPassword);
+      await this.validateCoachAssignment(
+         createUserDto.role ?? UserRole.USER,
+         createUserDto.coachId,
+      );
 
       try {
          const user = await this.prisma.user.create({
@@ -181,7 +194,11 @@ export class UsersService {
     * @throws NotFoundException si el usuario no existe
     */
    async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-      await this.ensureUserExists(id);
+      const existingUser = await this.ensureUserExists(id);
+      await this.validateCoachAssignment(
+         updateUserDto.role ?? existingUser.role,
+         updateUserDto.coachId,
+      );
 
       try {
          const user = await this.prisma.user.update({
@@ -218,17 +235,19 @@ export class UsersService {
     * Verifica si el usuario existe antes de actualizar o eliminar.
     *
     * @param id - Identificador del usuario
-    * @returns Promesa resuelta cuando el usuario existe
+    * @returns Usuario mínimo necesario para validaciones posteriores
     * @throws NotFoundException si no existe
     */
    private async ensureUserExists(id: string) {
       const user = await this.prisma.user.findUnique({
          where: { id },
-         select: { id: true },
+         select: { id: true, role: true },
       });
 
       // Si no existe lanza NotFoundException
       if (!user) throw new NotFoundException(`User with id "${id}" not found`);
+
+      return user;
    }
 
    /**
@@ -252,6 +271,13 @@ export class UsersService {
          firstName: createUserDto.firstName,
          lastName: createUserDto.lastName,
          role: createUserDto.role ?? UserRole.USER,
+         coach: createUserDto.coachId
+            ? {
+                 connect: {
+                    id: createUserDto.coachId,
+                 },
+              }
+            : undefined,
          weightKg: createUserDto.weightKg,
          heightCm: createUserDto.heightCm,
          emailVerifiedAt: securityData.emailVerifiedAt,
@@ -275,6 +301,16 @@ export class UsersService {
          firstName: updateUserDto.firstName,
          lastName: updateUserDto.lastName,
          role: updateUserDto.role,
+         coach:
+            updateUserDto.coachId === undefined
+               ? undefined
+               : updateUserDto.coachId === null
+                 ? { disconnect: true }
+                 : {
+                      connect: {
+                         id: updateUserDto.coachId,
+                      },
+                   },
          weightKg: updateUserDto.weightKg,
          heightCm: updateUserDto.heightCm,
          birthDate:
@@ -300,5 +336,88 @@ export class UsersService {
          updatedAt: user.updatedAt.toISOString(),
          emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
       };
+   }
+
+   /**
+    * Construye el filtro base de acceso para el listado de usuarios.
+    * Los administradores pueden filtrar por rol libremente y los coaches
+    * solo ven atletas asignados a su propia cartera.
+    *
+    * @param currentUser - Usuario autenticado que realiza la consulta
+    * @param roleFilter - Rol solicitado desde la capa HTTP
+    * @returns Clausula `where` base para Prisma
+    */
+   private buildUserAccessWhere(
+      currentUser: AuthenticatedUser,
+      roleFilter?: UserRole,
+   ): Prisma.UserWhereInput {
+      if (currentUser.role === UserRole.COACH) {
+         return {
+            role: UserRole.USER,
+            coachId: currentUser.sub,
+         };
+      }
+
+      return {
+         ...(roleFilter && {
+            role: roleFilter,
+         }),
+      };
+   }
+
+   /**
+    * Comprueba si el usuario autenticado puede acceder al registro solicitado.
+    * En el caso de un coach, el usuario debe ser un atleta asignado a ese coach.
+    *
+    * @param currentUser - Usuario autenticado que intenta acceder al recurso
+    * @param user - Registro mínimo del usuario objetivo
+    * @throws NotFoundException si el recurso queda fuera de su ámbito de acceso
+    */
+   private assertCanAccessUser(
+      currentUser: AuthenticatedUser,
+      user: Pick<SelectedUserRecord, 'id' | 'role' | 'coachId'>,
+   ) {
+      if (currentUser.role !== UserRole.COACH) {
+         return;
+      }
+
+      if (user.role !== UserRole.USER || user.coachId !== currentUser.sub) {
+         throw new NotFoundException(`User with id "${user.id}" not found`);
+      }
+   }
+
+   /**
+    * Valida que la asignación de coach sea coherente con las reglas de negocio.
+    * Solo los usuarios con rol `USER` pueden tener coach asignado y ese coach
+    * debe existir en base de datos con rol `COACH`.
+    *
+    * @param role - Rol final que tendrá el usuario tras la operación
+    * @param coachId - Identificador opcional del coach a asignar
+    * @throws BadRequestException si la asignación no es válida
+    */
+   private async validateCoachAssignment(
+      role: UserRole,
+      coachId?: string | null,
+   ) {
+      if (coachId === undefined || coachId === null) {
+         return;
+      }
+
+      if (role !== UserRole.USER) {
+         throw new BadRequestException(
+            'Only users with role USER can be assigned to a coach.',
+         );
+      }
+
+      const coach = await this.prisma.user.findUnique({
+         where: { id: coachId },
+         select: { id: true, role: true },
+      });
+
+      if (!coach || coach.role !== UserRole.COACH) {
+         throw new BadRequestException(
+            'The assigned coach must be an existing user with role COACH.',
+         );
+      }
    }
 }

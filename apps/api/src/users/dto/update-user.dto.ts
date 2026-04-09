@@ -52,6 +52,15 @@ export class UpdateUserDto {
    @IsEnum(UserRole)
    role?: UserRole;
 
+   @ApiPropertyOptional({
+      example: 'cm9j8u4p10000fkoq2m9is1coach',
+      nullable: true,
+   })
+   /** Nuevo coach asignado o `null` para quitar la asignacion. */
+   @IsOptional()
+   @IsString()
+   coachId?: string | null;
+
    @ApiPropertyOptional({ example: 81.2 })
    /** Nuevo peso en kilogramos o `null` para limpiar el valor. */
    @IsOptional()

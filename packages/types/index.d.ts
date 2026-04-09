@@ -37,6 +37,7 @@ export interface User {
   firstName: string | null;
   lastName: string | null;
   role: UserRole;
+  coachId: string | null;
   weightKg: number | null;
   heightCm: number | null;
   birthDate: string | null;

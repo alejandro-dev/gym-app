@@ -43,6 +43,15 @@ export class CreateUserDto {
    @IsEnum(UserRole)
    role?: UserRole;
 
+   @ApiPropertyOptional({
+      example: 'cm9j8u4p10000fkoq2m9is1coach',
+      nullable: true,
+   })
+   /** Identificador del coach asignado cuando el usuario es atleta. */
+   @IsOptional()
+   @IsString()
+   coachId?: string | null;
+
    @ApiPropertyOptional({ example: 78.5 })
    /** Peso del usuario en kilogramos. */
    @IsOptional()

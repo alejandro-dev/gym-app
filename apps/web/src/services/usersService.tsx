@@ -14,6 +14,7 @@ export interface CreateUserPayload {
    firstName?: string;
    lastName?: string;
    role: UserRole;
+   coachId?: string | null;
 }
 
 export interface UpdateUserPayload {
@@ -21,6 +22,7 @@ export interface UpdateUserPayload {
    firstName?: string | null;
    lastName?: string | null;
    role: UserRole;
+   coachId?: string | null;
 }
 
 // Construye la URL para listar/buscar usuarios con paginación.

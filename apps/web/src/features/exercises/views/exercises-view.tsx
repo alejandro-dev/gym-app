@@ -1,6 +1,6 @@
 "use client";
 
-import { searchExercises } from "@/app/(protected)/exercises/actions";
+import { searchExercises } from "@/app/(protected)/(admin)/exercises/actions";
 import { ExercisesListResponse } from "@gym-app/types";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";

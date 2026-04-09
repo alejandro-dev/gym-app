@@ -51,6 +51,7 @@ model User {
    firstName    String?
    lastName     String?
    role         UserRole  @default(USER)
+   coachId      String?
    weightKg     Float?
    heightCm     Float?
    birthDate    DateTime?
@@ -60,7 +61,10 @@ model User {
    createdAt    DateTime  @default(now())
    updatedAt    DateTime  @updatedAt
 
-   workoutPlans    WorkoutPlan[]
+   coach User? @relation("CoachAthletes", fields: [coachId], references: [id], onDelete: SetNull)
+   athletes User[] @relation("CoachAthletes")
+   ownedWorkoutPlans WorkoutPlan[] @relation("PlanOwner")
+   createdWorkoutPlans WorkoutPlan[] @relation("PlanCreator")
    workoutSessions WorkoutSession[]
    personalRecords PersonalRecord[]
 }
@@ -86,13 +90,15 @@ model Exercise {
 model WorkoutPlan {
    id          String   @id @default(cuid())
    userId      String
+   createdById String
    name        String
    description String?
    isActive    Boolean  @default(true)
    createdAt   DateTime @default(now())
    updatedAt   DateTime @updatedAt
 
-   user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+   user      User                  @relation("PlanOwner", fields: [userId], references: [id], onDelete: Cascade)
+   createdBy User                  @relation("PlanCreator", fields: [createdById], references: [id], onDelete: Restrict)
    exercises WorkoutPlanExercise[]
    sessions  WorkoutSession[]
 }

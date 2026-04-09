@@ -69,6 +69,11 @@ async function main() {
 			firstName: 'Laura',
 			lastName: 'Atleta',
 			role: UserRole.USER,
+			coach: {
+				connect: {
+					id: coach.id,
+				},
+			},
 			weightKg: 64,
 			heightCm: 168,
 			passwordHash,
@@ -79,6 +84,11 @@ async function main() {
 			firstName: 'Laura',
 			lastName: 'Atleta',
 			role: UserRole.USER,
+			coach: {
+				connect: {
+					id: coach.id,
+				},
+			},
 			weightKg: 64,
 			heightCm: 168,
 			passwordHash,
@@ -307,6 +317,7 @@ async function main() {
 	const pushPullLegs = await prisma.workoutPlan.create({
 		data: {
 			userId: athlete.id,
+			createdById: athlete.id,
 			name: 'Push Pull Legs intermedio',
 			description: 'Rutina de 5 dias con enfasis en hipertrofia y progresion de cargas.',
 			isActive: true,
@@ -315,9 +326,10 @@ async function main() {
 
 	const fullBody = await prisma.workoutPlan.create({
 		data: {
-			userId: coach.id,
+			userId: athlete.id,
+			createdById: coach.id,
 			name: 'Full body 3 dias',
-			description: 'Plan general para mejorar fuerza basica y tecnica.',
+			description: 'Plan general creado por el coach para mejorar fuerza basica y tecnica.',
 			isActive: true,
 		},
 	});

@@ -371,6 +371,11 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
                   id: ownerUserId,
                },
             },
+            createdBy: {
+               connect: {
+                  id: ownerUserId,
+               },
+            },
          },
       });
 

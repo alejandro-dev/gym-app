@@ -111,9 +111,10 @@ export class WorkoutPlansController {
    })
    @Post()
    create(
+      @CurrentUser() user: AuthenticatedUser,
       @Body() createWorkoutPlanDto: CreateWorkoutPlanDto,
    ): Promise<WorkoutPlanResponseDto> {
-      return this.workoutPlansService.create(createWorkoutPlanDto);
+      return this.workoutPlansService.create(user, createWorkoutPlanDto);
    }
 
    /**

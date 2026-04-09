@@ -20,8 +20,10 @@ import {
 } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AccessTokenGuard } from '../auth/guards/access-token.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
@@ -77,6 +79,7 @@ export class UsersController {
    @Get()
    @Roles(UserRole.ADMIN, UserRole.COACH)
    findAll(
+      @CurrentUser() user: AuthenticatedUser,
       @Query('page') page?: string,
       @Query('limit') limit?: string,
       @Query('search') search?: string,
@@ -86,6 +89,7 @@ export class UsersController {
       const parsedLimit = Number.parseInt(limit ?? '10', 10);
 
       return this.usersService.findAll(
+         user,
          Number.isNaN(parsedPage) ? 0 : Math.max(parsedPage, 0),
          Number.isNaN(parsedLimit)
             ? 10
@@ -109,8 +113,11 @@ export class UsersController {
    @ApiNotFoundResponse({ description: 'Usuario no encontrado.' })
    @Get(':id')
    @Roles(UserRole.ADMIN, UserRole.COACH)
-   findOne(@Param('id') id: string): Promise<User> {
-      return this.usersService.findOne(id);
+   findOne(
+      @CurrentUser() user: AuthenticatedUser,
+      @Param('id') id: string,
+   ): Promise<User> {
+      return this.usersService.findOne(user, id);
    }
 
    /**

@@ -9,9 +9,10 @@ import { useState } from "react";
 
 type UsersViewProps = {
    initialData: UsersListResponse;
+   currentUserRole: string;
 };
 
-export default function UsersView({ initialData }: UsersViewProps) {
+export default function UsersView({ initialData, currentUserRole }: UsersViewProps) {
    const [pagination, setPagination] = useState({
       pageIndex: initialData.page,
       pageSize: initialData.limit,
@@ -80,6 +81,7 @@ export default function UsersView({ initialData }: UsersViewProps) {
          search={search}
          filterRole={filterRole}
          total={usersQuery.data.total}
+         currentUserRole={currentUserRole}
          onPaginationChange={setPagination}
          onSearchChange={handleSearchChange}
          onFilterRoleChange={handleFilterRoleChange}

@@ -12,6 +12,10 @@ export class WorkoutPlanResponseDto {
    /** Identificador del usuario propietario del plan. */
    userId!: string;
 
+   @ApiProperty({ example: 'cm9j8u4p10000fkoq2m9is1def' })
+   /** Identificador del usuario que creo el plan. */
+   createdById!: string;
+
    @ApiProperty({ example: 'Push Pull Legs - Beginner' })
    /** Nombre del plan de entrenamiento. */
    name!: string;

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+   BadRequestException,
+   Injectable,
+   NotFoundException,
+} from '@nestjs/common';
 import { Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateWorkoutPlanDto } from './dto/create-workout-plan.dto';
@@ -24,6 +28,7 @@ export class WorkoutPlansService {
    private readonly workoutPlanSelect = {
       id: true,
       userId: true,
+      createdById: true,
       name: true,
       description: true,
       isActive: true,
@@ -41,12 +46,7 @@ export class WorkoutPlansService {
    async findAll(user: AuthenticatedUser, userId?: string) {
       return await this.prisma.workoutPlan.findMany({
          select: this.workoutPlanSelect,
-         where:
-            user.role === UserRole.USER
-               ? { userId: user.sub }
-               : userId
-                 ? { userId: userId }
-                 : undefined,
+         where: this.buildAccessiblePlansWhere(user, userId),
          orderBy: {
             createdAt: 'desc',
          },
@@ -63,19 +63,16 @@ export class WorkoutPlansService {
     */
    async findOne(user: AuthenticatedUser, id: string) {
       const workoutPlan = await this.prisma.workoutPlan.findUnique({
-         where: {
-            id,
-            userId:
-               user.role === UserRole.ADMIN || user.role === UserRole.COACH
-                  ? undefined
-                  : user.sub,
-         },
+         where: { id },
          select: this.workoutPlanSelect,
       });
 
       // Si no existe lanza NotFoundException
       if (!workoutPlan)
          throw new NotFoundException(`Workout plan with id "${id}" not found`);
+
+      this.assertCanAccessWorkoutPlan(user, workoutPlan);
+
       return workoutPlan;
    }
 
@@ -85,10 +82,15 @@ export class WorkoutPlansService {
     * @param createWorkoutPlanDto - Datos de creacion del plan de trabajo
     * @returns Plan de trabajo creado
     */
-   async create(createWorkoutPlanDto: CreateWorkoutPlanDto) {
+   async create(
+      user: AuthenticatedUser,
+      createWorkoutPlanDto: CreateWorkoutPlanDto,
+   ) {
+      this.assertCanCreateWorkoutPlan(user, createWorkoutPlanDto.userId);
+
       try {
          return await this.prisma.workoutPlan.create({
-            data: this.toCreateData(createWorkoutPlanDto),
+            data: this.toCreateData(user, createWorkoutPlanDto),
             select: this.workoutPlanSelect,
          });
       } catch (error) {
@@ -149,6 +151,7 @@ export class WorkoutPlansService {
     * @returns Datos adaptados a Prisma
     */
    private toCreateData(
+      user: AuthenticatedUser,
       createWorkoutPlanDto: CreateWorkoutPlanDto,
    ): Prisma.WorkoutPlanCreateInput {
       return {
@@ -158,6 +161,11 @@ export class WorkoutPlansService {
          user: {
             connect: {
                id: createWorkoutPlanDto.userId,
+            },
+         },
+         createdBy: {
+            connect: {
+               id: user.sub,
             },
          },
       };
@@ -189,18 +197,74 @@ export class WorkoutPlansService {
     */
    private async ensureWorkoutPlanExists(user: AuthenticatedUser, id: string) {
       const workoutPlan = await this.prisma.workoutPlan.findUnique({
-         where: {
-            id,
-            userId:
-               user.role === UserRole.ADMIN || user.role === UserRole.COACH
-                  ? undefined
-                  : user.sub,
-         },
-         select: { id: true, userId: true },
+         where: { id },
+         select: { id: true, userId: true, createdById: true },
       });
 
       // Si no existe lanza NotFoundException
       if (!workoutPlan)
          throw new NotFoundException(`Workout plan with id "${id}" not found`);
+
+      this.assertCanManageWorkoutPlan(user, workoutPlan);
+   }
+
+   private buildAccessiblePlansWhere(
+      user: AuthenticatedUser,
+      userId?: string,
+   ): Prisma.WorkoutPlanWhereInput | undefined {
+      if (user.role === UserRole.USER) {
+         return { userId: user.sub };
+      }
+
+      if (user.role === UserRole.COACH) {
+         return userId ? { userId } : { createdById: user.sub };
+      }
+
+      return userId ? { userId } : undefined;
+   }
+
+   private assertCanCreateWorkoutPlan(
+      user: AuthenticatedUser,
+      targetUserId: string,
+   ) {
+      if (user.role === UserRole.USER && targetUserId !== user.sub) {
+         throw new BadRequestException(
+            'A user can only create workout plans for themselves.',
+         );
+      }
+   }
+
+   private assertCanAccessWorkoutPlan(
+      user: AuthenticatedUser,
+      workoutPlan: {
+         userId: string;
+         createdById: string;
+      },
+   ) {
+      if (user.role === UserRole.USER && workoutPlan.userId !== user.sub) {
+         throw new NotFoundException('Workout plan not found');
+      }
+   }
+
+   private assertCanManageWorkoutPlan(
+      user: AuthenticatedUser,
+      workoutPlan: {
+         id: string;
+         userId: string;
+         createdById: string;
+      },
+   ) {
+      if (user.role === UserRole.ADMIN || user.role === UserRole.COACH) {
+         return;
+      }
+
+      if (
+         workoutPlan.userId !== user.sub ||
+         workoutPlan.createdById !== user.sub
+      ) {
+         throw new NotFoundException(
+            `Workout plan with id "${workoutPlan.id}" not found`,
+         );
+      }
    }
 }

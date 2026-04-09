@@ -12,10 +12,24 @@ describe('UsersService', () => {
          create: jest.Mock;
          findMany: jest.Mock;
          count: jest.Mock;
+         findUnique: jest.Mock;
+         update: jest.Mock;
       };
    };
    const accountOnboardingServiceMock = {
       enqueueWelcomeEmail: jest.fn(),
+   };
+   const adminUser = {
+      sub: 'admin_1',
+      email: 'admin@gymapp.dev',
+      role: UserRole.ADMIN,
+      tokenType: 'access' as const,
+   };
+   const coachUser = {
+      sub: 'coach_1',
+      email: 'coach@gymapp.dev',
+      role: UserRole.COACH,
+      tokenType: 'access' as const,
    };
 
    beforeEach(async () => {
@@ -24,6 +38,8 @@ describe('UsersService', () => {
             create: jest.fn(),
             findMany: jest.fn(),
             count: jest.fn(),
+            findUnique: jest.fn(),
+            update: jest.fn(),
          },
       };
 
@@ -57,6 +73,7 @@ describe('UsersService', () => {
             firstName: 'Alex',
             lastName: 'Trainer',
             role: UserRole.ADMIN,
+            coachId: null,
             weightKg: 82.5,
             heightCm: 178,
             birthDate: new Date('1992-06-14T00:00:00.000Z'),
@@ -67,7 +84,7 @@ describe('UsersService', () => {
       ]);
       prismaService.user.count.mockResolvedValue(1);
 
-      const result = await service.findAll(0, 10, 'alex', undefined);
+      const result = await service.findAll(adminUser, 0, 10, 'alex', undefined);
 
       expect(prismaService.user.findMany).toHaveBeenCalledWith(
          expect.objectContaining({
@@ -91,6 +108,7 @@ describe('UsersService', () => {
                firstName: 'Alex',
                lastName: 'Trainer',
                role: UserRole.ADMIN,
+               coachId: null,
                weightKg: 82.5,
                heightCm: 178,
                birthDate: '1992-06-14T00:00:00.000Z',
@@ -109,7 +127,7 @@ describe('UsersService', () => {
       prismaService.user.findMany.mockResolvedValue([]);
       prismaService.user.count.mockResolvedValue(0);
 
-      await service.findAll(0, 10, '', UserRole.ADMIN);
+      await service.findAll(adminUser, 0, 10, '', UserRole.ADMIN);
 
       expect(prismaService.user.findMany).toHaveBeenCalledWith(
          expect.objectContaining({
@@ -131,7 +149,7 @@ describe('UsersService', () => {
       prismaService.user.findMany.mockResolvedValue([]);
       prismaService.user.count.mockResolvedValue(0);
 
-      await service.findAll(0, 10, 'alex', UserRole.COACH);
+      await service.findAll(adminUser, 0, 10, 'alex', UserRole.COACH);
 
       expect(prismaService.user.findMany).toHaveBeenCalledWith(
          expect.objectContaining({
@@ -152,7 +170,7 @@ describe('UsersService', () => {
       prismaService.user.findMany.mockResolvedValue([]);
       prismaService.user.count.mockResolvedValue(0);
 
-      await service.findAll(0, 10, '', undefined);
+      await service.findAll(adminUser, 0, 10, '', undefined);
 
       expect(prismaService.user.findMany).toHaveBeenCalledWith(
          expect.objectContaining({
@@ -169,6 +187,7 @@ describe('UsersService', () => {
          firstName: 'Coach',
          lastName: 'Admin',
          role: UserRole.COACH,
+         coachId: null,
          weightKg: null,
          heightCm: null,
          birthDate: null,
@@ -222,6 +241,7 @@ describe('UsersService', () => {
          firstName: 'Coach',
          lastName: 'Admin',
          role: UserRole.COACH,
+         coachId: null,
          weightKg: null,
          heightCm: null,
          birthDate: null,
@@ -229,5 +249,71 @@ describe('UsersService', () => {
          createdAt: '2026-04-06T10:00:00.000Z',
          updatedAt: '2026-04-06T10:00:00.000Z',
       });
+   });
+
+   it('restricts coach listings to assigned athletes', async () => {
+      prismaService.user.findMany.mockResolvedValue([]);
+      prismaService.user.count.mockResolvedValue(0);
+
+      await service.findAll(coachUser, 0, 10, 'laura', UserRole.COACH);
+
+      expect(prismaService.user.findMany).toHaveBeenCalledWith(
+         expect.objectContaining({
+            where: {
+               role: UserRole.USER,
+               coachId: coachUser.sub,
+               OR: [
+                  { email: { contains: 'laura', mode: 'insensitive' } },
+                  { username: { contains: 'laura', mode: 'insensitive' } },
+                  { firstName: { contains: 'laura', mode: 'insensitive' } },
+                  { lastName: { contains: 'laura', mode: 'insensitive' } },
+               ],
+            },
+         }),
+      );
+   });
+
+   it('allows a coach to fetch an assigned athlete', async () => {
+      prismaService.user.findUnique.mockResolvedValue({
+         id: 'athlete_1',
+         email: 'athlete@gymapp.dev',
+         username: null,
+         firstName: 'Laura',
+         lastName: 'Atleta',
+         role: UserRole.USER,
+         coachId: coachUser.sub,
+         weightKg: null,
+         heightCm: null,
+         birthDate: null,
+         emailVerifiedAt: null,
+         createdAt: new Date('2026-03-28T10:00:00.000Z'),
+         updatedAt: new Date('2026-03-28T10:00:00.000Z'),
+      });
+
+      const result = await service.findOne(coachUser, 'athlete_1');
+
+      expect(result.coachId).toBe(coachUser.sub);
+   });
+
+   it('rejects coach access to users not assigned to them', async () => {
+      prismaService.user.findUnique.mockResolvedValue({
+         id: 'athlete_2',
+         email: 'athlete2@gymapp.dev',
+         username: null,
+         firstName: 'Mario',
+         lastName: 'Atleta',
+         role: UserRole.USER,
+         coachId: 'other_coach',
+         weightKg: null,
+         heightCm: null,
+         birthDate: null,
+         emailVerifiedAt: null,
+         createdAt: new Date('2026-03-28T10:00:00.000Z'),
+         updatedAt: new Date('2026-03-28T10:00:00.000Z'),
+      });
+
+      await expect(service.findOne(coachUser, 'athlete_2')).rejects.toThrow(
+         'User with id "athlete_2" not found',
+      );
    });
 });

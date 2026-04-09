@@ -77,6 +77,11 @@ describe('WorkoutSessionsController (e2e)', () => {
                   id: ownerUserId,
                },
             },
+            createdBy: {
+               connect: {
+                  id: ownerUserId,
+               },
+            },
          },
       });
 
@@ -243,6 +248,11 @@ describe('WorkoutSessionsController (e2e)', () => {
             description: 'Plan alternativo',
             isActive: true,
             user: {
+               connect: {
+                  id: ownerUserId,
+               },
+            },
+            createdBy: {
                connect: {
                   id: ownerUserId,
                },

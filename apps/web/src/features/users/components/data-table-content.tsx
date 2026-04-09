@@ -41,6 +41,7 @@ type DataTableContentProps<TData> = {
    total: number;
    search: string;
    filterRole: string;
+   currentUserRole: string;
    onAddUser: () => void;
    onSearchChange: (value: string) => void;
    onFilterRoleChange: (value: string) => void;
@@ -54,6 +55,7 @@ export function DataTableContent<TData>({
    total,
    search,
    filterRole,
+   currentUserRole,
    onAddUser,
    onSearchChange,
    onFilterRoleChange,
@@ -74,21 +76,23 @@ export function DataTableContent<TData>({
                   }
                   className="max-w-sm"
                />
-               <Select
-                  value={filterRole}
-                  onValueChange={onFilterRoleChange}
-               >
-                  <SelectTrigger className="w-full">
-                     <SelectValue placeholder="Filtrar por rol" />
-                  </SelectTrigger>
-                  <SelectContent>
-                     {ROLE_GROUP_VALUES.map((role) => (
-                        <SelectItem key={role} value={role}>
-                           {role}
-                        </SelectItem>
-                     ))}
-                  </SelectContent>
-               </Select>
+               {currentUserRole === "ADMIN" && (
+                  <Select
+                     value={filterRole}
+                     onValueChange={onFilterRoleChange}
+                  >
+                     <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Filtrar por rolsss" />
+                     </SelectTrigger>
+                     <SelectContent>
+                        {ROLE_GROUP_VALUES.map((role) => (
+                           <SelectItem key={role} value={role}>
+                              {role}
+                           </SelectItem>
+                        ))}
+                     </SelectContent>
+                  </Select>
+               )}
                <div className="ml-auto flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={onClearFilters}>
                      <IconTrash data-icon="inline-start" />
@@ -100,7 +104,7 @@ export function DataTableContent<TData>({
                <div className="ml-auto flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={onAddUser}>
                      <IconPlus data-icon="inline-start" />
-                     <span className="hidden lg:inline">Añadir usuario</span>
+                     <span className="hidden lg:inline">{currentUserRole === "ADMIN" ? "Añadir usuario" : "Añadir atleta"}</span>
                   </Button>
                </div>
             </div>
