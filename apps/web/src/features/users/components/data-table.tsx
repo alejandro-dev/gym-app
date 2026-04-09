@@ -26,9 +26,12 @@ type DataTableProps = {
    pageIndex: number;
    pageSize: number;
    search: string;
+   filterRole: string;
    total: number;
    onPaginationChange: React.Dispatch<React.SetStateAction<PaginationState>>;
    onSearchChange: (value: string) => void;
+   onFilterRoleChange: (value: string) => void;
+   onClearFilters: () => void;
 };
 
 export function DataTable({
@@ -37,9 +40,12 @@ export function DataTable({
    pageIndex,
    pageSize,
    search,
+   filterRole,
    total,
    onPaginationChange,
    onSearchChange,
+   onFilterRoleChange,
+   onClearFilters
 }: DataTableProps) {
    const pageCount = Math.max(Math.ceil(total / pageSize), 1);
 
@@ -184,7 +190,10 @@ export function DataTable({
             table={table}
             total={total}
             search={search}
+            filterRole={filterRole}
             onSearchChange={onSearchChange}
+            onFilterRoleChange={onFilterRoleChange}
+            onClearFilters={onClearFilters}
          />
       </>
    );

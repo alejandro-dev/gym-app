@@ -28,7 +28,7 @@ import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { ExerciseResponseDto } from './dto/exercise-response.dto';
 import { ExercisesListResponseDto } from './dto/exercises-list-response.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
-import { ExercisesListResponse } from '@gym-app/types';
+import type { ExercisesListResponse } from '@gym-app/types';
 
 /**
  * Controlador base para exponer endpoints del dominio de ejercicios.

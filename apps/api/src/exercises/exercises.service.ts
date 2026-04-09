@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import { handlePrismaError } from '../prisma/prisma-error.util';
-import { Exercise } from '@gym-app/types';
+import type { Exercise } from '@gym-app/types';
 
 type SelectedExerciseRecord = {
    id: string;

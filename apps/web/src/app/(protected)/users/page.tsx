@@ -13,7 +13,7 @@ export default async function UsersPage() {
    let initialData;
 
    try {
-      initialData = await searchUsers({ page: 0, limit: 10, search: "" });
+      initialData = await searchUsers({ page: 0, limit: 10, search: "", role: "" });
    } catch (error) {
       if (error instanceof ErrorCode) {
          if (error.status === 401) {

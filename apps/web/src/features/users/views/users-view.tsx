@@ -18,15 +18,17 @@ export default function UsersView({ initialData }: UsersViewProps) {
    });
 
    const [search, setSearch] = useState("");
+   const [filterRole, setFilterRole] = useState("");
 
    // Creamos la consulta para obtener los usuarios.
    const usersQuery = useQuery({
-      queryKey: ["users", pagination.pageIndex, pagination.pageSize, search],
+      queryKey: ["users", pagination.pageIndex, pagination.pageSize, search, filterRole],
       queryFn: () =>
          searchUsers({
             page: pagination.pageIndex,
             limit: pagination.pageSize,
             search,
+            role: filterRole
          }),
       initialData,
       placeholderData: (previousData) => previousData,
@@ -44,6 +46,31 @@ export default function UsersView({ initialData }: UsersViewProps) {
       }));
    };
 
+   // Evento que se activa cuando cambia el valor del filtro de rol.
+   const handleFilterRoleChange = (value: string) => {
+      // Actualizamos el valor del filtro de rol.
+      setFilterRole(value);
+
+      // Reiniciamos la paginación al inicio.
+      setPagination((current) => ({
+         ...current,
+         pageIndex: 0,
+      }));
+   };
+
+   // Evento que se activa cuando se hace clic en el botón de limpiar filtros.
+   const handleClearFilters = () => {
+      // Reiniciamos la paginación al inicio.
+      setPagination((current) => ({
+         ...current,
+         pageIndex: 0,
+      }));
+
+      // Limpiamos los filtros.
+      setSearch("");
+      setFilterRole("");
+   };
+
    return (
       <DataTable
          data={usersQuery.data.items}
@@ -51,9 +78,12 @@ export default function UsersView({ initialData }: UsersViewProps) {
          pageIndex={pagination.pageIndex}
          pageSize={pagination.pageSize}
          search={search}
+         filterRole={filterRole}
          total={usersQuery.data.total}
          onPaginationChange={setPagination}
          onSearchChange={handleSearchChange}
+         onFilterRoleChange={handleFilterRoleChange}
+         onClearFilters={handleClearFilters}
       />
    );
 }

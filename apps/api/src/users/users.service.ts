@@ -66,6 +66,7 @@ export class UsersService {
     * @param page - Numero de pagina base cero
     * @param limit - Cantidad maxima de usuarios por pagina
     * @param search - Cadena de búsqueda para filtrar usuarios
+    * @param role - Rol de usuario para filtrar
     *
     * @returns Listado de usuarios
     */
@@ -73,20 +74,24 @@ export class UsersService {
       page: number,
       limit: number,
       search: string,
+      roleFilter?: UserRole,
    ): Promise<UsersListResponse> {
       try {
-         // Si hay una cadena de búsqueda, filtramos los usuarios por email, nombre de usuario, nombre y apellidos.
-         const where: Prisma.UserWhereInput | undefined = search
-            ? {
-                 // mode: 'insensitive',ignora mayúsculas/minúsculas
-                 OR: [
-                    { email: { contains: search, mode: 'insensitive' } },
-                    { username: { contains: search, mode: 'insensitive' } },
-                    { firstName: { contains: search, mode: 'insensitive' } },
-                    { lastName: { contains: search, mode: 'insensitive' } },
-                 ],
-              }
-            : undefined;
+         // Si hay una cadena de búsqueda, filtramos los usuarios por email, nombre de usuario, nombre y apellidos. Si hay un filtro de rol, filtramos por el rol especificado.
+         const where: Prisma.UserWhereInput = {
+            ...(search?.trim() && {
+               // mode: 'insensitive',ignora mayúsculas/minúsculas
+               OR: [
+                  { email: { contains: search, mode: 'insensitive' } },
+                  { username: { contains: search, mode: 'insensitive' } },
+                  { firstName: { contains: search, mode: 'insensitive' } },
+                  { lastName: { contains: search, mode: 'insensitive' } },
+               ],
+            }),
+            ...(roleFilter && {
+               role: roleFilter,
+            }),
+         }
 
          const [users, total] = await Promise.all([
             this.prisma.user.findMany({

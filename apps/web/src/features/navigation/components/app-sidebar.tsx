@@ -2,23 +2,12 @@
 
 import * as React from "react"
 import {
-   IconActivityHeartbeat,
    IconBarbell,
-   IconCalendarStats,
-   IconCreditCard,
-   IconDashboard,
-   IconHelp,
    IconInnerShadowTop,
-   IconMessage2Heart,
-   IconSearch,
-   IconSettings,
-   IconUserStar,
    IconUsers,
 } from "@tabler/icons-react"
 
-import { NavDocuments } from "@/features/navigation/components/nav-documents"
 import { NavMain } from "@/features/navigation/components/nav-main"
-import { NavSecondary } from "@/features/navigation/components/nav-secondary"
 import { NavUser } from "@/features/navigation/components/nav-user"
 import {
    Sidebar,
@@ -31,12 +20,7 @@ import {
 } from "@/components/ui/sidebar"
 
 const data = {
-   user: {
-      name: "Alex Trainer",
-      email: "alex@gymapp.dev",
-      avatar: "",
-   },
-   navMain: [
+   navMainAdmin: [
       {
          title: "Usuarios",
          url: "/users",
@@ -47,64 +31,31 @@ const data = {
          url: "/exercises",
          icon: IconBarbell,
       },
-      {
-         title: "Resumen",
-         url: "#",
-         icon: IconDashboard,
-      },
-      {
-         title: "Clases",
-         url: "#",
-         icon: IconCalendarStats,
-      },
-      {
-         title: "Rendimiento",
-         url: "#",
-         icon: IconActivityHeartbeat,
-      },
-      {
-         title: "Staff",
-         url: "#",
-         icon: IconUserStar,
-      },
-   ],
-   navSecondary: [
-      {
-         title: "Configuracion",
-         url: "#",
-         icon: IconSettings,
-      },
-      {
-         title: "Ayuda",
-         url: "#",
-         icon: IconHelp,
-      },
-      {
-         title: "Buscar",
-         url: "#",
-         icon: IconSearch,
-      },
-   ],
-   documents: [
-      {
-         name: "Planes premium",
-         url: "#",
-         icon: IconBarbell,
-      },
-      {
-         name: "Cobros del mes",
-         url: "#",
-         icon: IconCreditCard,
-      },
-      {
-         name: "Feedback socios",
-         url: "#",
-         icon: IconMessage2Heart,
-      },
    ],
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
+   user: {
+      firstName: string | null
+      lastName: string | null
+      email: string
+      role: "USER" | "ADMIN" | "COACH"
+   }
+}
+
+export function AppSidebar({ user, ...props }: AppSidebarProps) {
+   // Si el usuario no tiene ni nombre ni apellido, se muestra su email como nombre
+   const displayName =
+      [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email
+
+   // Obtenemos el texto que se mostrará en la barra lateral para indicar el rol del usuario
+   const roleLabel =
+      user.role === "ADMIN"
+         ? "Administrador"
+         : user.role === "COACH"
+            ? "Coach"
+            : "Usuario"
+
    return (
       <Sidebar collapsible="offcanvas" {...props}>
          <SidebarHeader>
@@ -120,10 +71,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         </div>
                         <div className="grid flex-1 text-left">
                            <span className="font-display text-xl leading-none">
-                              Iron Pulse
+                              GymApp
                            </span>
                            <span className="text-xs text-sidebar-foreground/60">
-                              Performance club dashboard
+                              Perfil del {roleLabel}
                            </span>
                         </div>
                      </a>
@@ -132,12 +83,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenu>
          </SidebarHeader>
          <SidebarContent>
-            <NavMain items={data.navMain} />
-            <NavDocuments items={data.documents} />
-            <NavSecondary items={data.navSecondary} className="mt-auto" />
+            <NavMain items={data.navMainAdmin} />
          </SidebarContent>
          <SidebarFooter>
-            <NavUser user={data.user} />
+            <NavUser
+               user={{
+                  name: displayName,
+                  email: user.email,
+                  avatar: "",
+               }}
+            />
          </SidebarFooter>
       </Sidebar>
    )

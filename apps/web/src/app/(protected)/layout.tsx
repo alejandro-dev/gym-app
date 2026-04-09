@@ -11,7 +11,7 @@ export default async function ProtectedLayout({
 }: Readonly<{
    children: React.ReactNode
 }>) {
-   await requireUser()
+   const user = await requireUser()
 
    return (
       <SidebarProvider
@@ -22,7 +22,15 @@ export default async function ProtectedLayout({
             } as React.CSSProperties
          }
       >
-         <AppSidebar variant="inset" />
+         <AppSidebar
+            variant="inset"
+            user={{
+               firstName: user.firstName,
+               lastName: user.lastName,
+               email: user.email,
+               role: user.role,
+            }}
+         />
          <SidebarInset className="dashboard-shell">
             <SiteHeader />
             <div className="flex flex-1 flex-col">

@@ -67,7 +67,7 @@ describe('UsersService', () => {
       ]);
       prismaService.user.count.mockResolvedValue(1);
 
-      const result = await service.findAll(0, 10, 'alex');
+      const result = await service.findAll(0, 10, 'alex', undefined);
 
       expect(prismaService.user.findMany).toHaveBeenCalledWith(
          expect.objectContaining({
@@ -103,6 +103,62 @@ describe('UsersService', () => {
          page: 0,
          limit: 10,
       });
+   });
+
+   it('adds the role filter to the query when provided', async () => {
+      prismaService.user.findMany.mockResolvedValue([]);
+      prismaService.user.count.mockResolvedValue(0);
+
+      await service.findAll(0, 10, '', UserRole.ADMIN);
+
+      expect(prismaService.user.findMany).toHaveBeenCalledWith(
+         expect.objectContaining({
+            where: {
+               role: UserRole.ADMIN,
+            },
+         }),
+      );
+      expect(prismaService.user.count).toHaveBeenCalledWith(
+         expect.objectContaining({
+            where: {
+               role: UserRole.ADMIN,
+            },
+         }),
+      );
+   });
+
+   it('combines search and role filters in the query', async () => {
+      prismaService.user.findMany.mockResolvedValue([]);
+      prismaService.user.count.mockResolvedValue(0);
+
+      await service.findAll(0, 10, 'alex', UserRole.COACH);
+
+      expect(prismaService.user.findMany).toHaveBeenCalledWith(
+         expect.objectContaining({
+            where: {
+               OR: [
+                  { email: { contains: 'alex', mode: 'insensitive' } },
+                  { username: { contains: 'alex', mode: 'insensitive' } },
+                  { firstName: { contains: 'alex', mode: 'insensitive' } },
+                  { lastName: { contains: 'alex', mode: 'insensitive' } },
+               ],
+               role: UserRole.COACH,
+            },
+         }),
+      );
+   });
+
+   it('omits the role filter when it is not provided', async () => {
+      prismaService.user.findMany.mockResolvedValue([]);
+      prismaService.user.count.mockResolvedValue(0);
+
+      await service.findAll(0, 10, '', undefined);
+
+      expect(prismaService.user.findMany).toHaveBeenCalledWith(
+         expect.objectContaining({
+            where: {},
+         }),
+      );
    });
 
    it('creates an already verified user and enqueues the welcome email with temporary password', async () => {

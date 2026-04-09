@@ -1,9 +1,7 @@
 "use client"
 
-import { IconBellRinging } from "@tabler/icons-react"
 import { usePathname } from "next/navigation"
 
-import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
@@ -44,12 +42,6 @@ export function SiteHeader() {
                <p className="hidden text-sm leading-relaxed text-muted-foreground sm:block">
                   {copy.description}
                </p>
-            </div>
-            <div className="ml-auto flex items-center">
-               <Button variant="outline" size="icon-sm" className="rounded-full">
-                  <IconBellRinging />
-                  <span className="sr-only">Notificaciones</span>
-               </Button>
             </div>
          </div>
       </header>

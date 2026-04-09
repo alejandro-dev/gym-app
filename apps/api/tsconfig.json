@@ -10,9 +10,6 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
-    "paths": {
-      "@gym-app/types": ["../../packages/types/index.ts"]
-    },
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,

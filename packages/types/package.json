@@ -3,8 +3,11 @@
   "version": "0.0.1",
   "private": true,
   "main": "./index.ts",
-  "types": "./index.ts",
+  "types": "./index.d.ts",
   "exports": {
-    ".": "./index.ts"
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.ts"
+    }
   }
 }

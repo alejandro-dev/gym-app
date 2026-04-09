@@ -2,6 +2,13 @@ export type UserRole = "USER" | "ADMIN" | "COACH";
 export type MuscleGroup = "CHEST" | "BACK" | "LEGS" | "SHOULDERS" | "ARMS" | "CORE" | "FULL_BODY" | "GLUTES" | "CALVES" | "CARDIO";
 export type ExerciseCategory = "STRENGTH" | "BODYWEIGHT" | "CARDIO"
 
+export const ROLE_GROUP_VALUES = [
+   "USER",
+   "ADMIN",
+   "COACH",
+] as const satisfies readonly UserRole[];
+
+
 export const MUSCLE_GROUP_VALUES = [
    "CHEST",
    "BACK",

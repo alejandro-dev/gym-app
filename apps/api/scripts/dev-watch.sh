@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
-DIST_ENTRY="${APP_DIR}/dist/apps/api/src/main.js"
+DIST_ENTRY="${APP_DIR}/dist/src/main.js"
 
 APP_PID=""
 LAST_FINGERPRINT=""

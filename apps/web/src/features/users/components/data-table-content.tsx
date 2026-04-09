@@ -10,6 +10,7 @@ import {
    IconChevronsLeft,
    IconChevronsRight,
    IconPlus,
+   IconTrash,
 } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { ROLE_GROUP_VALUES } from "@gym-app/types";
 
 type DataTableContentProps<TData> = {
    columnsLength: number;
@@ -38,8 +40,11 @@ type DataTableContentProps<TData> = {
    table: TanstackTable<TData>;
    total: number;
    search: string;
+   filterRole: string;
    onAddUser: () => void;
    onSearchChange: (value: string) => void;
+   onFilterRoleChange: (value: string) => void;
+   onClearFilters: () => void;
 };
 
 export function DataTableContent<TData>({
@@ -48,8 +53,11 @@ export function DataTableContent<TData>({
    table,
    total,
    search,
+   filterRole,
    onAddUser,
    onSearchChange,
+   onFilterRoleChange,
+   onClearFilters
 }: DataTableContentProps<TData>) {
    return (
       <Tabs
@@ -57,7 +65,7 @@ export function DataTableContent<TData>({
          className="w-full flex-col justify-start gap-6"
       >
          <div className="flex items-center justify-between px-4 lg:px-6 py-1">
-            <div className="flex items-center">
+            <div className="flex items-center gap-5">
                <Input
                   placeholder="Filtro..."
                   value={search}
@@ -66,6 +74,27 @@ export function DataTableContent<TData>({
                   }
                   className="max-w-sm"
                />
+               <Select
+                  value={filterRole}
+                  onValueChange={onFilterRoleChange}
+               >
+                  <SelectTrigger className="w-full">
+                     <SelectValue placeholder="Filtrar por rol" />
+                  </SelectTrigger>
+                  <SelectContent>
+                     {ROLE_GROUP_VALUES.map((role) => (
+                        <SelectItem key={role} value={role}>
+                           {role}
+                        </SelectItem>
+                     ))}
+                  </SelectContent>
+               </Select>
+               <div className="ml-auto flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={onClearFilters}>
+                     <IconTrash data-icon="inline-start" />
+                     <span className="hidden lg:inline">Limpiar filtros</span>
+                  </Button>
+               </div>
             </div>
             <div className="flex items-center justify-between px-4 lg:px-6">
                <div className="ml-auto flex items-center gap-2">

@@ -5,6 +5,7 @@ export interface SearchUsersParams {
    page: number;
    limit: number;
    search?: string;
+   role?: string;
 };
 
 export interface CreateUserPayload {
@@ -27,11 +28,14 @@ export function buildUsersSearchPath(params: SearchUsersParams = {
    page: 0,
    limit: 0,
    search: "",
+   role: "",
 }): string {
-   const { page = 0, limit = 10, search = "" } = params;
+   const { page = 0, limit = 10, search = "", role = "" } = params;
    const queryParams = new URLSearchParams();
 
    if (search) queryParams.append("search", search);
+   if (role) queryParams.append("role", role);
+
    queryParams.append("page", page.toString());
    queryParams.append("limit", limit.toString());
 

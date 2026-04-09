@@ -64,6 +64,12 @@ export class UsersController {
       description: 'Cantidad maxima de usuarios por pagina.',
       example: 10,
    })
+   @ApiQuery({
+      name: 'role',
+      required: false,
+      description: 'Filtro de rol.',
+      example: 'USER',
+   })
    @ApiOkResponse({
       description: 'Listado paginado de usuarios.',
       type: UsersListResponseDto,
@@ -74,6 +80,7 @@ export class UsersController {
       @Query('page') page?: string,
       @Query('limit') limit?: string,
       @Query('search') search?: string,
+      @Query('role') roleFilter?: UserRole,
    ): Promise<UsersListResponse> {
       const parsedPage = Number.parseInt(page ?? '0', 10);
       const parsedLimit = Number.parseInt(limit ?? '10', 10);
@@ -84,6 +91,7 @@ export class UsersController {
             ? 10
             : Math.min(Math.max(parsedLimit, 1), 100),
          search ?? '',
+         roleFilter as UserRole,
       );
    }
 

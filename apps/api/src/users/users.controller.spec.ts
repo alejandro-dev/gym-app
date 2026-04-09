@@ -10,6 +10,7 @@ type UsersServiceMock = {
          page: number,
          limit: number,
          search: string,
+         role: UserRole | undefined,
       ) => Promise<UsersListResponse>
    >;
    findOne: jest.MockedFunction<(id: string) => Promise<User>>;
@@ -24,7 +25,7 @@ describe('UsersController', () => {
 
    beforeEach(async () => {
       usersService = {
-         findAll: jest.fn((...args: [number, number, string]) => {
+         findAll: jest.fn((...args: [number, number, string, UserRole | undefined]) => {
             void args;
 
             return Promise.resolve({
@@ -84,7 +85,7 @@ describe('UsersController', () => {
 
       await controller.findAll();
 
-      expect(usersService.findAll).toHaveBeenCalledWith(0, 10, '');
+      expect(usersService.findAll).toHaveBeenCalledWith(0, 10, '', undefined);
    });
 
    it('sanitizes invalid pagination values', async () => {
@@ -97,7 +98,12 @@ describe('UsersController', () => {
 
       await controller.findAll('-3', '1000');
 
-      expect(usersService.findAll).toHaveBeenCalledWith(0, 100, '');
+      expect(usersService.findAll).toHaveBeenCalledWith(
+         0,
+         100,
+         '',
+         undefined,
+      );
    });
 
    it('forwards the search term to the service', async () => {
@@ -110,7 +116,30 @@ describe('UsersController', () => {
 
       await controller.findAll('0', '10', 'alex');
 
-      expect(usersService.findAll).toHaveBeenCalledWith(0, 10, 'alex');
+      expect(usersService.findAll).toHaveBeenCalledWith(
+         0,
+         10,
+         'alex',
+         undefined,
+      );
+   });
+
+   it('forwards the role filter to the service', async () => {
+      usersService.findAll.mockResolvedValue({
+         items: [],
+         total: 0,
+         page: 0,
+         limit: 10,
+      });
+
+      await controller.findAll('0', '10', 'alex', UserRole.ADMIN);
+
+      expect(usersService.findAll).toHaveBeenCalledWith(
+         0,
+         10,
+         'alex',
+         UserRole.ADMIN,
+      );
    });
 
    it('delegates user creation to the service', async () => {
