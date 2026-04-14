@@ -116,6 +116,9 @@ describe('WorkoutPlansController', () => {
 
          expect(workoutPlansServiceMock.findAll).toHaveBeenCalledWith(
             currentUser,
+            0,
+            10,
+            '',
             undefined,
          );
          expect(result).toEqual([workoutPlanRecord]);

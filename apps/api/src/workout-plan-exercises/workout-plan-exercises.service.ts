@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+   ConflictException,
+   Injectable,
+   NotFoundException,
+} from '@nestjs/common';
 import { Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateWorkoutPlanExerciseDto } from './dto/create-workout-plan-exercise.dto';
@@ -106,11 +110,21 @@ export class WorkoutPlanExerciseService {
     */
    async create(createWorkoutPlanExerciseDto: CreateWorkoutPlanExerciseDto) {
       try {
+         await this.assertWorkoutPlanExercisePositionAvailable({
+            workoutPlanId: createWorkoutPlanExerciseDto.workoutPlanId,
+            day: createWorkoutPlanExerciseDto.day,
+            order: createWorkoutPlanExerciseDto.order,
+         });
+
          return await this.prisma.workoutPlanExercise.create({
             data: this.toCreateData(createWorkoutPlanExerciseDto),
             select: this.workoutPlanExerciseSelect,
          });
       } catch (error) {
+         if (error instanceof ConflictException) {
+            throw error;
+         }
+
          handlePrismaError(error, 'workout plan exercise');
       }
    }
@@ -130,15 +144,41 @@ export class WorkoutPlanExerciseService {
       updateWorkoutPlanExerciseDto: UpdateWorkoutPlanExerciseDto,
    ) {
       // Verificamos si el ejercicio en el plan de trabajo existe
-      await this.ensureWorkoutPlanExerciseExists(user, id);
+      const workoutPlanExercise = await this.ensureWorkoutPlanExerciseExists(
+         user,
+         id,
+      );
+
+      const nextDay =
+         updateWorkoutPlanExerciseDto.day === undefined
+            ? workoutPlanExercise.day
+            : updateWorkoutPlanExerciseDto.day;
+      const nextOrder =
+         updateWorkoutPlanExerciseDto.order ?? workoutPlanExercise.order;
+      const hasPositionChanged =
+         nextDay !== workoutPlanExercise.day ||
+         nextOrder !== workoutPlanExercise.order;
 
       try {
+         if (hasPositionChanged) {
+            await this.assertWorkoutPlanExercisePositionAvailable({
+               workoutPlanId: workoutPlanExercise.workoutPlanId,
+               day: nextDay,
+               order: nextOrder,
+               ignoreId: id,
+            });
+         }
+
          return await this.prisma.workoutPlanExercise.update({
             where: { id },
             data: this.toUpdateData(updateWorkoutPlanExerciseDto),
             select: this.workoutPlanExerciseSelect,
          });
       } catch (error) {
+         if (error instanceof ConflictException) {
+            throw error;
+         }
+
          handlePrismaError(error, 'workout plan exercise');
       }
    }
@@ -240,7 +280,13 @@ export class WorkoutPlanExerciseService {
                   userId: user.role === UserRole.USER ? user.sub : undefined,
                },
             },
-            select: { id: true, workoutPlan: true },
+            select: {
+               id: true,
+               workoutPlanId: true,
+               day: true,
+               order: true,
+               workoutPlan: true,
+            },
          });
 
       // Si no existe lanza NotFoundException
@@ -248,6 +294,41 @@ export class WorkoutPlanExerciseService {
          throw new NotFoundException(
             `Workout plan exercise with id "${id}" not found`,
          );
+
+      return workoutPlanExercise;
+   }
+
+   private async assertWorkoutPlanExercisePositionAvailable({
+      workoutPlanId,
+      day,
+      order,
+      ignoreId,
+   }: {
+      workoutPlanId: string;
+      day?: number | null;
+      order: number;
+      ignoreId?: string;
+   }) {
+      const existingWorkoutPlanExercise =
+         await this.prisma.workoutPlanExercise.findFirst({
+            where: {
+               workoutPlanId,
+               day: day ?? null,
+               order,
+               ...(ignoreId && {
+                  id: {
+                     not: ignoreId,
+                  },
+               }),
+            },
+            select: { id: true },
+         });
+
+      if (existingWorkoutPlanExercise) {
+         throw new ConflictException(
+            'A workout plan exercise already exists in that position.',
+         );
+      }
    }
 
    private buildAccessiblePlanExercisesWhere(

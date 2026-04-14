@@ -129,6 +129,38 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
          .expect(409);
    });
 
+   it('allows creating the same order on a different day', async () => {
+      await prisma.workoutPlanExercise.create({
+         data: {
+            workoutPlan: { connect: { id: workoutPlanId } },
+            exercise: { connect: { id: firstExerciseId } },
+            day: 1,
+            order: 1,
+         },
+      });
+
+      const response = await request(app.getHttpServer())
+         .post(apiPath('/workout-plan-exercises'))
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .send(
+            buildCreateWorkoutPlanExercisePayload({
+               exerciseId: secondExerciseId,
+               day: 2,
+               order: 1,
+            }),
+         )
+         .expect(201);
+
+      expect(response.body).toEqual(
+         expect.objectContaining({
+            workoutPlanId,
+            exerciseId: secondExerciseId,
+            day: 2,
+            order: 1,
+         }),
+      );
+   });
+
    it('lists workout plan exercises ordered by workout plan and order', async () => {
       const firstRecord = await prisma.workoutPlanExercise.create({
          data: {
@@ -410,14 +442,17 @@ describe('WorkoutPlanExerciseController (e2e)', () => {
 
    function buildCreateWorkoutPlanExercisePayload({
       exerciseId,
+      day,
       order,
    }: {
       exerciseId: string;
+      day?: number;
       order: number;
    }) {
       return {
          workoutPlanId,
          exerciseId,
+         day,
          order,
          targetSets: 4,
          targetRepsMin: 8,

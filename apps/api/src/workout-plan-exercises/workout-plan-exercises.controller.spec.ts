@@ -129,6 +129,7 @@ describe('WorkoutPlanExerciseController', () => {
          expect(workoutPlanExerciseServiceMock.findAll).toHaveBeenCalledWith(
             currentUser,
             undefined,
+            undefined,
          );
          expect(result).toEqual([workoutPlanExerciseRecord]);
       });

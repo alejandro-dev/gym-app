@@ -3,6 +3,7 @@ import { Prisma, UserRole } from '@prisma/client';
 import { WorkoutPlanExerciseService } from './workout-plan-exercises.service';
 import { PrismaService } from '../prisma/prisma.service';
 import {
+   ConflictException,
    InternalServerErrorException,
    NotFoundException,
 } from '@nestjs/common';
@@ -10,6 +11,7 @@ import {
 type CreateWorkoutPlanExerciseDto = {
    workoutPlanId: string;
    exerciseId: string;
+   day?: number | null;
    order: number;
    targetSets: number | null;
    targetRepsMin: number | null;
@@ -27,6 +29,7 @@ type WorkoutPlanExerciseRecord = {
    id: string;
    workoutPlanId: string;
    exerciseId: string;
+   day: number | null;
    order: number;
    targetSets: number | null;
    targetRepsMin: number | null;
@@ -61,8 +64,21 @@ describe('WorkoutPlanExerciseService', () => {
             Promise<WorkoutPlanExerciseRecord[]>,
             [Prisma.WorkoutPlanExerciseFindManyArgs]
          >(),
+         findFirst: jest.fn<
+            Promise<{ id: string } | null>,
+            [Prisma.WorkoutPlanExerciseFindFirstArgs]
+         >(),
          findUnique: jest.fn<
-            Promise<WorkoutPlanExerciseRecord | { id: string } | null>,
+            Promise<
+               | WorkoutPlanExerciseRecord
+               | {
+                    id: string;
+                    workoutPlanId: string;
+                    day: number | null;
+                    order: number;
+                 }
+               | null
+            >,
             [Prisma.WorkoutPlanExerciseFindUniqueArgs]
          >(),
          update: jest.fn<
@@ -79,6 +95,7 @@ describe('WorkoutPlanExerciseService', () => {
    const createWorkoutPlanExerciseDto: CreateWorkoutPlanExerciseDto = {
       workoutPlanId: 'workoutPlan_123',
       exerciseId: 'exercise_123',
+      day: null,
       order: 1,
       targetSets: 4,
       targetRepsMin: 8,
@@ -97,6 +114,7 @@ describe('WorkoutPlanExerciseService', () => {
    const workoutPlanExerciseRecord: WorkoutPlanExerciseRecord = {
       id: 'workoutPlanExercise_123',
       ...createWorkoutPlanExerciseDto,
+      day: createWorkoutPlanExerciseDto.day ?? null,
    };
 
    const updatedWorkoutPlanExerciseRecord: WorkoutPlanExerciseRecord = {
@@ -110,6 +128,7 @@ describe('WorkoutPlanExerciseService', () => {
 
    beforeEach(async () => {
       jest.clearAllMocks();
+      prismaMock.workoutPlanExercise.findFirst.mockResolvedValue(null);
 
       const module: TestingModule = await Test.createTestingModule({
          providers: [
@@ -148,6 +167,7 @@ describe('WorkoutPlanExerciseService', () => {
                },
             },
             order: createWorkoutPlanExerciseDto.order,
+            day: createWorkoutPlanExerciseDto.day,
             targetSets: createWorkoutPlanExerciseDto.targetSets,
             targetRepsMin: createWorkoutPlanExerciseDto.targetRepsMin,
             targetRepsMax: createWorkoutPlanExerciseDto.targetRepsMax,
@@ -160,6 +180,7 @@ describe('WorkoutPlanExerciseService', () => {
             workoutPlanId: true,
             exerciseId: true,
             order: true,
+            day: true,
             targetSets: true,
             targetRepsMin: true,
             targetRepsMax: true,
@@ -168,6 +189,47 @@ describe('WorkoutPlanExerciseService', () => {
             notes: true,
          });
          expect(result).toEqual(workoutPlanExerciseRecord);
+      });
+
+      it('throws ConflictException when creating a duplicate position without a day', async () => {
+         prismaMock.workoutPlanExercise.findFirst.mockResolvedValue({
+            id: 'existing_workoutPlanExercise',
+         });
+
+         await expect(
+            service.create(createWorkoutPlanExerciseDto),
+         ).rejects.toBeInstanceOf(ConflictException);
+         expect(prismaMock.workoutPlanExercise.findFirst).toHaveBeenCalledWith({
+            where: {
+               workoutPlanId: createWorkoutPlanExerciseDto.workoutPlanId,
+               day: null,
+               order: createWorkoutPlanExerciseDto.order,
+            },
+            select: { id: true },
+         });
+         expect(prismaMock.workoutPlanExercise.create).not.toHaveBeenCalled();
+      });
+
+      it('allows the same order on a different day', async () => {
+         prismaMock.workoutPlanExercise.create.mockResolvedValue({
+            ...workoutPlanExerciseRecord,
+            day: 2,
+         });
+
+         await service.create({
+            ...createWorkoutPlanExerciseDto,
+            day: 2,
+         });
+
+         expect(prismaMock.workoutPlanExercise.findFirst).toHaveBeenCalledWith({
+            where: {
+               workoutPlanId: createWorkoutPlanExerciseDto.workoutPlanId,
+               day: 2,
+               order: createWorkoutPlanExerciseDto.order,
+            },
+            select: { id: true },
+         });
+         expect(prismaMock.workoutPlanExercise.create).toHaveBeenCalled();
       });
 
       it('translates unexpected database errors into InternalServerErrorException', async () => {
@@ -210,6 +272,7 @@ describe('WorkoutPlanExerciseService', () => {
          });
          expect(findManyArgs.orderBy).toEqual([
             { workoutPlanId: 'asc' },
+            { day: 'asc' },
             { order: 'asc' },
          ]);
          expect(findManyArgs.where).toEqual({
@@ -278,6 +341,9 @@ describe('WorkoutPlanExerciseService', () => {
       it('verifies existence, updates the workout plan exercise, and returns the updated record', async () => {
          prismaMock.workoutPlanExercise.findUnique.mockResolvedValue({
             id: workoutPlanExerciseRecord.id,
+            workoutPlanId: workoutPlanExerciseRecord.workoutPlanId,
+            day: workoutPlanExerciseRecord.day,
+            order: workoutPlanExerciseRecord.order,
          });
          prismaMock.workoutPlanExercise.update.mockResolvedValue(
             updatedWorkoutPlanExerciseRecord,
@@ -298,13 +364,32 @@ describe('WorkoutPlanExerciseService', () => {
                id: workoutPlanExerciseRecord.id,
                workoutPlan: { userId: currentUser.sub },
             },
-            select: { id: true, workoutPlan: true },
+            select: {
+               id: true,
+               workoutPlanId: true,
+               day: true,
+               order: true,
+               workoutPlan: true,
+            },
+         });
+         expect(prismaMock.workoutPlanExercise.findFirst).toHaveBeenCalledWith({
+            where: {
+               workoutPlanId: workoutPlanExerciseRecord.workoutPlanId,
+               day: null,
+               order: updatedWorkoutPlanExerciseDto.order,
+               id: {
+                  not: workoutPlanExerciseRecord.id,
+               },
+            },
+            select: { id: true },
          });
          expect(updateArgs.where).toEqual({
             id: workoutPlanExerciseRecord.id,
          });
          expect(updateArgs.data).toEqual({
+            exercise: undefined,
             order: updatedWorkoutPlanExerciseDto.order,
+            day: undefined,
             targetSets: updatedWorkoutPlanExerciseDto.targetSets,
             targetRepsMin: undefined,
             targetRepsMax: undefined,
@@ -317,6 +402,7 @@ describe('WorkoutPlanExerciseService', () => {
             workoutPlanId: true,
             exerciseId: true,
             order: true,
+            day: true,
             targetSets: true,
             targetRepsMin: true,
             targetRepsMax: true,
@@ -325,6 +411,47 @@ describe('WorkoutPlanExerciseService', () => {
             notes: true,
          });
          expect(result).toEqual(updatedWorkoutPlanExerciseRecord);
+      });
+
+      it('throws ConflictException when updating to a duplicate position', async () => {
+         prismaMock.workoutPlanExercise.findUnique.mockResolvedValue({
+            id: workoutPlanExerciseRecord.id,
+            workoutPlanId: workoutPlanExerciseRecord.workoutPlanId,
+            day: workoutPlanExerciseRecord.day,
+            order: workoutPlanExerciseRecord.order,
+         });
+         prismaMock.workoutPlanExercise.findFirst.mockResolvedValue({
+            id: 'existing_workoutPlanExercise',
+         });
+
+         await expect(
+            service.update(currentUser, workoutPlanExerciseRecord.id, {
+               order: 2,
+            }),
+         ).rejects.toBeInstanceOf(ConflictException);
+         expect(prismaMock.workoutPlanExercise.update).not.toHaveBeenCalled();
+      });
+
+      it('does not check position conflicts when day and order do not change', async () => {
+         prismaMock.workoutPlanExercise.findUnique.mockResolvedValue({
+            id: workoutPlanExerciseRecord.id,
+            workoutPlanId: workoutPlanExerciseRecord.workoutPlanId,
+            day: workoutPlanExerciseRecord.day,
+            order: workoutPlanExerciseRecord.order,
+         });
+         prismaMock.workoutPlanExercise.update.mockResolvedValue({
+            ...workoutPlanExerciseRecord,
+            notes: 'Only notes changed',
+         });
+
+         await service.update(currentUser, workoutPlanExerciseRecord.id, {
+            notes: 'Only notes changed',
+         });
+
+         expect(
+            prismaMock.workoutPlanExercise.findFirst,
+         ).not.toHaveBeenCalled();
+         expect(prismaMock.workoutPlanExercise.update).toHaveBeenCalled();
       });
 
       it('throws NotFoundException when updating a missing workout plan exercise', async () => {
@@ -343,6 +470,9 @@ describe('WorkoutPlanExerciseService', () => {
       it('translates unexpected database errors into InternalServerErrorException', async () => {
          prismaMock.workoutPlanExercise.findUnique.mockResolvedValue({
             id: workoutPlanExerciseRecord.id,
+            workoutPlanId: workoutPlanExerciseRecord.workoutPlanId,
+            day: workoutPlanExerciseRecord.day,
+            order: workoutPlanExerciseRecord.order,
          });
          prismaMock.workoutPlanExercise.update.mockRejectedValue(
             new Error('db unavailable'),
@@ -362,6 +492,9 @@ describe('WorkoutPlanExerciseService', () => {
       it('verifies existence and returns the deleted workout plan exercise', async () => {
          prismaMock.workoutPlanExercise.findUnique.mockResolvedValue({
             id: workoutPlanExerciseRecord.id,
+            workoutPlanId: workoutPlanExerciseRecord.workoutPlanId,
+            day: workoutPlanExerciseRecord.day,
+            order: workoutPlanExerciseRecord.order,
          });
          prismaMock.workoutPlanExercise.delete.mockResolvedValue(
             workoutPlanExerciseRecord,
@@ -381,7 +514,13 @@ describe('WorkoutPlanExerciseService', () => {
                id: workoutPlanExerciseRecord.id,
                workoutPlan: { userId: currentUser.sub },
             },
-            select: { id: true, workoutPlan: true },
+            select: {
+               id: true,
+               workoutPlanId: true,
+               day: true,
+               order: true,
+               workoutPlan: true,
+            },
          });
          expect(deleteArgs.where).toEqual({
             id: workoutPlanExerciseRecord.id,
@@ -391,6 +530,7 @@ describe('WorkoutPlanExerciseService', () => {
             workoutPlanId: true,
             exerciseId: true,
             order: true,
+            day: true,
             targetSets: true,
             targetRepsMin: true,
             targetRepsMax: true,
