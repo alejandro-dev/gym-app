@@ -12,6 +12,19 @@ export type MuscleGroup =
   | "CARDIO";
 export type ExerciseCategory = "STRENGTH" | "BODYWEIGHT" | "CARDIO";
 
+export type WorkoutPlanGoal =
+   | "STRENGTH"
+   | "HYPERTROPHY"
+   | "FAT_LOSS"
+   | "ENDURANCE"
+   | "GENERAL_FITNESS"
+   | "REHAB";
+
+export type WorkoutPlanLevel =
+   | "BEGINNER"
+   | "INTERMEDIATE"
+   | "ADVANCED";
+
 export declare const ROLE_GROUP_VALUES: readonly UserRole[];
 export declare const MUSCLE_GROUP_VALUES: readonly MuscleGroup[];
 export declare const EXERCISE_CATEGORY_VALUES: readonly ExerciseCategory[];
@@ -69,6 +82,56 @@ export interface Exercise {
 
 export interface ExercisesListResponse {
   items: Exercise[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface WorkoutPlanExercise {
+  id: string;
+  workoutPlanId: string;
+  exerciseId: string;
+  day: number | null;
+  order: number;
+  targetSets: number | null;
+  targetRepsMin: number | null;
+  targetRepsMax: number | null;
+  targetWeightKg: number | null;
+  restSeconds: number | null;
+  notes: string | null;
+  exercise: {
+    id: string;
+    name: string;
+    slug?: string;
+    muscleGroup: MuscleGroup;
+    category: ExerciseCategory;
+    equipment: string | null;
+    isCompound?: boolean;
+  };
+}
+
+export interface WorkoutPlan {
+  id: string;
+  userId: string | null;
+  user: {
+    email: string | null;
+    firstName: string | null;
+    lastName: string | null;
+  } | null;
+  createdById: string;
+  name: string;
+  description: string | null;
+  goal: WorkoutPlanGoal | null;
+  level: WorkoutPlanLevel | null;
+  durationWeeks: number | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  exercises?: WorkoutPlanExercise[];
+}
+
+export interface WorkoutPlansListResponse {
+  items: WorkoutPlan[];
   total: number;
   page: number;
   limit: number;

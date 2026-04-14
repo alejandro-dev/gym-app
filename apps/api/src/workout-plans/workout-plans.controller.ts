@@ -29,6 +29,7 @@ import { UserRole } from '@prisma/client';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+import { WorkoutPlan, WorkoutPlansListResponse } from '@gym-app/types';
 
 /**
  * Controlador base para exponer endpoints del dominio de planes de entrenamiento.
@@ -61,6 +62,18 @@ export class WorkoutPlansController {
       description:
          'Filtra por identificador de usuario. Solo aplica para roles con acceso ampliado.',
    })
+   @ApiQuery({
+      name: 'page',
+      required: false,
+      description: 'Numero de pagina base cero.',
+      example: 0,
+   })
+   @ApiQuery({
+      name: 'limit',
+      required: false,
+      description: 'Cantidad maxima de planes por pagina.',
+      example: 10,
+   })
    @ApiOkResponse({
       description: 'Listado de planes de entrenamiento.',
       type: WorkoutPlanResponseDto,
@@ -69,9 +82,23 @@ export class WorkoutPlansController {
    @Get()
    findAll(
       @CurrentUser() user: AuthenticatedUser,
+      @Query('page') page?: string,
+      @Query('limit') limit?: string,
+      @Query('search') search?: string,
       @Query('userId') userId?: string,
-   ): Promise<WorkoutPlanResponseDto[]> {
-      return this.workoutPlansService.findAll(user, userId);
+   ): Promise<WorkoutPlansListResponse> {
+      const parsedPage = Number.parseInt(page ?? '0', 10);
+      const parsedLimit = Number.parseInt(limit ?? '10', 10);
+
+      return this.workoutPlansService.findAll(
+         user,
+         Number.isNaN(parsedPage) ? 0 : Math.max(parsedPage, 0),
+         Number.isNaN(parsedLimit)
+            ? 10
+            : Math.min(Math.max(parsedLimit, 1), 100),
+         search ?? '',
+         userId,
+      );
    }
 
    /**
@@ -91,7 +118,7 @@ export class WorkoutPlansController {
    findOne(
       @CurrentUser() user: AuthenticatedUser,
       @Param('id') id: string,
-   ): Promise<WorkoutPlanResponseDto> {
+   ): Promise<WorkoutPlan> {
       return this.workoutPlansService.findOne(user, id);
    }
 
@@ -113,7 +140,7 @@ export class WorkoutPlansController {
    create(
       @CurrentUser() user: AuthenticatedUser,
       @Body() createWorkoutPlanDto: CreateWorkoutPlanDto,
-   ): Promise<WorkoutPlanResponseDto> {
+   ): Promise<WorkoutPlan> {
       return this.workoutPlansService.create(user, createWorkoutPlanDto);
    }
 
@@ -139,7 +166,7 @@ export class WorkoutPlansController {
       @CurrentUser() user: AuthenticatedUser,
       @Param('id') id: string,
       @Body() updateWorkoutPlanDto: UpdateWorkoutPlanDto,
-   ): Promise<WorkoutPlanResponseDto> {
+   ): Promise<WorkoutPlan> {
       return this.workoutPlansService.update(user, id, updateWorkoutPlanDto);
    }
 
@@ -160,7 +187,7 @@ export class WorkoutPlansController {
    remove(
       @CurrentUser() user: AuthenticatedUser,
       @Param('id') id: string,
-   ): Promise<WorkoutPlanResponseDto> {
+   ): Promise<WorkoutPlan> {
       return this.workoutPlansService.remove(user, id);
    }
 }

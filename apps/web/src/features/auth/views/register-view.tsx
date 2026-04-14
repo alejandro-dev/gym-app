@@ -1,4 +1,4 @@
- "use client"
+"use client"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -16,9 +16,13 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { useAuthRegister } from "@/features/auth/hooks/use-auth-register"
+import { EyeIcon, EyeOffIcon } from "lucide-react"
+import { useState } from "react"
 
 export function RegisterView() {
    const { credentials, handleSubmit, isLoading, readData } = useAuthRegister()
+   const [showPassword, setShowPassword] = useState(false)
+   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
    return (
       <div className="flex flex-col gap-6">
@@ -81,15 +85,34 @@ export function RegisterView() {
                         <FieldLabel htmlFor="password">
                            Contraseña <span className="text-destructive">*</span>
                         </FieldLabel>
-                        <Input
-                           id="password"
-                           name="password"
-                           type="password"
-                           value={credentials.password}
-                           onChange={readData}
-                           disabled={isLoading}
-                           required
-                        />
+                        <div className="relative">
+                           <Input
+                              id="password"
+                              name="password"
+                              type={showPassword ? "text" : "password"}
+                              value={credentials.password}
+                              onChange={readData}
+                              disabled={isLoading}
+                              className="pr-9"
+                              required
+                           />
+                           <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute top-0 right-0 text-muted-foreground"
+                              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                              aria-pressed={showPassword}
+                              disabled={isLoading}
+                              onClick={() => setShowPassword((isVisible) => !isVisible)}
+                           >
+                              {showPassword ? (
+                                 <EyeOffIcon aria-hidden="true" />
+                              ) : (
+                                 <EyeIcon aria-hidden="true" />
+                              )}
+                           </Button>
+                        </div>
                         <FieldDescription>
                            Debe tener al menos 8 caracteres.
                         </FieldDescription>
@@ -98,15 +121,34 @@ export function RegisterView() {
                         <FieldLabel htmlFor="confirmPassword">
                            Confirmar Contraseña <span className="text-destructive">*</span>
                         </FieldLabel>
-                        <Input
-                           id="confirmPassword"
-                           name="confirmPassword"
-                           type="password"
-                           value={credentials.confirmPassword}
-                           onChange={readData}
-                           disabled={isLoading}
-                           required
-                        />
+                        <div className="relative">
+                           <Input
+                              id="confirmPassword"
+                              name="confirmPassword"
+                              type={showConfirmPassword ? "text" : "password"}
+                              value={credentials.confirmPassword}
+                              onChange={readData}
+                              disabled={isLoading}
+                              className="pr-9"
+                              required
+                           />
+                           <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute top-0 right-0 text-muted-foreground"
+                              aria-label={showConfirmPassword ? "Ocultar confirmación de contraseña" : "Mostrar confirmación de contraseña"}
+                              aria-pressed={showConfirmPassword}
+                              disabled={isLoading}
+                              onClick={() => setShowConfirmPassword((isVisible) => !isVisible)}
+                           >
+                              {showConfirmPassword ? (
+                                 <EyeOffIcon aria-hidden="true" />
+                              ) : (
+                                 <EyeIcon aria-hidden="true" />
+                              )}
+                           </Button>
+                        </div>
                         <FieldDescription>Por favor confirma tu contraseña.</FieldDescription>
                      </Field>
                      <div className="grid gap-4 md:grid-cols-2">

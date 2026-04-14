@@ -21,12 +21,20 @@ type WorkoutPlanListItem = {
    createdById: string;
 };
 
+type WorkoutPlanListResponseBody = {
+   items: WorkoutPlanListItem[];
+   total: number;
+   page: number;
+   limit: number;
+};
+
 describe('WorkoutPlansController (e2e)', () => {
    let app: INestApplication<App>;
    let prisma: PrismaService;
    let ownerUserId: string;
    let userAccessToken: string;
    let coachAccessToken: string;
+   let adminAccessToken: string;
    let coachUserId: string;
    const apiPath = (path: string) => `/api${path}`;
    const anyString = expect.any(String) as unknown as string;
@@ -54,6 +62,7 @@ describe('WorkoutPlansController (e2e)', () => {
 
       userAccessToken = await createAuthenticatedUser(UserRole.USER);
       coachAccessToken = await createAuthenticatedUser(UserRole.COACH);
+      adminAccessToken = await createAuthenticatedUser(UserRole.ADMIN);
       const user = await prisma.user.findFirstOrThrow({
          where: { email: { contains: 'user-' } },
          orderBy: { createdAt: 'desc' },
@@ -144,15 +153,22 @@ describe('WorkoutPlansController (e2e)', () => {
          .get(apiPath('/workout-plans'))
          .set('Authorization', `Bearer ${userAccessToken}`)
          .expect(200);
-      const workoutPlans = response.body as WorkoutPlanListItem[];
+      const workoutPlans = response.body as WorkoutPlanListResponseBody;
 
-      expect(workoutPlans).toHaveLength(2);
-      expect(workoutPlans[0]).toEqual(
+      expect(workoutPlans).toEqual(
+         expect.objectContaining({
+            total: 2,
+            page: 0,
+            limit: 10,
+         }),
+      );
+      expect(workoutPlans.items).toHaveLength(2);
+      expect(workoutPlans.items[0]).toEqual(
          expect.objectContaining({
             id: secondPlan.id,
          }),
       );
-      expect(workoutPlans[1]).toEqual(
+      expect(workoutPlans.items[1]).toEqual(
          expect.objectContaining({
             id: firstPlan.id,
          }),
@@ -332,6 +348,19 @@ describe('WorkoutPlansController (e2e)', () => {
          .expect(400);
    });
 
+   it('prevents a user from creating a template workout plan', async () => {
+      await request(app.getHttpServer())
+         .post(apiPath('/workout-plans'))
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .send({
+            name: 'Workout Plan user-template',
+            description: 'Users cannot create templates',
+            userId: null,
+            isActive: true,
+         })
+         .expect(400);
+   });
+
    it('allows a coach to create a workout plan for another user', async () => {
       const response = await request(app.getHttpServer())
          .post(apiPath('/workout-plans'))
@@ -351,6 +380,48 @@ describe('WorkoutPlansController (e2e)', () => {
             name: 'Workout Plan by coach',
          }),
       );
+   });
+
+   it('allows a coach to create a template workout plan', async () => {
+      const response = await request(app.getHttpServer())
+         .post(apiPath('/workout-plans'))
+         .set('Authorization', `Bearer ${coachAccessToken}`)
+         .send({
+            name: 'Workout Plan coach-template',
+            description: 'Template created by coach',
+            userId: null,
+            isActive: true,
+         })
+         .expect(201);
+
+      expect(response.body).toEqual(
+         expect.objectContaining({
+            userId: null,
+            user: null,
+            createdById: coachUserId,
+            name: 'Workout Plan coach-template',
+         }),
+      );
+   });
+
+   it('prevents a user from reading a template workout plan', async () => {
+      const workoutPlan = await prisma.workoutPlan.create({
+         data: {
+            name: 'Workout Plan hidden-template',
+            description: 'Template should not be visible to regular users',
+            isActive: true,
+            createdBy: {
+               connect: {
+                  id: coachUserId,
+               },
+            },
+         },
+      });
+
+      await request(app.getHttpServer())
+         .get(apiPath(`/workout-plans/${workoutPlan.id}`))
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .expect(404);
    });
 
    it('prevents a user from updating a coach-authored workout plan', async () => {
@@ -379,6 +450,95 @@ describe('WorkoutPlansController (e2e)', () => {
             description: 'User should not edit this',
          })
          .expect(404);
+   });
+
+   it('prevents a user from updating a template workout plan', async () => {
+      const workoutPlan = await prisma.workoutPlan.create({
+         data: {
+            name: 'Workout Plan template-update',
+            description: 'Templates cannot be managed by users',
+            isActive: true,
+            createdBy: {
+               connect: {
+                  id: coachUserId,
+               },
+            },
+         },
+      });
+
+      await request(app.getHttpServer())
+         .patch(apiPath(`/workout-plans/${workoutPlan.id}`))
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .send({
+            description: 'User should not edit templates',
+         })
+         .expect(404);
+   });
+
+   it('allows an admin to update any workout plan', async () => {
+      const workoutPlan = await prisma.workoutPlan.create({
+         data: {
+            name: 'Workout Plan admin-managed',
+            description: 'Admin can update this plan',
+            isActive: true,
+            user: {
+               connect: {
+                  id: ownerUserId,
+               },
+            },
+            createdBy: {
+               connect: {
+                  id: coachUserId,
+               },
+            },
+         },
+      });
+
+      const response = await request(app.getHttpServer())
+         .patch(apiPath(`/workout-plans/${workoutPlan.id}`))
+         .set('Authorization', `Bearer ${adminAccessToken}`)
+         .send({
+            description: 'Updated by admin',
+         })
+         .expect(200);
+
+      expect(response.body).toEqual(
+         expect.objectContaining({
+            id: workoutPlan.id,
+            description: 'Updated by admin',
+            userId: ownerUserId,
+            createdById: coachUserId,
+         }),
+      );
+   });
+
+   it('allows an admin to delete any workout plan', async () => {
+      const workoutPlan = await prisma.workoutPlan.create({
+         data: {
+            name: 'Workout Plan admin-deleted',
+            description: 'Admin can delete this plan',
+            isActive: true,
+            user: {
+               connect: {
+                  id: ownerUserId,
+               },
+            },
+            createdBy: {
+               connect: {
+                  id: coachUserId,
+               },
+            },
+         },
+      });
+
+      await request(app.getHttpServer())
+         .delete(apiPath(`/workout-plans/${workoutPlan.id}`))
+         .set('Authorization', `Bearer ${adminAccessToken}`)
+         .expect(200);
+
+      await expect(
+         prisma.workoutPlan.findUnique({ where: { id: workoutPlan.id } }),
+      ).resolves.toBeNull();
    });
 
    async function createAuthenticatedUser(role: UserRole) {

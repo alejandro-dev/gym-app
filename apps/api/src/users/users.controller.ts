@@ -133,7 +133,7 @@ export class UsersController {
       type: UserResponseDto,
    })
    @Post()
-   @Roles(UserRole.ADMIN)
+   @Roles(UserRole.ADMIN, UserRole.COACH)
    create(@Body() createUserDto: CreateUserDto): Promise<User> {
       return this.usersService.create(createUserDto);
    }

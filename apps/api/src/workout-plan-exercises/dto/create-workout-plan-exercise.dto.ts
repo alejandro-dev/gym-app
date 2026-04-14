@@ -20,6 +20,12 @@ export class CreateWorkoutPlanExerciseDto {
    @IsInt()
    order!: number;
 
+   @ApiPropertyOptional({ example: 1, nullable: true })
+   /** Dia del ejercicio dentro del plan. */
+   @IsOptional()
+   @IsInt()
+   day?: number | null;
+
    @ApiPropertyOptional({ example: 4, nullable: true })
    /** Numero objetivo de series. */
    @IsOptional()

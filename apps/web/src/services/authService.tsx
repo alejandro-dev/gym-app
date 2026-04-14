@@ -55,3 +55,9 @@ export async function verifyEmail(input: AuthVerifyEmailInput) {
       body: JSON.stringify(input),
    });
 }
+
+export async function logout() {
+   return fetchJson<AuthMessageResponse>("/api/auth/logout", {
+      method: "POST",
+   });
+}

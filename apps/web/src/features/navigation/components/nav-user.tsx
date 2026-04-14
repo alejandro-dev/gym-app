@@ -8,6 +8,7 @@ import {
    IconUserCircle,
 } from "@tabler/icons-react"
 
+import { useAuthLogout } from "@/features/auth/hooks/use-auth-logout"
 import {
    Avatar,
    AvatarFallback,
@@ -39,6 +40,11 @@ export function NavUser({
    }
 }) {
    const { isMobile } = useSidebar()
+   const { isLoading, logout } = useAuthLogout()
+
+   const handleLogout = async () => {
+      await logout()
+   }
 
    return (
       <SidebarMenu>
@@ -102,9 +108,15 @@ export function NavUser({
                      </DropdownMenuItem>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                        <IconLogout />
-                        Cerrar sesion
+                  <DropdownMenuItem
+                     disabled={isLoading}
+                     onSelect={(event) => {
+                        event.preventDefault()
+                        void handleLogout()
+                     }}
+                  >
+                     <IconLogout />
+                     {isLoading ? "Cerrando sesion..." : "Cerrar sesion"}
                   </DropdownMenuItem>
                </DropdownMenuContent>
             </DropdownMenu>

@@ -238,7 +238,7 @@ export function AddExerciseDialog({
                </div>
                <DialogFooter className="border-t px-6 py-5">
                   <div className="pb-3">
-                     <DialogClose asChild className="mr-5">
+                     <DialogClose asChild className="mr-3">
                         <Button type="button" variant="outline" disabled={isSaving}>
                            Cancelar
                         </Button>

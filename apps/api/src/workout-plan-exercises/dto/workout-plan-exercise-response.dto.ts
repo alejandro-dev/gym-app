@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ExerciseCategory, MuscleGroup } from '@prisma/client';
 
 /**
  * Representacion publica de un ejercicio dentro de un plan de entrenamiento.
@@ -15,6 +16,10 @@ export class WorkoutPlanExerciseResponseDto {
    @ApiProperty({ example: 'cm9j8u4p10000fkoq2m9is1xyz' })
    /** Identificador del ejercicio asociado. */
    exerciseId!: string;
+
+   @ApiPropertyOptional({ example: 1, nullable: true })
+   /** Dia del ejercicio dentro del plan. */
+   day!: number | null;
 
    @ApiProperty({ example: 1 })
    /** Posicion del ejercicio dentro del plan. */
@@ -46,4 +51,22 @@ export class WorkoutPlanExerciseResponseDto {
    })
    /** Notas opcionales para la ejecucion. */
    notes!: string | null;
+
+   @ApiProperty({
+      example: {
+         id: 'cm9j8u4p10000fkoq2m9is1abc',
+         name: 'Press de banca',
+         muscleGroup: 'Pecho',
+         category: 'Fuerza',
+         equipment: 'Barra',
+      },
+   })
+   /** Informacion basica del ejercicio asociado. */
+   exercise!: {
+      id: string;
+      name: string;
+      muscleGroup: MuscleGroup;
+      category: ExerciseCategory;
+      equipment: string | null;
+   };
 }

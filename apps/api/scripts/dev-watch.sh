@@ -6,6 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 DIST_ENTRY="${APP_DIR}/dist/src/main.js"
+AUTH_CONSTANTS_ENTRY="${APP_DIR}/dist/src/auth/constants/auth.constants.js"
 
 APP_PID=""
 LAST_FINGERPRINT=""
@@ -31,6 +32,10 @@ stop_app() {
 
 start_app() {
   stop_app
+  if [[ ! -f "${DIST_ENTRY}" || ! -f "${AUTH_CONSTANTS_ENTRY}" ]]; then
+    echo "Build incompleto: falta ${DIST_ENTRY} o ${AUTH_CONSTANTS_ENTRY}."
+    return 1
+  fi
   node "${DIST_ENTRY}" &
   APP_PID=$!
 }

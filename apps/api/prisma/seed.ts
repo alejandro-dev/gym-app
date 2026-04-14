@@ -3,6 +3,8 @@ import {
 	MuscleGroup,
 	PersonalRecordMetric,
 	PrismaClient,
+	WorkoutPlanGoal,
+	WorkoutPlanLevel,
 	UserRole,
 } from '@prisma/client';
 import { randomBytes, scrypt as scryptCallback } from 'crypto';
@@ -320,6 +322,9 @@ async function main() {
 			createdById: athlete.id,
 			name: 'Push Pull Legs intermedio',
 			description: 'Rutina de 5 dias con enfasis en hipertrofia y progresion de cargas.',
+			goal: WorkoutPlanGoal.HYPERTROPHY,
+			level: WorkoutPlanLevel.INTERMEDIATE,
+			durationWeeks: 12,
 			isActive: true,
 		},
 	});
@@ -330,6 +335,9 @@ async function main() {
 			createdById: coach.id,
 			name: 'Full body 3 dias',
 			description: 'Plan general creado por el coach para mejorar fuerza basica y tecnica.',
+			goal: WorkoutPlanGoal.STRENGTH,
+			level: WorkoutPlanLevel.BEGINNER,
+			durationWeeks: 8,
 			isActive: true,
 		},
 	});
@@ -339,6 +347,7 @@ async function main() {
 			{
 				workoutPlanId: pushPullLegs.id,
 				exerciseId: exerciseMap.get('press-de-banca-plano')!.id,
+				day: 1,
 				order: 1,
 				targetSets: 4,
 				targetRepsMin: 6,
@@ -348,6 +357,7 @@ async function main() {
 			{
 				workoutPlanId: pushPullLegs.id,
 				exerciseId: exerciseMap.get('press-militar-de-pie')!.id,
+				day: 1,
 				order: 2,
 				targetSets: 3,
 				targetRepsMin: 8,
@@ -357,6 +367,7 @@ async function main() {
 			{
 				workoutPlanId: pushPullLegs.id,
 				exerciseId: exerciseMap.get('extension-de-triceps-en-polea')!.id,
+				day: 1,
 				order: 3,
 				targetSets: 3,
 				targetRepsMin: 10,
@@ -366,6 +377,7 @@ async function main() {
 			{
 				workoutPlanId: fullBody.id,
 				exerciseId: exerciseMap.get('sentadilla-con-barra')!.id,
+				day: 1,
 				order: 1,
 				targetSets: 4,
 				targetRepsMin: 5,
@@ -375,6 +387,7 @@ async function main() {
 			{
 				workoutPlanId: fullBody.id,
 				exerciseId: exerciseMap.get('remo-con-barra')!.id,
+				day: 1,
 				order: 2,
 				targetSets: 4,
 				targetRepsMin: 6,
@@ -384,6 +397,7 @@ async function main() {
 			{
 				workoutPlanId: fullBody.id,
 				exerciseId: exerciseMap.get('ab-wheel')!.id,
+				day: 1,
 				order: 3,
 				targetSets: 3,
 				targetRepsMin: 8,

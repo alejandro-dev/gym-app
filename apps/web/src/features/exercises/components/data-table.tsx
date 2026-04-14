@@ -1,26 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { IconDotsVertical } from "@tabler/icons-react";
-import { type ColumnDef, type PaginationState } from "@tanstack/react-table";
+import { type PaginationState } from "@tanstack/react-table";
 
-import { Button } from "@/components/ui/button";
-import {
-   DropdownMenu,
-   DropdownMenuContent,
-   DropdownMenuItem,
-   DropdownMenuSeparator,
-   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-   Exercise,
-   getExerciseCategoryLabelEs,
-   getMuscleGroupLabelEs,
-} from "@gym-app/types";
+import type { Exercise } from "@gym-app/types";
 import { useExercisesDataTable } from "../hooks/use-exercises-data-table";
 import { DataTableContent } from "./data-table-content";
 import { AddExerciseDialog } from "./form-exercise";
 import { DeleteExerciseDialog } from "./delete-exercise";
+import { useDeleteExercise } from "../hooks/use-delete-exercise";
+import { useExerciseColumns } from "../hooks/use-exercise-columns";
+import { useExerciseForm } from "../hooks/use-exercise-form";
 
 type DataTableProps = {
    data: Exercise[];
@@ -54,84 +44,17 @@ export function DataTable({
    onClearFilters,
 }: DataTableProps) {
    const pageCount = Math.max(Math.ceil(total / pageSize), 1);
+   const exerciseForm = useExerciseForm();
+   const deleteExercise = useDeleteExercise();
+   const columns = useExerciseColumns({
+      onDelete: deleteExercise.openDelete,
+      onEdit: exerciseForm.openEdit,
+   });
 
    const {
       table,
-      selectedExercise,
-      isDialogOpen,
-      isDeleteDialogOpen,
-      isDeleting,
-      isSaving,
-      formValues,
-      openCreateDialog,
-      openEditDialog,
-      openDeleteDialog,
-      handleCreateExercise,
-      handleDialogOpenChange,
-      handleDeleteDialogOpenChange,
-      handleDeleteExercise,
-      handleFormValueChange,
-      handleMuscleGroupChange,
-      handleCategoryChange,
-      handleIsCompoundChange,
    } = useExercisesDataTable({
-      columns: [
-         {
-            accessorKey: "name",
-            header: "Nombre",
-            cell: ({ row }) => (
-               <div className="font-medium text-foreground">{row.original.name}</div>
-            ),
-            enableHiding: false,
-         },
-         {
-            accessorKey: "muscleGroup",
-            header: "Grupo muscular",
-            cell: ({ row }) => (
-               <div className="font-medium text-foreground">
-                  {getMuscleGroupLabelEs(row.original.muscleGroup)}
-               </div>
-            ),
-         },
-         {
-            id: "category",
-            header: "Categoría",
-            cell: ({ row }) => (
-               <div className="font-medium text-foreground">
-                  {getExerciseCategoryLabelEs(row.original.category)}
-               </div>
-            ),
-         },
-         {
-            id: "actions",
-            cell: ({ row }) => (
-               <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                     <Button
-                        variant="ghost"
-                        className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
-                        size="icon"
-                     >
-                        <IconDotsVertical />
-                        <span className="sr-only">Open menu</span>
-                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-32">
-                     <DropdownMenuItem onClick={() => openEditDialog(row.original)}>
-                        Editar
-                     </DropdownMenuItem>
-                     <DropdownMenuSeparator />
-                     <DropdownMenuItem
-                        variant="destructive"
-                        onSelect={() => openDeleteDialog(row.original)}
-                     >
-                        Eliminar
-                     </DropdownMenuItem>
-                  </DropdownMenuContent>
-               </DropdownMenu>
-            ),
-         },
-      ] satisfies ColumnDef<Exercise>[],
+      columns,
       data,
       getRowId: (row) => row.id,
       pagination: {
@@ -145,28 +68,28 @@ export function DataTable({
    return (
       <>
          <AddExerciseDialog
-            isOpen={isDialogOpen}
-            isSaving={isSaving}
-            mode={selectedExercise ? "edit" : "create"}
-            onOpenChange={handleDialogOpenChange}
-            onMuscleGroupChange={handleMuscleGroupChange}
-            onCategoryChange={handleCategoryChange}
-            onIsCompoundChange={handleIsCompoundChange}
-            onSubmit={handleCreateExercise}
-            onValueChange={handleFormValueChange}
-            values={formValues}
+            isOpen={exerciseForm.isOpen}
+            isSaving={exerciseForm.isSaving}
+            mode={exerciseForm.selectedExercise ? "edit" : "create"}
+            onOpenChange={exerciseForm.handleOpenChange}
+            onMuscleGroupChange={exerciseForm.handleMuscleGroupChange}
+            onCategoryChange={exerciseForm.handleCategoryChange}
+            onIsCompoundChange={exerciseForm.handleIsCompoundChange}
+            onSubmit={exerciseForm.handleSubmit}
+            onValueChange={exerciseForm.handleValueChange}
+            values={exerciseForm.values}
          />
          <DeleteExerciseDialog
-            isDeleting={isDeleting}
-            isOpen={isDeleteDialogOpen}
-            exercise={selectedExercise}
-            onConfirm={handleDeleteExercise}
-            onOpenChange={handleDeleteDialogOpenChange}
+            isDeleting={deleteExercise.isDeleting}
+            isOpen={deleteExercise.isOpen}
+            exercise={deleteExercise.selectedExercise}
+            onConfirm={deleteExercise.handleConfirm}
+            onOpenChange={deleteExercise.handleOpenChange}
          />
          <DataTableContent
             columnsLength={table.getAllColumns().length}
             isLoading={isLoading}
-            onAddUser={openCreateDialog}
+            onAddUser={exerciseForm.openCreate}
             table={table}
             total={total}
             search={search}

@@ -3,6 +3,7 @@
 import * as React from "react"
 import {
    IconBarbell,
+   IconFile,
    IconInnerShadowTop,
    IconUsers,
 } from "@tabler/icons-react"
@@ -39,9 +40,9 @@ const data = {
          icon: IconUsers,
       },
       {
-         title: "Ejercicios",
-         url: "/exercises",
-         icon: IconBarbell,
+         title: "Planes de entrenamiento",
+         url: "/workout-plans",
+         icon: IconFile,
       },
    ],
 }

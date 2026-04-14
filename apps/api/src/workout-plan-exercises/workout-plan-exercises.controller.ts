@@ -53,6 +53,7 @@ export class WorkoutPlanExerciseController {
     *
     * @param user - Usuario autenticado
     * @param userId - Identificador opcional del usuario por el que filtrar cuando el rol lo permite
+    * @param workoutPlanId - Identificador opcional del plan por el que filtrar
     * @returns Listado de ejercicios en planes de entrenamiento
     */
    @ApiOperation({ summary: 'Listar ejercicios de planes de entrenamiento' })
@@ -63,6 +64,12 @@ export class WorkoutPlanExerciseController {
       description:
          'Filtra por identificador de usuario. Solo aplica para roles con acceso ampliado.',
    })
+   @ApiQuery({
+      name: 'workoutPlanId',
+      required: false,
+      type: String,
+      description: 'Filtra por identificador de plan de entrenamiento.',
+   })
    @ApiOkResponse({
       description: 'Listado de ejercicios en planes de entrenamiento.',
       type: WorkoutPlanExerciseResponseDto,
@@ -72,8 +79,13 @@ export class WorkoutPlanExerciseController {
    findAll(
       @CurrentUser() user: AuthenticatedUser,
       @Query('userId') userId?: string,
+      @Query('workoutPlanId') workoutPlanId?: string,
    ): Promise<WorkoutPlanExerciseResponseDto[]> {
-      return this.workoutPlanExerciseService.findAll(user, userId);
+      return this.workoutPlanExerciseService.findAll(
+         user,
+         userId,
+         workoutPlanId,
+      );
    }
 
    /**

@@ -16,9 +16,12 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { useAuthLogin } from "@/features/auth/hooks/use-auth-login"
+import { EyeIcon, EyeOffIcon } from "lucide-react"
+import { useState } from "react"
 
 export default function LoginView() {
    const { credentials, handleSubmit, isLoading, readData } = useAuthLogin()
+   const [showPassword, setShowPassword] = useState(false)
 
    return (
       <>
@@ -56,15 +59,34 @@ export default function LoginView() {
                                  ¿Olvidaste tu contraseña?
                               </a>
                            </div>
-                           <Input
-                              id="password"
-                              name="password"
-                              type="password"
-                              value={credentials.password}
-                              onChange={readData}
-                              disabled={isLoading}
-                              required
-                           />
+                           <div className="relative">
+                              <Input
+                                 id="password"
+                                 name="password"
+                                 type={showPassword ? "text" : "password"}
+                                 value={credentials.password}
+                                 onChange={readData}
+                                 disabled={isLoading}
+                                 className="pr-9"
+                                 required
+                              />
+                              <Button
+                                 type="button"
+                                 variant="ghost"
+                                 size="icon"
+                                 className="absolute top-0 right-0 text-muted-foreground"
+                                 aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                                 aria-pressed={showPassword}
+                                 disabled={isLoading}
+                                 onClick={() => setShowPassword((isVisible) => !isVisible)}
+                              >
+                                 {showPassword ? (
+                                    <EyeOffIcon aria-hidden="true" />
+                                 ) : (
+                                    <EyeIcon aria-hidden="true" />
+                                 )}
+                              </Button>
+                           </div>
                         </Field>
                         <Field>
                            <Button type="submit" disabled={isLoading} className="w-full">

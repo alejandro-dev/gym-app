@@ -42,6 +42,21 @@ enum PersonalRecordMetric {
    SESSION_VOLUME // mayor volumen total de toda la sesión
 }
 
+enum WorkoutPlanGoal {
+   STRENGTH // fuerza
+   HYPERTROPHY // hipertrofia
+   FAT_LOSS // pérdida de grasa
+   ENDURANCE // tonificación
+   GENERAL_FITNESS // fitness general
+   REHAB // rehabilitación
+}
+
+enum WorkoutPlanLevel {
+   BEGINNER // principiante
+   INTERMEDIATE // intermedio
+   ADVANCED // avanzado
+}
+
 model User {
    id           String    @id @default(cuid())
    email        String    @unique
@@ -89,15 +104,18 @@ model Exercise {
 
 model WorkoutPlan {
    id          String   @id @default(cuid())
-   userId      String
+   userId      String?
    createdById String
    name        String
    description String?
+   goal        WorkoutPlanGoal?
+   level       WorkoutPlanLevel?
+   durationWeeks Int? // Duración estimada del plan en semanas, usada para organizar los ejercicios por día/semana"
    isActive    Boolean  @default(true)
    createdAt   DateTime @default(now())
    updatedAt   DateTime @updatedAt
 
-   user      User                  @relation("PlanOwner", fields: [userId], references: [id], onDelete: Cascade)
+   user      User?                  @relation("PlanOwner", fields: [userId], references: [id], onDelete: Cascade)
    createdBy User                  @relation("PlanCreator", fields: [createdById], references: [id], onDelete: Restrict)
    exercises WorkoutPlanExercise[]
    sessions  WorkoutSession[]
@@ -107,18 +125,19 @@ model WorkoutPlanExercise {
    id             String  @id @default(cuid())
    workoutPlanId  String
    exerciseId     String
-   order          Int
-   targetSets     Int?
-   targetRepsMin  Int?
-   targetRepsMax  Int?
-   targetWeightKg Float?
-   restSeconds    Int?
-   notes          String?
+   day            Int? // Dia del ejercicio dentro del plan
+   order          Int // Posicion del ejercicio dentro del plan
+   targetSets     Int? // Numero objetivo de series
+   targetRepsMin  Int? // Rango minimo objetivo de repeticiones
+   targetRepsMax  Int? // Rango maximo objetivo de repeticiones
+   targetWeightKg Float? // Peso objetivo en kilogramos
+   restSeconds    Int? // Descanso objetivo entre series en segundos
+   notes          String? // Notas opcionales para la ejecucion
 
    workoutPlan WorkoutPlan @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
    exercise    Exercise    @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
 
-   @@unique([workoutPlanId, order])
+   @@unique([workoutPlanId, day, order])
 }
 
 model WorkoutSession {

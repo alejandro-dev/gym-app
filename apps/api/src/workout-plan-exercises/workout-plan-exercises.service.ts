@@ -32,6 +32,18 @@ export class WorkoutPlanExerciseService {
       targetWeightKg: true,
       restSeconds: true,
       notes: true,
+      day: true,
+      exercise: {
+         select: {
+            id: true,
+            name: true,
+            slug: true,
+            muscleGroup: true,
+            category: true,
+            equipment: true,
+            isCompound: true,
+         },
+      },
    } satisfies Prisma.WorkoutPlanExerciseSelect;
 
    /**
@@ -39,18 +51,22 @@ export class WorkoutPlanExerciseService {
     *
     * @param user - Usuario autenticado
     * @param userId - Identificador opcional del usuario por el que filtrar cuando el rol lo permite
+    * @param workoutPlanId - Identificador opcional del plan por el que filtrar
     * @returns Listado de ejercicios de plan accesibles para el usuario autenticado
     */
-   async findAll(user: AuthenticatedUser, userId?: string) {
+   async findAll(
+      user: AuthenticatedUser,
+      userId?: string,
+      workoutPlanId?: string,
+   ) {
       return await this.prisma.workoutPlanExercise.findMany({
          select: this.workoutPlanExerciseSelect,
-         where:
-            user.role === UserRole.USER
-               ? { workoutPlan: { userId: user.sub } }
-               : userId
-                 ? { workoutPlan: { userId: userId } }
-                 : undefined,
-         orderBy: [{ workoutPlanId: 'asc' }, { order: 'asc' }],
+         where: this.buildAccessiblePlanExercisesWhere(
+            user,
+            userId,
+            workoutPlanId,
+         ),
+         orderBy: [{ workoutPlanId: 'asc' }, { day: 'asc' }, { order: 'asc' }],
       });
    }
 
@@ -166,6 +182,7 @@ export class WorkoutPlanExerciseService {
             },
          },
          order: createWorkoutPlanExerciseDto.order,
+         day: createWorkoutPlanExerciseDto.day,
          targetSets: createWorkoutPlanExerciseDto.targetSets,
          targetRepsMin: createWorkoutPlanExerciseDto.targetRepsMin,
          targetRepsMax: createWorkoutPlanExerciseDto.targetRepsMax,
@@ -185,7 +202,15 @@ export class WorkoutPlanExerciseService {
       updateWorkoutPlanExerciseDto: UpdateWorkoutPlanExerciseDto,
    ): Prisma.WorkoutPlanExerciseUpdateInput {
       return {
+         exercise: updateWorkoutPlanExerciseDto.exerciseId
+            ? {
+                 connect: {
+                    id: updateWorkoutPlanExerciseDto.exerciseId,
+                 },
+              }
+            : undefined,
          order: updateWorkoutPlanExerciseDto.order,
+         day: updateWorkoutPlanExerciseDto.day,
          targetSets: updateWorkoutPlanExerciseDto.targetSets,
          targetRepsMin: updateWorkoutPlanExerciseDto.targetRepsMin,
          targetRepsMax: updateWorkoutPlanExerciseDto.targetRepsMax,
@@ -223,5 +248,45 @@ export class WorkoutPlanExerciseService {
          throw new NotFoundException(
             `Workout plan exercise with id "${id}" not found`,
          );
+   }
+
+   private buildAccessiblePlanExercisesWhere(
+      user: AuthenticatedUser,
+      userId?: string,
+      workoutPlanId?: string,
+   ): Prisma.WorkoutPlanExerciseWhereInput | undefined {
+      const workoutPlanFilter: Prisma.WorkoutPlanWhereInput = {
+         ...(workoutPlanId && { id: workoutPlanId }),
+      };
+
+      if (user.role === UserRole.USER) {
+         return {
+            workoutPlan: {
+               ...workoutPlanFilter,
+               userId: user.sub,
+            },
+         };
+      }
+
+      if (user.role === UserRole.COACH) {
+         return {
+            workoutPlan: {
+               ...workoutPlanFilter,
+               ...(userId && { userId }),
+               createdById: user.sub,
+            },
+         };
+      }
+
+      if (userId || workoutPlanId) {
+         return {
+            workoutPlan: {
+               ...workoutPlanFilter,
+               ...(userId && { userId }),
+            },
+         };
+      }
+
+      return undefined;
    }
 }

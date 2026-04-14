@@ -3,12 +3,37 @@ import {
    Injectable,
    NotFoundException,
 } from '@nestjs/common';
-import { Prisma, UserRole } from '@prisma/client';
+import {
+   Prisma,
+   UserRole,
+   WorkoutPlanGoal,
+   WorkoutPlanLevel,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import type { WorkoutPlan } from '@gym-app/types';
 import { CreateWorkoutPlanDto } from './dto/create-workout-plan.dto';
 import { UpdateWorkoutPlanDto } from './dto/update-workout-plan.dto';
 import { handlePrismaError } from '../prisma/prisma-error.util';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+
+type SelectedWorkoutPlanRecord = {
+   id: string;
+   userId: string | null;
+   user: {
+      email: string;
+      firstName: string | null;
+      lastName: string | null;
+   } | null;
+   createdById: string;
+   name: string;
+   description: string | null;
+   goal: WorkoutPlanGoal | null;
+   level: WorkoutPlanLevel | null;
+   durationWeeks: number | null;
+   isActive: boolean;
+   createdAt: Date;
+   updatedAt: Date;
+};
 
 /**
  * Servicio base para operaciones del dominio de planes de trabajo.
@@ -28,9 +53,19 @@ export class WorkoutPlansService {
    private readonly workoutPlanSelect = {
       id: true,
       userId: true,
+      user: {
+         select: {
+            email: true,
+            firstName: true,
+            lastName: true,
+         },
+      },
       createdById: true,
       name: true,
       description: true,
+      goal: true,
+      level: true,
+      durationWeeks: true,
       isActive: true,
       createdAt: true,
       updatedAt: true,
@@ -40,17 +75,54 @@ export class WorkoutPlansService {
     * Obtiene todos los planes de trabajo ordenados por fecha de creacion descendente.
     *
     * @param user - Usuario autenticado
+    * @param page - Numero de pagina base cero
+    * @param limit - Cantidad maxima de planes por pagina
+    * @param search - Cadena de búsqueda para filtrar planes por nombre
     * @param userId - Identificador opcional del usuario por el que filtrar cuando el rol lo permite
     * @returns Listado de planes de trabajo accesibles para el usuario autenticado
     */
-   async findAll(user: AuthenticatedUser, userId?: string) {
-      return await this.prisma.workoutPlan.findMany({
-         select: this.workoutPlanSelect,
-         where: this.buildAccessiblePlansWhere(user, userId),
-         orderBy: {
-            createdAt: 'desc',
-         },
-      });
+   async findAll(
+      user: AuthenticatedUser,
+      page: number,
+      limit: number,
+      search: string,
+      userId?: string,
+   ) {
+      try {
+         const where: Prisma.WorkoutPlanWhereInput = {
+            ...this.buildAccessiblePlansWhere(user, userId),
+            ...(search?.trim() && {
+               // mode: 'insensitive',ignora mayúsculas/minúsculas
+               OR: [{ name: { contains: search, mode: 'insensitive' } }],
+            }),
+         };
+
+         const [workoutPlans, total] = await Promise.all([
+            this.prisma.workoutPlan.findMany({
+               select: this.workoutPlanSelect,
+               where,
+               orderBy: {
+                  createdAt: 'desc',
+               },
+               skip: page * limit,
+               take: limit,
+            }),
+            this.prisma.workoutPlan.count({
+               where,
+            }),
+         ]);
+
+         return {
+            items: workoutPlans.map((workoutPlan) =>
+               this.toPublicWorkoutPlan(workoutPlan),
+            ),
+            total,
+            page,
+            limit,
+         };
+      } catch (error) {
+         handlePrismaError(error, 'workout plan');
+      }
    }
 
    /**
@@ -73,7 +145,7 @@ export class WorkoutPlansService {
 
       this.assertCanAccessWorkoutPlan(user, workoutPlan);
 
-      return workoutPlan;
+      return this.toPublicWorkoutPlan(workoutPlan);
    }
 
    /**
@@ -86,13 +158,18 @@ export class WorkoutPlansService {
       user: AuthenticatedUser,
       createWorkoutPlanDto: CreateWorkoutPlanDto,
    ) {
-      this.assertCanCreateWorkoutPlan(user, createWorkoutPlanDto.userId);
+      this.assertCanCreateWorkoutPlan(
+         user,
+         createWorkoutPlanDto.userId ?? null,
+      );
 
       try {
-         return await this.prisma.workoutPlan.create({
+         const workoutPlan = await this.prisma.workoutPlan.create({
             data: this.toCreateData(user, createWorkoutPlanDto),
             select: this.workoutPlanSelect,
          });
+
+         return this.toPublicWorkoutPlan(workoutPlan);
       } catch (error) {
          handlePrismaError(error, 'workout plan');
       }
@@ -116,11 +193,13 @@ export class WorkoutPlansService {
       await this.ensureWorkoutPlanExists(user, id);
 
       try {
-         return await this.prisma.workoutPlan.update({
+         const workoutPlan = await this.prisma.workoutPlan.update({
             where: { id },
             data: this.toUpdateData(updateWorkoutPlanDto),
             select: this.workoutPlanSelect,
          });
+
+         return this.toPublicWorkoutPlan(workoutPlan);
       } catch (error) {
          handlePrismaError(error, 'workout plan');
       }
@@ -138,10 +217,12 @@ export class WorkoutPlansService {
       // Verificamos si el plan de trabajo existe
       await this.ensureWorkoutPlanExists(user, id);
 
-      return await this.prisma.workoutPlan.delete({
+      const workoutPlan = await this.prisma.workoutPlan.delete({
          where: { id },
          select: this.workoutPlanSelect,
       });
+
+      return this.toPublicWorkoutPlan(workoutPlan);
    }
 
    /**
@@ -154,21 +235,30 @@ export class WorkoutPlansService {
       user: AuthenticatedUser,
       createWorkoutPlanDto: CreateWorkoutPlanDto,
    ): Prisma.WorkoutPlanCreateInput {
-      return {
+      const data: Prisma.WorkoutPlanCreateInput = {
          name: createWorkoutPlanDto.name,
          description: createWorkoutPlanDto.description,
          isActive: createWorkoutPlanDto.isActive,
-         user: {
-            connect: {
-               id: createWorkoutPlanDto.userId,
-            },
-         },
+         goal: createWorkoutPlanDto.goal,
+         level: createWorkoutPlanDto.level,
+         durationWeeks: createWorkoutPlanDto.durationWeeks,
          createdBy: {
             connect: {
                id: user.sub,
             },
          },
       };
+
+      // Si el plan tiene un usuario asociado
+      if (createWorkoutPlanDto.userId) {
+         data.user = {
+            connect: {
+               id: createWorkoutPlanDto.userId,
+            },
+         };
+      }
+
+      return data;
    }
 
    /**
@@ -184,7 +274,40 @@ export class WorkoutPlansService {
          name: updateWorkoutPlanDto.name,
          description: updateWorkoutPlanDto.description,
          isActive: updateWorkoutPlanDto.isActive,
+         goal: updateWorkoutPlanDto.goal,
+         level: updateWorkoutPlanDto.level,
+         durationWeeks: updateWorkoutPlanDto.durationWeeks,
       };
+   }
+
+   /**
+    * Convierte un registro de Prisma al contrato publico serializable de la API.
+    *
+    * @param workoutPlan - Registro de plan de trabajo obtenido de Prisma
+    * @returns Plan de trabajo listo para respuesta JSON
+    */
+   private toPublicWorkoutPlan(
+      workoutPlan: SelectedWorkoutPlanRecord,
+   ): WorkoutPlan {
+      const data = {
+         ...workoutPlan,
+         createdAt: workoutPlan.createdAt.toISOString(),
+         updatedAt: workoutPlan.updatedAt.toISOString(),
+      };
+
+      if (workoutPlan.userId && workoutPlan.user) {
+         data.userId = workoutPlan.userId;
+         data.user = {
+            email: workoutPlan.user.email,
+            firstName: workoutPlan.user.firstName ?? '',
+            lastName: workoutPlan.user.lastName ?? '',
+         };
+      } else {
+         data.userId = null;
+         data.user = null;
+      }
+
+      return data;
    }
 
    /**
@@ -223,9 +346,15 @@ export class WorkoutPlansService {
       return userId ? { userId } : undefined;
    }
 
+   /**
+    * Comprueba si el usuario autenticado puede crear un plan de trabajo.
+    *
+    * @param user - Usuario autenticado que intenta crear el recurso
+    * @throws BadRequestException si el usuario no tiene permiso para crear el plan
+    */
    private assertCanCreateWorkoutPlan(
       user: AuthenticatedUser,
-      targetUserId: string,
+      targetUserId: string | null,
    ) {
       if (user.role === UserRole.USER && targetUserId !== user.sub) {
          throw new BadRequestException(
@@ -237,10 +366,21 @@ export class WorkoutPlansService {
    private assertCanAccessWorkoutPlan(
       user: AuthenticatedUser,
       workoutPlan: {
-         userId: string;
+         userId: string | null;
          createdById: string;
       },
    ) {
+      if (user.role === UserRole.ADMIN) {
+         return;
+      }
+
+      if (
+         user.role === UserRole.COACH &&
+         workoutPlan.createdById !== user.sub
+      ) {
+         throw new NotFoundException('Workout plan not found');
+      }
+
       if (user.role === UserRole.USER && workoutPlan.userId !== user.sub) {
          throw new NotFoundException('Workout plan not found');
       }
@@ -250,11 +390,11 @@ export class WorkoutPlansService {
       user: AuthenticatedUser,
       workoutPlan: {
          id: string;
-         userId: string;
+         userId: string | null;
          createdById: string;
       },
    ) {
-      if (user.role === UserRole.ADMIN || user.role === UserRole.COACH) {
+      if (user.role === UserRole.ADMIN) {
          return;
       }
 
