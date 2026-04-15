@@ -30,6 +30,7 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { WorkoutPlan, WorkoutPlansListResponse } from '@gym-app/types';
+import { AssignUserDto } from './dto/assign-user.dto';
 
 /**
  * Controlador base para exponer endpoints del dominio de planes de entrenamiento.
@@ -189,5 +190,35 @@ export class WorkoutPlansController {
       @Param('id') id: string,
    ): Promise<WorkoutPlan> {
       return this.workoutPlansService.remove(user, id);
+   }
+
+   /**
+    * Asigna un usuario a un plan de trabajo.
+    *
+    * @param user - Usuario autenticado
+    * @param id - Identificador del plan de trabajo
+    * @param userId - Identificador del usuario a asignar
+    * @returns Plan de trabajo actualizado
+    */
+   @ApiOperation({ summary: 'Asignar usuario a plan de entrenamiento' })
+   @ApiOkResponse({
+      description: 'Plan de entrenamiento actualizado correctamente.',
+      type: WorkoutPlanResponseDto,
+   })
+   @ApiNotFoundResponse({ description: 'Plan de entrenamiento no encontrado.' })
+   @ApiConflictResponse({
+      description: 'Ya existe un recurso relacionado que entra en conflicto.',
+   })
+   @Patch(':id/assign-user')
+   assignUser(
+      @CurrentUser() user: AuthenticatedUser,
+      @Param('id') id: string,
+      @Body() assignUserDto: AssignUserDto,
+   ): Promise<WorkoutPlan> {
+      return this.workoutPlansService.assignUser(
+         user,
+         id,
+         assignUserDto.userId,
+      );
    }
 }

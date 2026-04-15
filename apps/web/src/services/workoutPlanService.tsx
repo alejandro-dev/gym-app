@@ -25,6 +25,10 @@ export interface CreateWorkoutPlanPayload {
 
 export type UpdateWorkoutPlanPayload = Omit<CreateWorkoutPlanPayload, "userId">;
 
+export interface AssignUserPayload {
+   userId: string;
+}
+
 // Construye la URL para listar/buscar planes con paginación.
 export function buildWorkoutPlansSearchPath(
    params: SearchWorkoutPlansParams = {
@@ -72,6 +76,18 @@ export async function updateWorkoutPlan(
    payload: UpdateWorkoutPlanPayload,
 ): Promise<WorkoutPlan> {
    return fetchJson<WorkoutPlan>(`/api/workout-plans/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+   });
+}
+
+// Función que asigna un usuario a un plan de entrenamiento.
+export async function assignUser(
+   id: string,
+   payload: AssignUserPayload,
+): Promise<WorkoutPlan> {
+   return fetchJson<WorkoutPlan>(`/api/workout-plans/${id}/assign-user`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

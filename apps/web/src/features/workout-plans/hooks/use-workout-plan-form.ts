@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -18,6 +17,7 @@ import {
 import type { WorkoutPlanViewModel } from "../components/types";
 import { workoutPlanSchema } from "../schemas/workout-plan.schema";
 import { toWorkoutPlanViewModel } from "./use-workout-plans-state";
+import { useCallback, useState } from "react";
 
 type UseWorkoutPlanFormParams = {
    setPlans: React.Dispatch<React.SetStateAction<WorkoutPlanViewModel[]>>;
@@ -44,17 +44,17 @@ const WORKOUT_PLAN_ERROR_MESSAGES: StatusMessageMap = {
 export function useWorkoutPlanForm({ setPlans }: UseWorkoutPlanFormParams) {
    const queryClient = useQueryClient();
    const [selectedPlan, setSelectedPlan] =
-      React.useState<WorkoutPlanViewModel | null>(null);
-   const [isOpen, setIsOpen] = React.useState(false);
-   const [mode, setMode] = React.useState<"create" | "edit" | "duplicate">(
+      useState<WorkoutPlanViewModel | null>(null);
+   const [isOpen, setIsOpen] = useState(false);
+   const [mode, setMode] = useState<"create" | "edit" | "duplicate">(
       "create",
    );
-   const [values, setValues] = React.useState<WorkoutPlanFormValues>(
+   const [values, setValues] = useState<WorkoutPlanFormValues>(
       EMPTY_WORKOUT_PLAN_FORM_VALUES,
    );
 
    // Restablece los valores del formulario y la vista.
-   const reset = React.useCallback(() => {
+   const reset = useCallback(() => {
       setValues(EMPTY_WORKOUT_PLAN_FORM_VALUES);
       setSelectedPlan(null);
    }, []);
