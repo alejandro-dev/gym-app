@@ -1,6 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserRole } from '@prisma/client';
+import { ExerciseCategory, MuscleGroup, UserRole } from '@prisma/client';
 import * as cookieParser from 'cookie-parser';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
@@ -110,6 +110,105 @@ describe('WorkoutPlansController (e2e)', () => {
             updatedAt: anyString,
          }),
       );
+   });
+
+   it('copies a workout plan with its exercises', async () => {
+      const sourceExercise = await prisma.exercise.create({
+         data: {
+            name: 'Bench Press copy source',
+            slug: 'bench-press-copy-source',
+            description: 'Compound chest exercise',
+            muscleGroup: MuscleGroup.CHEST,
+            category: ExerciseCategory.STRENGTH,
+            equipment: 'Barbell',
+            isCompound: true,
+         },
+      });
+      const sourcePlan = await prisma.workoutPlan.create({
+         data: {
+            name: 'Workout Plan source-copy',
+            description: 'Source plan with exercises',
+            isActive: true,
+            user: {
+               connect: {
+                  id: ownerUserId,
+               },
+            },
+            createdBy: {
+               connect: {
+                  id: ownerUserId,
+               },
+            },
+            exercises: {
+               create: {
+                  exercise: {
+                     connect: {
+                        id: sourceExercise.id,
+                     },
+                  },
+                  day: 2,
+                  order: 1,
+                  targetSets: 4,
+                  targetRepsMin: 6,
+                  targetRepsMax: 8,
+                  targetWeightKg: 90,
+                  restSeconds: 150,
+                  notes: 'Copy this prescription',
+               },
+            },
+         },
+      });
+
+      const response = await request(app.getHttpServer())
+         .post(apiPath('/workout-plans'))
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .send({
+            ...buildCreateWorkoutPlanPayload('copied-plan'),
+            name: 'Workout Plan copied-plan',
+            type: 'copy',
+            sourceWorkoutPlanId: sourcePlan.id,
+         })
+         .expect(201);
+      const copiedPlan = response.body as Record<string, unknown>;
+
+      const copiedExercises = await prisma.workoutPlanExercise.findMany({
+         where: { workoutPlanId: copiedPlan.id as string },
+         orderBy: [{ day: 'asc' }, { order: 'asc' }],
+      });
+
+      expect(copiedPlan).toEqual(
+         expect.objectContaining({
+            name: 'Workout Plan copied-plan',
+            userId: ownerUserId,
+            createdById: ownerUserId,
+         }),
+      );
+      expect(copiedExercises).toHaveLength(1);
+      expect(copiedExercises[0]).toEqual(
+         expect.objectContaining({
+            workoutPlanId: copiedPlan.id,
+            exerciseId: sourceExercise.id,
+            day: 2,
+            order: 1,
+            targetSets: 4,
+            targetRepsMin: 6,
+            targetRepsMax: 8,
+            targetWeightKg: 90,
+            restSeconds: 150,
+            notes: 'Copy this prescription',
+         }),
+      );
+   });
+
+   it('returns 400 when copying without a source workout plan id', async () => {
+      await request(app.getHttpServer())
+         .post(apiPath('/workout-plans'))
+         .set('Authorization', `Bearer ${userAccessToken}`)
+         .send({
+            ...buildCreateWorkoutPlanPayload('copy-without-source'),
+            type: 'copy',
+         })
+         .expect(400);
    });
 
    it('lists workout plans in descending creation order', async () => {
@@ -378,6 +477,43 @@ describe('WorkoutPlansController (e2e)', () => {
             userId: ownerUserId,
             createdById: coachUserId,
             name: 'Workout Plan by coach',
+         }),
+      );
+   });
+
+   it('allows a coach creator to update a workout plan assigned to another user', async () => {
+      const workoutPlan = await prisma.workoutPlan.create({
+         data: {
+            name: 'Workout Plan coach-created-update',
+            description: 'Assigned by coach',
+            isActive: true,
+            user: {
+               connect: {
+                  id: ownerUserId,
+               },
+            },
+            createdBy: {
+               connect: {
+                  id: coachUserId,
+               },
+            },
+         },
+      });
+
+      const response = await request(app.getHttpServer())
+         .patch(apiPath(`/workout-plans/${workoutPlan.id}`))
+         .set('Authorization', `Bearer ${coachAccessToken}`)
+         .send({
+            description: 'Updated by coach creator',
+         })
+         .expect(200);
+
+      expect(response.body).toEqual(
+         expect.objectContaining({
+            id: workoutPlan.id,
+            description: 'Updated by coach creator',
+            userId: ownerUserId,
+            createdById: coachUserId,
          }),
       );
    });

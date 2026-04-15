@@ -13,6 +13,8 @@ type CreateWorkoutPlanDto = {
    name: string;
    description: string | null;
    isActive: boolean;
+   type?: 'new' | 'copy' | null;
+   sourceWorkoutPlanId?: string | null;
 };
 
 type UpdateWorkoutPlanDto = Partial<CreateWorkoutPlanDto>;
@@ -34,6 +36,18 @@ type WorkoutPlanRecord = {
    isActive: boolean;
    createdAt: Date;
    updatedAt: Date;
+};
+
+type WorkoutPlanExerciseCopyRecord = {
+   exerciseId: string;
+   day: number | null;
+   order: number;
+   targetSets: number | null;
+   targetRepsMin: number | null;
+   targetRepsMax: number | null;
+   targetWeightKg: number | null;
+   restSeconds: number | null;
+   notes: string | null;
 };
 
 describe('WorkoutPlansService', () => {
@@ -58,6 +72,7 @@ describe('WorkoutPlansService', () => {
    };
 
    const prismaMock = {
+      $transaction: jest.fn(),
       workoutPlan: {
          create: jest.fn<
             Promise<WorkoutPlanRecord>,
@@ -79,6 +94,16 @@ describe('WorkoutPlansService', () => {
          delete: jest.fn<
             Promise<WorkoutPlanRecord>,
             [Prisma.WorkoutPlanDeleteArgs]
+         >(),
+      },
+      workoutPlanExercise: {
+         findMany: jest.fn<
+            Promise<WorkoutPlanExerciseCopyRecord[]>,
+            [Prisma.WorkoutPlanExerciseFindManyArgs]
+         >(),
+         createMany: jest.fn<
+            Promise<Prisma.BatchPayload>,
+            [Prisma.WorkoutPlanExerciseCreateManyArgs]
          >(),
       },
    };
@@ -120,6 +145,10 @@ describe('WorkoutPlansService', () => {
 
    beforeEach(async () => {
       jest.clearAllMocks();
+      prismaMock.$transaction.mockImplementation(
+         async <T>(callback: (tx: typeof prismaMock) => Promise<T>) =>
+            callback(prismaMock),
+      );
 
       const module: TestingModule = await Test.createTestingModule({
          providers: [
@@ -141,6 +170,7 @@ describe('WorkoutPlansService', () => {
          const result = await service.create(currentUser, createWorkoutPlanDto);
          const [createArgs] = prismaMock.workoutPlan.create.mock.calls[0];
 
+         expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
          expect(createArgs.data).toEqual({
             name: createWorkoutPlanDto.name,
             description: createWorkoutPlanDto.description,
@@ -174,6 +204,10 @@ describe('WorkoutPlansService', () => {
             createdAt: workoutPlanRecord.createdAt.toISOString(),
             updatedAt: workoutPlanRecord.updatedAt.toISOString(),
          });
+         expect(prismaMock.workoutPlanExercise.findMany).not.toHaveBeenCalled();
+         expect(
+            prismaMock.workoutPlanExercise.createMany,
+         ).not.toHaveBeenCalled();
       });
 
       it('creates a template without an owner for privileged roles', async () => {
@@ -205,6 +239,137 @@ describe('WorkoutPlansService', () => {
             user: null,
             createdById: coachUser.sub,
          });
+      });
+
+      it('copies workout plan exercises when creating from another plan', async () => {
+         const copiedWorkoutPlanRecord: WorkoutPlanRecord = {
+            ...workoutPlanRecord,
+            id: 'workoutPlan_copy',
+            name: 'Plan de trabajo copia',
+            createdById: coachUser.sub,
+         };
+         const sourceWorkoutPlanExercises: WorkoutPlanExerciseCopyRecord[] = [
+            {
+               exerciseId: 'exercise_1',
+               day: 1,
+               order: 1,
+               targetSets: 4,
+               targetRepsMin: 8,
+               targetRepsMax: 10,
+               targetWeightKg: 80,
+               restSeconds: 120,
+               notes: 'Mantener tecnica',
+            },
+            {
+               exerciseId: 'exercise_2',
+               day: 1,
+               order: 2,
+               targetSets: 3,
+               targetRepsMin: 10,
+               targetRepsMax: 12,
+               targetWeightKg: null,
+               restSeconds: 90,
+               notes: null,
+            },
+         ];
+
+         prismaMock.workoutPlan.findUnique.mockResolvedValue({
+            id: workoutPlanRecord.id,
+            userId: null,
+            createdById: coachUser.sub,
+         });
+         prismaMock.workoutPlan.create.mockResolvedValue(
+            copiedWorkoutPlanRecord,
+         );
+         prismaMock.workoutPlanExercise.findMany.mockResolvedValue(
+            sourceWorkoutPlanExercises,
+         );
+         prismaMock.workoutPlanExercise.createMany.mockResolvedValue({
+            count: sourceWorkoutPlanExercises.length,
+         });
+
+         const result = await service.create(coachUser, {
+            ...createWorkoutPlanDto,
+            name: copiedWorkoutPlanRecord.name,
+            type: 'copy',
+            sourceWorkoutPlanId: workoutPlanRecord.id,
+         });
+
+         expect(prismaMock.workoutPlan.findUnique).toHaveBeenCalledWith({
+            where: { id: workoutPlanRecord.id },
+            select: { id: true, userId: true, createdById: true },
+         });
+         expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
+         expect(prismaMock.workoutPlanExercise.findMany).toHaveBeenCalledWith({
+            where: { workoutPlanId: workoutPlanRecord.id },
+            select: {
+               exerciseId: true,
+               day: true,
+               order: true,
+               targetSets: true,
+               targetRepsMin: true,
+               targetRepsMax: true,
+               targetWeightKg: true,
+               restSeconds: true,
+               notes: true,
+            },
+         });
+         expect(prismaMock.workoutPlanExercise.createMany).toHaveBeenCalledWith(
+            {
+               data: sourceWorkoutPlanExercises.map((sourceExercise) => ({
+                  workoutPlanId: copiedWorkoutPlanRecord.id,
+                  ...sourceExercise,
+               })),
+            },
+         );
+         expect(result).toMatchObject({
+            id: copiedWorkoutPlanRecord.id,
+            name: copiedWorkoutPlanRecord.name,
+         });
+      });
+
+      it('rejects copying a workout plan without a source id', async () => {
+         await expect(
+            service.create(coachUser, {
+               ...createWorkoutPlanDto,
+               type: 'copy',
+               sourceWorkoutPlanId: null,
+            }),
+         ).rejects.toBeInstanceOf(BadRequestException);
+         expect(prismaMock.$transaction).not.toHaveBeenCalled();
+         expect(prismaMock.workoutPlan.create).not.toHaveBeenCalled();
+      });
+
+      it('rejects copying a missing workout plan', async () => {
+         prismaMock.workoutPlan.findUnique.mockResolvedValue(null);
+
+         await expect(
+            service.create(coachUser, {
+               ...createWorkoutPlanDto,
+               type: 'copy',
+               sourceWorkoutPlanId: 'missing_workoutPlan',
+            }),
+         ).rejects.toBeInstanceOf(NotFoundException);
+         expect(prismaMock.$transaction).not.toHaveBeenCalled();
+         expect(prismaMock.workoutPlan.create).not.toHaveBeenCalled();
+      });
+
+      it('rejects copying a workout plan that the user cannot access', async () => {
+         prismaMock.workoutPlan.findUnique.mockResolvedValue({
+            id: workoutPlanRecord.id,
+            userId: null,
+            createdById: 'another_coach',
+         });
+
+         await expect(
+            service.create(coachUser, {
+               ...createWorkoutPlanDto,
+               type: 'copy',
+               sourceWorkoutPlanId: workoutPlanRecord.id,
+            }),
+         ).rejects.toBeInstanceOf(NotFoundException);
+         expect(prismaMock.$transaction).not.toHaveBeenCalled();
+         expect(prismaMock.workoutPlan.create).not.toHaveBeenCalled();
       });
 
       it('translates unexpected database errors into InternalServerErrorException', async () => {
@@ -405,12 +570,22 @@ describe('WorkoutPlansService', () => {
          expect(prismaMock.workoutPlan.update).not.toHaveBeenCalled();
       });
 
-      it('rejects update of a template for regular users', async () => {
+      it('allows the creator to update an unassigned workout plan', async () => {
+         const unassignedUpdatedRecord: WorkoutPlanRecord = {
+            ...updatedWorkoutPlanRecord,
+            userId: null,
+            user: null,
+            createdById: currentUser.sub,
+         };
+
          prismaMock.workoutPlan.findUnique.mockResolvedValue({
             id: workoutPlanRecord.id,
             userId: null,
             createdById: currentUser.sub,
          });
+         prismaMock.workoutPlan.update.mockResolvedValue(
+            unassignedUpdatedRecord,
+         );
 
          await expect(
             service.update(
@@ -418,8 +593,12 @@ describe('WorkoutPlansService', () => {
                workoutPlanRecord.id,
                updatedWorkoutPlanDto,
             ),
-         ).rejects.toBeInstanceOf(NotFoundException);
-         expect(prismaMock.workoutPlan.update).not.toHaveBeenCalled();
+         ).resolves.toMatchObject({
+            id: unassignedUpdatedRecord.id,
+            userId: null,
+            createdById: currentUser.sub,
+         });
+         expect(prismaMock.workoutPlan.update).toHaveBeenCalled();
       });
 
       it('allows admin to update any workout plan', async () => {
@@ -444,11 +623,39 @@ describe('WorkoutPlansService', () => {
          expect(prismaMock.workoutPlan.update).toHaveBeenCalled();
       });
 
-      it('rejects coach update when not owner and creator', async () => {
+      it('allows a coach creator to update a plan assigned to another user', async () => {
+         const coachUpdatedRecord: WorkoutPlanRecord = {
+            ...updatedWorkoutPlanRecord,
+            userId: currentUser.sub,
+            createdById: coachUser.sub,
+         };
+
          prismaMock.workoutPlan.findUnique.mockResolvedValue({
             id: workoutPlanRecord.id,
             userId: currentUser.sub,
             createdById: coachUser.sub,
+         });
+         prismaMock.workoutPlan.update.mockResolvedValue(coachUpdatedRecord);
+
+         await expect(
+            service.update(
+               coachUser,
+               workoutPlanRecord.id,
+               updatedWorkoutPlanDto,
+            ),
+         ).resolves.toMatchObject({
+            id: coachUpdatedRecord.id,
+            userId: currentUser.sub,
+            createdById: coachUser.sub,
+         });
+         expect(prismaMock.workoutPlan.update).toHaveBeenCalled();
+      });
+
+      it('rejects coach update when they did not create the plan', async () => {
+         prismaMock.workoutPlan.findUnique.mockResolvedValue({
+            id: workoutPlanRecord.id,
+            userId: currentUser.sub,
+            createdById: 'another_coach',
          });
 
          await expect(
@@ -543,17 +750,29 @@ describe('WorkoutPlansService', () => {
          expect(prismaMock.workoutPlan.delete).not.toHaveBeenCalled();
       });
 
-      it('rejects removing a template for regular users', async () => {
+      it('allows the creator to remove an unassigned workout plan', async () => {
+         const unassignedRecord: WorkoutPlanRecord = {
+            ...workoutPlanRecord,
+            userId: null,
+            user: null,
+            createdById: currentUser.sub,
+         };
+
          prismaMock.workoutPlan.findUnique.mockResolvedValue({
             id: workoutPlanRecord.id,
             userId: null,
             createdById: currentUser.sub,
          });
+         prismaMock.workoutPlan.delete.mockResolvedValue(unassignedRecord);
 
          await expect(
             service.remove(currentUser, workoutPlanRecord.id),
-         ).rejects.toBeInstanceOf(NotFoundException);
-         expect(prismaMock.workoutPlan.delete).not.toHaveBeenCalled();
+         ).resolves.toMatchObject({
+            id: unassignedRecord.id,
+            userId: null,
+            createdById: currentUser.sub,
+         });
+         expect(prismaMock.workoutPlan.delete).toHaveBeenCalled();
       });
 
       it('allows admin to remove any workout plan', async () => {
@@ -568,6 +787,30 @@ describe('WorkoutPlansService', () => {
             service.remove(adminUser, workoutPlanRecord.id),
          ).resolves.toMatchObject({
             id: workoutPlanRecord.id,
+         });
+         expect(prismaMock.workoutPlan.delete).toHaveBeenCalled();
+      });
+
+      it('allows a coach creator to remove a plan assigned to another user', async () => {
+         const coachOwnedRecord: WorkoutPlanRecord = {
+            ...workoutPlanRecord,
+            userId: currentUser.sub,
+            createdById: coachUser.sub,
+         };
+
+         prismaMock.workoutPlan.findUnique.mockResolvedValue({
+            id: workoutPlanRecord.id,
+            userId: currentUser.sub,
+            createdById: coachUser.sub,
+         });
+         prismaMock.workoutPlan.delete.mockResolvedValue(coachOwnedRecord);
+
+         await expect(
+            service.remove(coachUser, workoutPlanRecord.id),
+         ).resolves.toMatchObject({
+            id: coachOwnedRecord.id,
+            userId: currentUser.sub,
+            createdById: coachUser.sub,
          });
          expect(prismaMock.workoutPlan.delete).toHaveBeenCalled();
       });

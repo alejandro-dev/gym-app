@@ -162,7 +162,11 @@ export class UsersService {
       // de una contraseña enviada desde el cliente.
       const temporaryPassword = generateRandomPassword();
       const passwordHash = await hashValue(temporaryPassword);
+
+      // Resolvemos el coach asignado según las reglas de negocio y el usuario autenticado.
       const coachId = this.resolveCreateCoachId(userAuth, createUserDto);
+
+      // Validamos que el coach asignado sea válido.
       await this.validateCoachAssignment(
          createUserDto.role ?? UserRole.USER,
          coachId,

@@ -72,6 +72,21 @@ export class WorkoutPlansService {
    } satisfies Prisma.WorkoutPlanSelect;
 
    /**
+    * Selecciona los campos de un ejercicio en plan de trabajo para la consulta.
+    */
+   private readonly workoutPlanExerciseSelect = {
+      exerciseId: true,
+      day: true,
+      order: true,
+      targetSets: true,
+      targetRepsMin: true,
+      targetRepsMax: true,
+      targetWeightKg: true,
+      restSeconds: true,
+      notes: true,
+   } satisfies Prisma.WorkoutPlanExerciseSelect;
+
+   /**
     * Obtiene todos los planes de trabajo ordenados por fecha de creacion descendente.
     *
     * @param user - Usuario autenticado
@@ -150,6 +165,7 @@ export class WorkoutPlansService {
 
    /**
     * Crea un plan de trabajo y devuelve la version publica del registro.
+    * Si el plan es de tipo "copy", crea un plan de trabajo copia del plan de trabajo a copiar.
     *
     * @param createWorkoutPlanDto - Datos de creacion del plan de trabajo
     * @returns Plan de trabajo creado
@@ -158,15 +174,81 @@ export class WorkoutPlansService {
       user: AuthenticatedUser,
       createWorkoutPlanDto: CreateWorkoutPlanDto,
    ) {
+      // Verificamos que el usuario tenga permiso para crear el plan de trabajo.
       this.assertCanCreateWorkoutPlan(
          user,
          createWorkoutPlanDto.userId ?? null,
       );
 
+      let sourceWorkoutPlanId: string | null = null;
+
+      // Si el plan es de tipo "copy", verificamos que exista el plan de trabajo a copiar.
+      if (createWorkoutPlanDto.type === 'copy') {
+         // Si el plan de trabajo a copiar es nulo lanza BadRequestException
+         if (!createWorkoutPlanDto.sourceWorkoutPlanId) {
+            throw new BadRequestException(
+               'El plan de trabajo a copiar no puede ser nulo',
+            );
+         }
+
+         sourceWorkoutPlanId = createWorkoutPlanDto.sourceWorkoutPlanId;
+
+         // Verificamos que el plan de trabajo a copiar existe.
+         const sourceWorkoutPlan = await this.prisma.workoutPlan.findUnique({
+            where: { id: sourceWorkoutPlanId },
+            select: { id: true, userId: true, createdById: true },
+         });
+
+         // Si no existe lanza NotFoundException
+         if (!sourceWorkoutPlan) {
+            throw new NotFoundException(
+               `Workout plan with id "${sourceWorkoutPlanId}" not found`,
+            );
+         }
+
+         // Si el usuario no es el creador o el propietario lanza NotFoundException
+         this.assertCanAccessWorkoutPlan(user, sourceWorkoutPlan);
+      }
+
       try {
-         const workoutPlan = await this.prisma.workoutPlan.create({
-            data: this.toCreateData(user, createWorkoutPlanDto),
-            select: this.workoutPlanSelect,
+         const workoutPlan = await this.prisma.$transaction(async (tx) => {
+            const createdWorkoutPlan = await tx.workoutPlan.create({
+               data: this.toCreateData(user, createWorkoutPlanDto),
+               select: this.workoutPlanSelect,
+            });
+
+            // Si el plan de trabajo no es de tipo "copy", devolvemos el plan creado.
+            if (createWorkoutPlanDto.type !== 'copy' || !sourceWorkoutPlanId) {
+               return createdWorkoutPlan;
+            }
+
+            // Consultamos los ejercicios del plan de trabajo a copiar.
+            const sourceWorkoutPlanExercises =
+               await tx.workoutPlanExercise.findMany({
+                  where: { workoutPlanId: sourceWorkoutPlanId },
+                  select: this.workoutPlanExerciseSelect,
+               });
+
+            // Creamos los ejercicios del plan de trabajo copiado.
+            // Si el plan de trabajo a copiar no tiene ejercicios, no creamos ejercicios.
+            if (sourceWorkoutPlanExercises.length > 0) {
+               await tx.workoutPlanExercise.createMany({
+                  data: sourceWorkoutPlanExercises.map((sourceExercise) => ({
+                     workoutPlanId: createdWorkoutPlan.id,
+                     exerciseId: sourceExercise.exerciseId,
+                     day: sourceExercise.day,
+                     order: sourceExercise.order,
+                     targetSets: sourceExercise.targetSets,
+                     targetRepsMin: sourceExercise.targetRepsMin,
+                     targetRepsMax: sourceExercise.targetRepsMax,
+                     targetWeightKg: sourceExercise.targetWeightKg,
+                     restSeconds: sourceExercise.restSeconds,
+                     notes: sourceExercise.notes,
+                  })),
+               });
+            }
+
+            return createdWorkoutPlan;
          });
 
          return this.toPublicWorkoutPlan(workoutPlan);
@@ -360,7 +442,7 @@ export class WorkoutPlansService {
       if (!workoutPlan)
          throw new NotFoundException(`Workout plan with id "${id}" not found`);
 
-      // Si el usuario no es el creador o el propietario lanza NotFoundException
+      // Solo el administrador o el creador del plan pueden administrarlo.
       this.assertCanManageWorkoutPlan(user, workoutPlan);
    }
 
@@ -469,10 +551,7 @@ export class WorkoutPlansService {
          return;
       }
 
-      if (
-         workoutPlan.userId !== user.sub ||
-         workoutPlan.createdById !== user.sub
-      ) {
+      if (workoutPlan.createdById !== user.sub) {
          throw new NotFoundException(
             `Workout plan with id "${workoutPlan.id}" not found`,
          );
