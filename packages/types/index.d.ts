@@ -13,17 +13,16 @@ export type MuscleGroup =
 export type ExerciseCategory = "STRENGTH" | "BODYWEIGHT" | "CARDIO";
 
 export type WorkoutPlanGoal =
-   | "STRENGTH"
-   | "HYPERTROPHY"
-   | "FAT_LOSS"
-   | "ENDURANCE"
-   | "GENERAL_FITNESS"
-   | "REHAB";
+  | "STRENGTH"
+  | "HYPERTROPHY"
+  | "FAT_LOSS"
+  | "ENDURANCE"
+  | "GENERAL_FITNESS"
+  | "REHAB";
 
-export type WorkoutPlanLevel =
-   | "BEGINNER"
-   | "INTERMEDIATE"
-   | "ADVANCED";
+export type WorkoutPlanLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+
+export type WorkoutPlanType = "new" | "copy";
 
 export declare const ROLE_GROUP_VALUES: readonly UserRole[];
 export declare const MUSCLE_GROUP_VALUES: readonly MuscleGroup[];
@@ -35,9 +34,7 @@ export declare const EXERCISE_CATEGORY_LABELS_ES: Record<
   string
 >;
 
-export declare function getMuscleGroupLabelEs(
-  muscleGroup: MuscleGroup,
-): string;
+export declare function getMuscleGroupLabelEs(muscleGroup: MuscleGroup): string;
 
 export declare function getExerciseCategoryLabelEs(
   category: ExerciseCategory,
@@ -87,29 +84,6 @@ export interface ExercisesListResponse {
   limit: number;
 }
 
-export interface WorkoutPlanExercise {
-  id: string;
-  workoutPlanId: string;
-  exerciseId: string;
-  day: number | null;
-  order: number;
-  targetSets: number | null;
-  targetRepsMin: number | null;
-  targetRepsMax: number | null;
-  targetWeightKg: number | null;
-  restSeconds: number | null;
-  notes: string | null;
-  exercise: {
-    id: string;
-    name: string;
-    slug?: string;
-    muscleGroup: MuscleGroup;
-    category: ExerciseCategory;
-    equipment: string | null;
-    isCompound?: boolean;
-  };
-}
-
 export interface WorkoutPlan {
   id: string;
   userId: string | null;
@@ -135,4 +109,27 @@ export interface WorkoutPlansListResponse {
   total: number;
   page: number;
   limit: number;
+}
+
+export interface WorkoutPlanExercise {
+  id: string;
+  workoutPlanId: string;
+  exerciseId: string;
+  day: number | null;
+  order: number;
+  targetSets: number | null;
+  targetRepsMin: number | null;
+  targetRepsMax: number | null;
+  targetWeightKg: number | null;
+  restSeconds: number | null;
+  notes: string | null;
+  exercise: {
+    id: string;
+    name: string;
+    slug?: string;
+    muscleGroup: MuscleGroup;
+    category: ExerciseCategory;
+    equipment: string | null;
+    isCompound?: boolean;
+  };
 }
