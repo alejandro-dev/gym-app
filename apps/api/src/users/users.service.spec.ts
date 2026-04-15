@@ -199,7 +199,7 @@ describe('UsersService', () => {
          undefined,
       );
 
-      const result = await service.create({
+      const result = await service.create(adminUser, {
          email: 'coach@gymapp.dev',
          firstName: 'Coach',
          lastName: 'Admin',
@@ -215,6 +215,7 @@ describe('UsersService', () => {
       expect(createCall.data.emailVerifiedAt).toBeInstanceOf(Date);
       expect(typeof createCall.data.passwordHash).toBe('string');
       expect(createCall.data.passwordHash).toContain(':');
+      expect(createCall.data.coach).toBeUndefined();
 
       const welcomeEmailCalls = accountOnboardingServiceMock.enqueueWelcomeEmail
          .mock.calls as Array<
@@ -249,6 +250,108 @@ describe('UsersService', () => {
          createdAt: '2026-04-06T10:00:00.000Z',
          updatedAt: '2026-04-06T10:00:00.000Z',
       });
+   });
+
+   it('keeps the requested coach assignment when an admin creates an athlete', async () => {
+      prismaService.user.findUnique.mockResolvedValue({
+         id: coachUser.sub,
+         role: UserRole.COACH,
+      });
+      prismaService.user.create.mockResolvedValue({
+         id: 'athlete_1',
+         email: 'athlete@gymapp.dev',
+         username: null,
+         firstName: 'Laura',
+         lastName: 'Atleta',
+         role: UserRole.USER,
+         coachId: coachUser.sub,
+         weightKg: null,
+         heightCm: null,
+         birthDate: null,
+         emailVerifiedAt: new Date('2026-04-06T10:00:00.000Z'),
+         createdAt: new Date('2026-04-06T10:00:00.000Z'),
+         updatedAt: new Date('2026-04-06T10:00:00.000Z'),
+      });
+      accountOnboardingServiceMock.enqueueWelcomeEmail.mockResolvedValue(
+         undefined,
+      );
+
+      await service.create(adminUser, {
+         email: 'athlete@gymapp.dev',
+         firstName: 'Laura',
+         lastName: 'Atleta',
+         role: UserRole.USER,
+         coachId: coachUser.sub,
+      });
+
+      expect(prismaService.user.findUnique).toHaveBeenCalledWith({
+         where: { id: coachUser.sub },
+         select: { id: true, role: true },
+      });
+      const createCalls = prismaService.user.create.mock.calls as Array<
+         [Prisma.UserCreateArgs]
+      >;
+      const [createCall] = createCalls[0] ?? [];
+
+      expect(createCall.data.coach).toEqual({
+         connect: {
+            id: coachUser.sub,
+         },
+      });
+   });
+
+   it('assigns created athletes to the authenticated coach', async () => {
+      prismaService.user.findUnique.mockResolvedValue({
+         id: coachUser.sub,
+         role: UserRole.COACH,
+      });
+      prismaService.user.create.mockResolvedValue({
+         id: 'athlete_2',
+         email: 'new-athlete@gymapp.dev',
+         username: null,
+         firstName: 'New',
+         lastName: 'Athlete',
+         role: UserRole.USER,
+         coachId: coachUser.sub,
+         weightKg: null,
+         heightCm: null,
+         birthDate: null,
+         emailVerifiedAt: new Date('2026-04-06T10:00:00.000Z'),
+         createdAt: new Date('2026-04-06T10:00:00.000Z'),
+         updatedAt: new Date('2026-04-06T10:00:00.000Z'),
+      });
+      accountOnboardingServiceMock.enqueueWelcomeEmail.mockResolvedValue(
+         undefined,
+      );
+
+      await service.create(coachUser, {
+         email: 'new-athlete@gymapp.dev',
+         firstName: 'New',
+         lastName: 'Athlete',
+         role: UserRole.USER,
+      });
+
+      const createCalls = prismaService.user.create.mock.calls as Array<
+         [Prisma.UserCreateArgs]
+      >;
+      const [createCall] = createCalls[0] ?? [];
+
+      expect(createCall.data.coach).toEqual({
+         connect: {
+            id: coachUser.sub,
+         },
+      });
+   });
+
+   it('rejects coach creation of non-athlete users', async () => {
+      await expect(
+         service.create(coachUser, {
+            email: 'admin-from-coach@gymapp.dev',
+            role: UserRole.ADMIN,
+         }),
+      ).rejects.toThrow('Coaches can only create users with role USER.');
+
+      expect(prismaService.user.create).not.toHaveBeenCalled();
    });
 
    it('restricts coach listings to assigned athletes', async () => {

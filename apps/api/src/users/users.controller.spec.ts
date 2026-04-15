@@ -189,14 +189,14 @@ describe('UsersController', () => {
          updatedAt: '2026-04-06T10:00:00.000Z',
       });
 
-      await controller.create({
+      await controller.create(currentUser, {
          email: 'coach@gymapp.dev',
          firstName: 'Coach',
          lastName: 'Admin',
          role: UserRole.COACH,
       });
 
-      expect(usersService.create).toHaveBeenCalledWith({
+      expect(usersService.create).toHaveBeenCalledWith(currentUser, {
          email: 'coach@gymapp.dev',
          firstName: 'Coach',
          lastName: 'Admin',
