@@ -99,6 +99,7 @@ export function DataTable({
          />
          <AssignPlanDialog
             isOpen={assignPlan.isOpen}
+            isSaving={assignPlan.isSaving}
             planName={assignPlan.selectedPlan?.name}
             values={assignPlan.values}
             onOpenChange={assignPlan.handleOpenChange}

@@ -226,6 +226,38 @@ export class WorkoutPlansService {
    }
 
    /**
+    * Asigna un usuario a un plan de trabajo.
+    *
+    * @param user - Usuario autenticado
+    * @param id - Identificador del plan de trabajo
+    * @param userId - Identificador del usuario a asignar
+    * @returns Plan de trabajo actualizado
+    * @throws NotFoundException si el plan de trabajo no existe
+    */
+   async assignUser(user: AuthenticatedUser, id: string, userId: string) {
+      // Verificamos si el plan de trabajo existe
+      await this.ensureWorkoutPlanCanBeAssigned(user, id);
+
+      try {
+         const workoutPlan = await this.prisma.workoutPlan.update({
+            where: { id },
+            data: {
+               user: {
+                  connect: {
+                     id: userId,
+                  },
+               },
+            },
+            select: this.workoutPlanSelect,
+         });
+
+         return this.toPublicWorkoutPlan(workoutPlan);
+      } catch (error) {
+         handlePrismaError(error, 'workout plan');
+      }
+   }
+
+   /**
     * Convierte el DTO de creacion al formato esperado por Prisma.
     *
     * @param createWorkoutPlanDto - Datos de creacion del plan de trabajo
@@ -328,7 +360,32 @@ export class WorkoutPlansService {
       if (!workoutPlan)
          throw new NotFoundException(`Workout plan with id "${id}" not found`);
 
+      // Si el usuario no es el creador o el propietario lanza NotFoundException
       this.assertCanManageWorkoutPlan(user, workoutPlan);
+   }
+
+   /**
+    * Verifica si el plan de trabajo existe y puede ser asignado por el usuario.
+    *
+    * @param user - Usuario autenticado
+    * @param id - Identificador del plan de trabajo
+    * @returns Promesa resuelta cuando el plan existe y puede asignarse
+    * @throws NotFoundException si no existe o el usuario no puede asignarlo
+    */
+   private async ensureWorkoutPlanCanBeAssigned(
+      user: AuthenticatedUser,
+      id: string,
+   ) {
+      const workoutPlan = await this.prisma.workoutPlan.findUnique({
+         where: { id },
+         select: { id: true, createdById: true },
+      });
+
+      // Si no existe lanza NotFoundException
+      if (!workoutPlan)
+         throw new NotFoundException(`Workout plan with id "${id}" not found`);
+
+      this.assertCanAssignWorkoutPlan(user, workoutPlan);
    }
 
    private buildAccessiblePlansWhere(
@@ -402,6 +459,24 @@ export class WorkoutPlansService {
          workoutPlan.userId !== user.sub ||
          workoutPlan.createdById !== user.sub
       ) {
+         throw new NotFoundException(
+            `Workout plan with id "${workoutPlan.id}" not found`,
+         );
+      }
+   }
+
+   private assertCanAssignWorkoutPlan(
+      user: AuthenticatedUser,
+      workoutPlan: {
+         id: string;
+         createdById: string;
+      },
+   ) {
+      if (user.role === UserRole.ADMIN) {
+         return;
+      }
+
+      if (workoutPlan.createdById !== user.sub) {
          throw new NotFoundException(
             `Workout plan with id "${workoutPlan.id}" not found`,
          );
