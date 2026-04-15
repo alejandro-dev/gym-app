@@ -31,6 +31,7 @@ import {
    deleteWorkoutPlanExercise,
    searchWorkoutPlanExercises,
    updateWorkoutPlanExercise,
+   type UpdateWorkoutPlanExercisePayload,
    type WorkoutPlanExercisePayload,
 } from "@/services/workoutPlanExercisesService";
 
@@ -224,11 +225,14 @@ export default function WorkoutPlanDetailView({
 
          await Promise.all(
             exercises.map((exercise) => {
-               const payload = toWorkoutPlanExercisePayload(plan.id, exercise);
-
                return exercise.isDraft
-                  ? createWorkoutPlanExercise(payload)
-                  : updateWorkoutPlanExercise(exercise.id, payload);
+                  ? createWorkoutPlanExercise(
+                       toWorkoutPlanExercisePayload(plan.id, exercise),
+                    )
+                  : updateWorkoutPlanExercise(
+                       exercise.id,
+                       toUpdateWorkoutPlanExercisePayload(exercise),
+                    );
             }),
          );
 
@@ -701,6 +705,26 @@ function toWorkoutPlanExercisePayload(
 
    return {
       workoutPlanId,
+      exerciseId: exercise.exerciseId,
+      day: exercise.day,
+      order: exercise.order,
+      targetSets: exercise.targetSets,
+      targetRepsMin: exercise.targetRepsMin,
+      targetRepsMax: exercise.targetRepsMax,
+      targetWeightKg: exercise.targetWeightKg,
+      restSeconds: exercise.restSeconds,
+      notes: exercise.notes,
+   };
+}
+
+function toUpdateWorkoutPlanExercisePayload(
+   exercise: WorkoutPlanExerciseDraft,
+): UpdateWorkoutPlanExercisePayload {
+   if (!exercise.exerciseId) {
+      throw new Error("Selecciona un ejercicio antes de guardar.");
+   }
+
+   return {
       exerciseId: exercise.exerciseId,
       day: exercise.day,
       order: exercise.order,

@@ -102,3 +102,11 @@ export async function assignUser(
     body: JSON.stringify(payload),
   });
 }
+
+// Función que elimina un plan de entrenamiento.
+export async function deleteWorkoutPlan(id: string): Promise<WorkoutPlan> {
+  return fetchJson<WorkoutPlan>(`/api/workout-plans/${id}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
+}

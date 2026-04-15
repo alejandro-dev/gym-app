@@ -30,6 +30,7 @@ type UseWorkoutPlanColumnsParams = {
    onDuplicate: (plan: WorkoutPlanViewModel) => void;
    onEdit: (plan: WorkoutPlanViewModel) => void;
    onOpenEditor: (plan: WorkoutPlanViewModel) => void;
+   onDelete: (plan: WorkoutPlanViewModel) => void;
 };
 
 export function useWorkoutPlanColumns({
@@ -37,6 +38,7 @@ export function useWorkoutPlanColumns({
    onDuplicate,
    onEdit,
    onOpenEditor,
+   onDelete,
 }: UseWorkoutPlanColumnsParams) {
    return [
       {
@@ -133,10 +135,16 @@ export function useWorkoutPlanColumns({
                      <IconCopy data-icon="inline-start" />
                      Duplicar
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem onSelect={() => onAssign(row.original)}>
                      <IconUserPlus data-icon="inline-start" />
                      Asignar a atleta
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                     variant="destructive"
+                     onSelect={() => onDelete(row.original)}
+                  >
+                     Eliminar
                   </DropdownMenuItem>
                </DropdownMenuContent>
             </DropdownMenu>

@@ -14,6 +14,8 @@ import { useWorkoutPlanForm } from "../hooks/use-workout-plan-form";
 import { useWorkoutPlansDataTable } from "../hooks/use-workout-plans-data-table";
 import { useWorkoutPlansState } from "../hooks/use-workout-plans-state";
 import useAthletesOptions from "../hooks/use-athletes-options";
+import { DeleteWorkoutPlanDialog } from "./delete-workout-plan";
+import { useDeleteWorkoutPlan } from "../hooks/use-delete-workout-plan";
 
 type DataTableProps = {
    data: WorkoutPlan[];
@@ -36,21 +38,22 @@ export function DataTable({
    total,
    onPaginationChange,
    onSearchChange,
-   onClearFilters
+   onClearFilters,
 }: DataTableProps) {
    const router = useRouter();
    // La tabla trabaja con una copia local para reflejar cambios hechos en dialogs
    // sin esperar a refrescar el listado completo desde la API.
    const {
       plans,
-      setPlans,
       activePlans,
       assignedPlans,
       templatePlans,
+      setPlans,
    } = useWorkoutPlansState(data);
    const planForm = useWorkoutPlanForm({ setPlans });
    const assignPlan = useAssignWorkoutPlan({ setPlans });
    const athletesOptionsQuery = useAthletesOptions();
+   const deleteWorkoutPlan = useDeleteWorkoutPlan({ setPlans });
 
    const effectiveTotal = Math.max(total, plans.length);
    const pageCount = Math.max(Math.ceil(effectiveTotal / pageSize), 1);
@@ -61,6 +64,7 @@ export function DataTable({
       onDuplicate: planForm.openDuplicate,
       onEdit: planForm.openEdit,
       onOpenEditor: (plan) => router.push(`/workout-plans/${plan.id}`),
+      onDelete: deleteWorkoutPlan.openDelete,
    });
 
    const {
@@ -106,6 +110,13 @@ export function DataTable({
             onSubmit={assignPlan.handleSubmit}
             onAthleteChange={assignPlan.handleAthleteChange}
             athletesOptions={athletesOptionsQuery.data ?? []}
+         />
+         <DeleteWorkoutPlanDialog
+            isDeleting={deleteWorkoutPlan.isDeleting}
+            isOpen={deleteWorkoutPlan.isOpen}
+            workoutPlan={deleteWorkoutPlan.selectedWorkoutPlan}
+            onConfirm={deleteWorkoutPlan.handleConfirm}
+            onOpenChange={deleteWorkoutPlan.handleOpenChange}
          />
          <DataTableContent
             columnsLength={table.getAllColumns().length}
