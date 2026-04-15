@@ -123,6 +123,7 @@ export class UsersController {
    /**
     * Crea un nuevo usuario.
     *
+    * @param user - Usuario autenticado que solicita el recurso
     * @param createUserDto - Datos de creacion del usuario
     * @returns Usuario creado
     */
@@ -134,8 +135,11 @@ export class UsersController {
    })
    @Post()
    @Roles(UserRole.ADMIN, UserRole.COACH)
-   create(@Body() createUserDto: CreateUserDto): Promise<User> {
-      return this.usersService.create(createUserDto);
+   create(
+      @CurrentUser() user: AuthenticatedUser,
+      @Body() createUserDto: CreateUserDto,
+   ): Promise<User> {
+      return this.usersService.create(user, createUserDto);
    }
 
    /**

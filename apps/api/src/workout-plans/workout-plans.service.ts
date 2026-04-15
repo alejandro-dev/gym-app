@@ -420,6 +420,13 @@ export class WorkoutPlansService {
       }
    }
 
+   /**
+    * Comprueba si el usuario autenticado puede acceder a un plan de trabajo.
+    *
+    * @param user - Usuario autenticado que intenta acceder al recurso
+    * @param workoutPlan - Plan de trabajo que se está accediendo
+    * @throws BadRequestException si el usuario no tiene permiso para acceder al plan
+    */
    private assertCanAccessWorkoutPlan(
       user: AuthenticatedUser,
       workoutPlan: {
@@ -443,6 +450,13 @@ export class WorkoutPlansService {
       }
    }
 
+   /**
+    * Comprueba si el usuario autenticado puede administrar un plan de trabajo.
+    *
+    * @param user - Usuario autenticado que intenta administrar el recurso
+    * @param workoutPlan - Plan de trabajo que se está administrando
+    * @throws BadRequestException si el usuario no tiene permiso para administrar el plan
+    */
    private assertCanManageWorkoutPlan(
       user: AuthenticatedUser,
       workoutPlan: {
@@ -465,6 +479,13 @@ export class WorkoutPlansService {
       }
    }
 
+   /**
+    * Comprueba si el usuario autenticado puede asignar un plan de trabajo.
+    *
+    * @param user - Usuario autenticado que intenta asignar el recurso
+    * @param workoutPlan - Plan de trabajo que se está asignando
+    * @throws BadRequestException si el usuario no tiene permiso para asignar el plan
+    */
    private assertCanAssignWorkoutPlan(
       user: AuthenticatedUser,
       workoutPlan: {

@@ -150,17 +150,22 @@ export class UsersService {
    /**
     * Crea un usuario y devuelve la version publica del registro.
     *
+    * @param userAuth - Usuario autenticado que solicita la creacion
     * @param createUserDto - Datos de creacion del usuario
     * @returns Usuario creado
     */
-   async create(createUserDto: CreateUserDto): Promise<User> {
+   async create(
+      userAuth: AuthenticatedUser,
+      createUserDto: CreateUserDto,
+   ): Promise<User> {
       // Generamos una password temporal segura en backend para no depender
       // de una contraseña enviada desde el cliente.
       const temporaryPassword = generateRandomPassword();
       const passwordHash = await hashValue(temporaryPassword);
+      const coachId = this.resolveCreateCoachId(userAuth, createUserDto);
       await this.validateCoachAssignment(
          createUserDto.role ?? UserRole.USER,
-         createUserDto.coachId,
+         coachId,
       );
 
       try {
@@ -168,6 +173,7 @@ export class UsersService {
             data: this.toCreateData(createUserDto, {
                passwordHash,
                emailVerifiedAt: new Date(),
+               coachId,
             }),
             select: this.userSelect,
          });
@@ -262,6 +268,7 @@ export class UsersService {
       securityData: {
          passwordHash: string;
          emailVerifiedAt: Date;
+         coachId?: string | null;
       },
    ): Prisma.UserCreateInput {
       return {
@@ -271,10 +278,10 @@ export class UsersService {
          firstName: createUserDto.firstName,
          lastName: createUserDto.lastName,
          role: createUserDto.role ?? UserRole.USER,
-         coach: createUserDto.coachId
+         coach: securityData.coachId
             ? {
                  connect: {
-                    id: createUserDto.coachId,
+                    id: securityData.coachId,
                  },
               }
             : undefined,
@@ -363,6 +370,40 @@ export class UsersService {
             role: roleFilter,
          }),
       };
+   }
+
+   /**
+    * Resuelve el coach asignado al crear usuarios.
+    * Los coaches solo pueden crear atletas dentro de su propia cartera.
+    *
+    * @param currentUser - Usuario autenticado que solicita la creacion
+    * @param createUserDto - Datos de creacion recibidos
+    * @returns Identificador de coach a conectar, si aplica
+    * @throws BadRequestException si un coach intenta crear otro rol o asignar otro coach
+    */
+   private resolveCreateCoachId(
+      currentUser: AuthenticatedUser,
+      createUserDto: CreateUserDto,
+   ): string | null | undefined {
+      if (currentUser.role !== UserRole.COACH) {
+         return createUserDto.coachId;
+      }
+
+      const role = createUserDto.role ?? UserRole.USER;
+
+      if (role !== UserRole.USER) {
+         throw new BadRequestException(
+            'Coaches can only create users with role USER.',
+         );
+      }
+
+      if (createUserDto.coachId && createUserDto.coachId !== currentUser.sub) {
+         throw new BadRequestException(
+            'Coaches can only assign athletes to themselves.',
+         );
+      }
+
+      return currentUser.sub;
    }
 
    /**
