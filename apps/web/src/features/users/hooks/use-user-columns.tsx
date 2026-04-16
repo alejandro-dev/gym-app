@@ -22,12 +22,14 @@ type UseUserColumnsParams = {
    currentUserRole: string;
    onDelete: (user: User) => void;
    onEdit: (user: User) => void;
+   onView: (user: User) => void;
 };
 
 export function useUserColumns({
    currentUserRole,
    onDelete,
    onEdit,
+   onView,
 }: UseUserColumnsParams) {
    return [
       {
@@ -109,7 +111,9 @@ export function useUserColumns({
                   <DropdownMenuItem onClick={() => onEdit(row.original)}>
                      Editar
                   </DropdownMenuItem>
-                  <DropdownMenuItem>Ver</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => onView(row.original)}>
+                     Ver
+                  </DropdownMenuItem>
                   {currentUserRole === "ADMIN" && (
                      <>
                         <DropdownMenuSeparator />

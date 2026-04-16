@@ -99,10 +99,6 @@ export function NavUser({
                         Perfil
                      </DropdownMenuItem>
                      <DropdownMenuItem>
-                        <IconCreditCard />
-                        Facturacion
-                     </DropdownMenuItem>
-                     <DropdownMenuItem>
                         <IconNotification />
                         Notificaciones
                      </DropdownMenuItem>

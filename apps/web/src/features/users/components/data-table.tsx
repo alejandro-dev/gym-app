@@ -6,6 +6,7 @@ import { type PaginationState } from "@tanstack/react-table";
 import { DataTableContent } from "./data-table-content";
 import { AddUserDialog } from "./form-user";
 import { DeleteUserDialog } from "./delete-user";
+import { UserDetailDialog } from "./user-detail-dialog";
 import type { User } from "@gym-app/types";
 import { useDeleteUser } from "../hooks/use-delete-user";
 import { useUserColumns } from "../hooks/use-user-columns";
@@ -42,12 +43,29 @@ export function DataTable({
    onClearFilters
 }: DataTableProps) {
    const pageCount = Math.max(Math.ceil(total / pageSize), 1);
+   const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
+   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
    const userForm = useUserForm();
    const deleteUser = useDeleteUser();
+
+   const handleViewUser = React.useCallback((user: User) => {
+      setSelectedUser(user);
+      setIsDetailOpen(true);
+   }, []);
+
+   const handleDetailOpenChange = React.useCallback((open: boolean) => {
+      setIsDetailOpen(open);
+
+      if (!open) {
+         setSelectedUser(null);
+      }
+   }, []);
+
    const columns = useUserColumns({
       currentUserRole,
       onDelete: deleteUser.openDelete,
       onEdit: userForm.openEdit,
+      onView: handleViewUser,
    });
 
    const {
@@ -85,6 +103,12 @@ export function DataTable({
                onOpenChange={deleteUser.handleOpenChange}
             />
          )}
+         <UserDetailDialog
+            currentUserRole={currentUserRole}
+            isOpen={isDetailOpen}
+            user={selectedUser}
+            onOpenChange={handleDetailOpenChange}
+         />
          <DataTableContent
             columnsLength={table.getAllColumns().length}
             isLoading={isLoading}
