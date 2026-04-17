@@ -267,8 +267,8 @@ export class UsersService {
     */
    async changeStatus(
       userAuth: AuthenticatedUser,
-      id: string, 
-      isActive: boolean
+      id: string,
+      isActive: boolean,
    ) {
       // Validamos que el coach asignado sea válido y que el usuario exista y sea del coach
       await this.assertCanAccessUserById(userAuth, id);
@@ -532,7 +532,8 @@ export class UsersService {
       });
 
       // Si no existe lanza NotFoundException
-      if (!user) throw new NotFoundException(`User with id "${userId}" not found`);
+      if (!user)
+         throw new NotFoundException(`User with id "${userId}" not found`);
       this.assertCanAccessUser(currentUser, user);
 
       // Si el usuario es admin y el usuario solicitado es el mismo, lanza BadRequestException

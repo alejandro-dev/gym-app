@@ -174,30 +174,26 @@ describe('AuthService', () => {
    });
 
    it('throws UnauthorizedException when refresh token user does not exist', async () => {
-      jest
-         .spyOn(service as never, 'verifyToken')
-         .mockResolvedValueOnce({
-            sub: 'missing-user',
-            email: 'missing@example.com',
-            role: 'USER',
-            tokenType: 'refresh',
-         } as never);
+      jest.spyOn(service as never, 'verifyToken').mockResolvedValueOnce({
+         sub: 'missing-user',
+         email: 'missing@example.com',
+         role: 'USER',
+         tokenType: 'refresh',
+      } as never);
       prismaServiceMock.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.refreshTokens('refresh-token')).rejects.toBeInstanceOf(
-         UnauthorizedException,
-      );
+      await expect(
+         service.refreshTokens('refresh-token'),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
    });
 
    it('throws ForbiddenException when inactive user refreshes tokens', async () => {
-      jest
-         .spyOn(service as never, 'verifyToken')
-         .mockResolvedValueOnce({
-            sub: 'user-1',
-            email: 'alex@example.com',
-            role: 'USER',
-            tokenType: 'refresh',
-         } as never);
+      jest.spyOn(service as never, 'verifyToken').mockResolvedValueOnce({
+         sub: 'user-1',
+         email: 'alex@example.com',
+         role: 'USER',
+         tokenType: 'refresh',
+      } as never);
       prismaServiceMock.user.findUnique.mockResolvedValue({
          id: 'user-1',
          email: 'alex@example.com',
@@ -214,9 +210,9 @@ describe('AuthService', () => {
          hashedRefreshToken: 'stored-refresh-hash',
       });
 
-      await expect(service.refreshTokens('refresh-token')).rejects.toBeInstanceOf(
-         ForbiddenException,
-      );
+      await expect(
+         service.refreshTokens('refresh-token'),
+      ).rejects.toBeInstanceOf(ForbiddenException);
 
       expect(accountOnboardingServiceMock.issueTokens).not.toHaveBeenCalled();
    });
@@ -240,14 +236,12 @@ describe('AuthService', () => {
          refreshToken: 'new-refresh-token',
       };
 
-      jest
-         .spyOn(service as never, 'verifyToken')
-         .mockResolvedValueOnce({
-            sub: 'user-1',
-            email: 'alex@example.com',
-            role: 'USER',
-            tokenType: 'refresh',
-         } as never);
+      jest.spyOn(service as never, 'verifyToken').mockResolvedValueOnce({
+         sub: 'user-1',
+         email: 'alex@example.com',
+         role: 'USER',
+         tokenType: 'refresh',
+      } as never);
       jest
          .spyOn(service as never, 'verifyValue')
          .mockResolvedValueOnce(true as never);
