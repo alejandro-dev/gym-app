@@ -58,6 +58,7 @@ export class AuthService {
       weightKg: true,
       heightCm: true,
       birthDate: true,
+      isActive: true,
       createdAt: true,
       updatedAt: true,
    } satisfies Prisma.UserSelect;
@@ -145,6 +146,7 @@ export class AuthService {
             weightKg: true,
             heightCm: true,
             birthDate: true,
+            isActive: true,
             createdAt: true,
             updatedAt: true,
             emailVerifiedAt: true,
@@ -153,6 +155,9 @@ export class AuthService {
 
       // Si no existe el usuario, lanza una excepción
       if (!user) throw new UnauthorizedException('Invalid credentials');
+
+      // Si el usuario no está activo, lanza una excepción
+      if (!user.isActive) throw new ForbiddenException('User not active');
 
       // Verificamos la contraseña
       const isPasswordValid = await this.verifyValue(
@@ -237,6 +242,12 @@ export class AuthService {
             hashedRefreshToken: true,
          },
       });
+
+      // Si no existe el usuario, lanza una excepción
+      if (!user) throw new UnauthorizedException('Invalid refresh token');
+
+      // Si el usuario no está activo, lanza una excepción
+      if (!user.isActive) throw new ForbiddenException('User not active');
 
       // Si no existe el usuario o el refresh token no está disponible, lanza una excepción
       if (!user?.hashedRefreshToken)

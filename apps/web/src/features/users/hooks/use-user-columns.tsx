@@ -4,8 +4,9 @@ import {
    IconCircleCheckFilled,
    IconDotsVertical,
    IconLoader,
+   IconXboxXFilled,
 } from "@tabler/icons-react";
-import type { ColumnDef } from "@tanstack/react-table";
+import { type ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ type UseUserColumnsParams = {
    onDelete: (user: User) => void;
    onEdit: (user: User) => void;
    onView: (user: User) => void;
+   onChangeStatus: (user: User) => void;
 };
 
 export function useUserColumns({
@@ -30,6 +32,7 @@ export function useUserColumns({
    onDelete,
    onEdit,
    onView,
+   onChangeStatus,
 }: UseUserColumnsParams) {
    return [
       {
@@ -56,6 +59,23 @@ export function useUserColumns({
             return fullName || "-";
          },
       },
+      {
+
+         accessorKey: "isActive",
+         header: "Estado",
+         cell: ({ row }) => (
+            <Badge variant="outline" className="px-1.5 text-muted-foreground">
+               {row.original.isActive ? (
+                  <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />
+               ) : (
+                  <IconXboxXFilled className="fill-red-500 dark:fill-red-400" />
+               )}
+               {row.original.isActive
+                  ? "Activo"
+                  : "Bloqueado"}
+            </Badge>
+         ),
+      } satisfies ColumnDef<User>,
       ...(currentUserRole === "ADMIN"
          ? [
               {
@@ -107,13 +127,28 @@ export function useUserColumns({
                      <span className="sr-only">Open menu</span>
                   </Button>
                </DropdownMenuTrigger>
-               <DropdownMenuContent align="end" className="w-32">
+               <DropdownMenuContent align="end" className="w-40">
                   <DropdownMenuItem onClick={() => onEdit(row.original)}>
                      Editar
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => onView(row.original)}>
                      Ver
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {row.original.isActive ?
+                     <DropdownMenuItem
+                        variant="destructive"
+                        onSelect={() => onChangeStatus(row.original)}
+                     >
+                        Desactivar acceso
+                     </DropdownMenuItem>
+                     :
+                      <DropdownMenuItem
+                        onSelect={() => onChangeStatus(row.original)}
+                     >
+                        Activar acceso
+                     </DropdownMenuItem>
+                  }
                   {currentUserRole === "ADMIN" && (
                      <>
                         <DropdownMenuSeparator />

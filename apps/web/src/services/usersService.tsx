@@ -25,6 +25,10 @@ export interface UpdateUserPayload {
    coachId?: string | null;
 }
 
+export interface ChangeStatusUserPayload {
+   isActive: boolean;
+}
+
 // Construye la URL para listar/buscar usuarios con paginación.
 export function buildUsersSearchPath(params: SearchUsersParams = {
    page: 0,
@@ -76,5 +80,14 @@ export async function deleteUser(id: string): Promise<User> {
    return fetchJson<User>(`/api/users/${id}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
+   });
+}
+
+// Función que cambia el estado de un usuario.
+export async function changeUserStatus(id: string, payload: ChangeStatusUserPayload): Promise<User> {
+   return fetchJson<User>(`/api/users/${id}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
    });
 }

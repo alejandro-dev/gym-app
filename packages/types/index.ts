@@ -87,6 +87,7 @@ export interface User {
   heightCm: number | null;
   birthDate: string | null;
   emailVerifiedAt: string | null;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
