@@ -88,6 +88,7 @@ describe('AuthService', () => {
          weightKg: null,
          heightCm: null,
          birthDate: null,
+         isActive: true,
          createdAt: new Date('2024-01-01T00:00:00.000Z'),
          updatedAt: new Date('2024-01-01T00:00:00.000Z'),
          emailVerifiedAt: null,
@@ -116,6 +117,7 @@ describe('AuthService', () => {
             weightKg: null,
             heightCm: null,
             birthDate: null,
+            isActive: true,
             createdAt: new Date('2024-01-01T00:00:00.000Z'),
             updatedAt: new Date('2024-01-01T00:00:00.000Z'),
          },
@@ -141,6 +143,129 @@ describe('AuthService', () => {
             password: 'supersecreto123',
          }),
       ).resolves.toEqual(issuedTokens);
+   });
+
+   it('throws ForbiddenException when an inactive user tries to login', async () => {
+      prismaServiceMock.user.findUnique.mockResolvedValue({
+         id: 'user-1',
+         email: 'alex@example.com',
+         username: 'alex',
+         passwordHash: 'stored-hash',
+         firstName: 'Alex',
+         lastName: 'Doe',
+         role: 'USER',
+         weightKg: null,
+         heightCm: null,
+         birthDate: null,
+         isActive: false,
+         createdAt: new Date('2024-01-01T00:00:00.000Z'),
+         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+         emailVerifiedAt: new Date('2024-01-02T00:00:00.000Z'),
+      });
+
+      await expect(
+         service.login({
+            email: 'alex@example.com',
+            password: 'supersecreto123',
+         }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+
+      expect(accountOnboardingServiceMock.issueTokens).not.toHaveBeenCalled();
+   });
+
+   it('throws UnauthorizedException when refresh token user does not exist', async () => {
+      jest
+         .spyOn(service as never, 'verifyToken')
+         .mockResolvedValueOnce({
+            sub: 'missing-user',
+            email: 'missing@example.com',
+            role: 'USER',
+            tokenType: 'refresh',
+         } as never);
+      prismaServiceMock.user.findUnique.mockResolvedValue(null);
+
+      await expect(service.refreshTokens('refresh-token')).rejects.toBeInstanceOf(
+         UnauthorizedException,
+      );
+   });
+
+   it('throws ForbiddenException when inactive user refreshes tokens', async () => {
+      jest
+         .spyOn(service as never, 'verifyToken')
+         .mockResolvedValueOnce({
+            sub: 'user-1',
+            email: 'alex@example.com',
+            role: 'USER',
+            tokenType: 'refresh',
+         } as never);
+      prismaServiceMock.user.findUnique.mockResolvedValue({
+         id: 'user-1',
+         email: 'alex@example.com',
+         username: 'alex',
+         firstName: 'Alex',
+         lastName: 'Doe',
+         role: 'USER',
+         weightKg: null,
+         heightCm: null,
+         birthDate: null,
+         isActive: false,
+         createdAt: new Date('2024-01-01T00:00:00.000Z'),
+         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+         hashedRefreshToken: 'stored-refresh-hash',
+      });
+
+      await expect(service.refreshTokens('refresh-token')).rejects.toBeInstanceOf(
+         ForbiddenException,
+      );
+
+      expect(accountOnboardingServiceMock.issueTokens).not.toHaveBeenCalled();
+   });
+
+   it('returns new tokens when refresh token belongs to an active user', async () => {
+      const issuedTokens = {
+         user: {
+            id: 'user-1',
+            email: 'alex@example.com',
+            username: 'alex',
+            firstName: 'Alex',
+            lastName: 'Doe',
+            role: 'USER',
+            weightKg: null,
+            heightCm: null,
+            birthDate: null,
+            createdAt: new Date('2024-01-01T00:00:00.000Z'),
+            updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+         },
+         accessToken: 'new-access-token',
+         refreshToken: 'new-refresh-token',
+      };
+
+      jest
+         .spyOn(service as never, 'verifyToken')
+         .mockResolvedValueOnce({
+            sub: 'user-1',
+            email: 'alex@example.com',
+            role: 'USER',
+            tokenType: 'refresh',
+         } as never);
+      jest
+         .spyOn(service as never, 'verifyValue')
+         .mockResolvedValueOnce(true as never);
+      prismaServiceMock.user.findUnique.mockResolvedValue({
+         ...issuedTokens.user,
+         isActive: true,
+         hashedRefreshToken: 'stored-refresh-hash',
+      });
+      accountOnboardingServiceMock.issueTokens.mockResolvedValueOnce(
+         issuedTokens,
+      );
+
+      await expect(service.refreshTokens('refresh-token')).resolves.toEqual(
+         issuedTokens,
+      );
+      expect(accountOnboardingServiceMock.issueTokens).toHaveBeenCalledWith(
+         issuedTokens.user,
+      );
    });
 
    it('verifies email and clears verification fields when token matches', async () => {

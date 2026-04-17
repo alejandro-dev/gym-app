@@ -21,6 +21,7 @@ type UsersServiceMock = {
    create: jest.MockedFunction<UsersService['create']>;
    update: jest.MockedFunction<UsersService['update']>;
    remove: jest.MockedFunction<UsersService['remove']>;
+   changeStatus: jest.MockedFunction<UsersService['changeStatus']>;
 };
 
 describe('UsersController', () => {
@@ -70,6 +71,7 @@ describe('UsersController', () => {
                heightCm: null,
                birthDate: null,
                emailVerifiedAt: null,
+               isActive: true,
                createdAt: '2026-03-28T10:00:00.000Z',
                updatedAt: '2026-03-28T10:00:00.000Z',
             });
@@ -77,6 +79,7 @@ describe('UsersController', () => {
          create: jest.fn(),
          update: jest.fn(),
          remove: jest.fn(),
+         changeStatus: jest.fn(),
       };
 
       const module: TestingModule = await Test.createTestingModule({
@@ -185,6 +188,7 @@ describe('UsersController', () => {
          heightCm: null,
          birthDate: null,
          emailVerifiedAt: '2026-04-06T10:00:00.000Z',
+         isActive: true,
          createdAt: '2026-04-06T10:00:00.000Z',
          updatedAt: '2026-04-06T10:00:00.000Z',
       });
@@ -208,5 +212,34 @@ describe('UsersController', () => {
       await controller.findOne(currentUser, 'user_1');
 
       expect(usersService.findOne).toHaveBeenCalledWith(currentUser, 'user_1');
+   });
+
+   it('delegates user status changes to the service with the authenticated user', async () => {
+      usersService.changeStatus.mockResolvedValue({
+         id: 'user_1',
+         email: 'athlete@gymapp.dev',
+         username: null,
+         firstName: null,
+         lastName: null,
+         role: UserRole.USER,
+         coachId: currentUser.sub,
+         weightKg: null,
+         heightCm: null,
+         birthDate: null,
+         emailVerifiedAt: null,
+         isActive: false,
+         createdAt: '2026-03-28T10:00:00.000Z',
+         updatedAt: '2026-03-28T10:00:00.000Z',
+      });
+
+      await controller.changeStatus(currentUser, 'user_1', {
+         isActive: false,
+      });
+
+      expect(usersService.changeStatus).toHaveBeenCalledWith(
+         currentUser,
+         'user_1',
+         false,
+      );
    });
 });

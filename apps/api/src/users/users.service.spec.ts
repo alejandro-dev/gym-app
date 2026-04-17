@@ -1,4 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import {
+   BadRequestException,
+   ForbiddenException,
+   NotFoundException,
+} from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 import { AccountOnboardingService } from '../auth/account-onboarding.service';
@@ -78,6 +83,7 @@ describe('UsersService', () => {
             heightCm: 178,
             birthDate: new Date('1992-06-14T00:00:00.000Z'),
             emailVerifiedAt: new Date('2026-03-28T09:00:00.000Z'),
+            isActive: true,
             createdAt: new Date('2026-03-28T10:00:00.000Z'),
             updatedAt: new Date('2026-03-28T12:00:00.000Z'),
          },
@@ -113,6 +119,7 @@ describe('UsersService', () => {
                heightCm: 178,
                birthDate: '1992-06-14T00:00:00.000Z',
                emailVerifiedAt: '2026-03-28T09:00:00.000Z',
+               isActive: true,
                createdAt: '2026-03-28T10:00:00.000Z',
                updatedAt: '2026-03-28T12:00:00.000Z',
             },
@@ -192,6 +199,7 @@ describe('UsersService', () => {
          heightCm: null,
          birthDate: null,
          emailVerifiedAt: new Date('2026-04-06T10:00:00.000Z'),
+         isActive: true,
          createdAt: new Date('2026-04-06T10:00:00.000Z'),
          updatedAt: new Date('2026-04-06T10:00:00.000Z'),
       });
@@ -247,6 +255,7 @@ describe('UsersService', () => {
          heightCm: null,
          birthDate: null,
          emailVerifiedAt: '2026-04-06T10:00:00.000Z',
+         isActive: true,
          createdAt: '2026-04-06T10:00:00.000Z',
          updatedAt: '2026-04-06T10:00:00.000Z',
       });
@@ -269,6 +278,7 @@ describe('UsersService', () => {
          heightCm: null,
          birthDate: null,
          emailVerifiedAt: new Date('2026-04-06T10:00:00.000Z'),
+         isActive: true,
          createdAt: new Date('2026-04-06T10:00:00.000Z'),
          updatedAt: new Date('2026-04-06T10:00:00.000Z'),
       });
@@ -317,6 +327,7 @@ describe('UsersService', () => {
          heightCm: null,
          birthDate: null,
          emailVerifiedAt: new Date('2026-04-06T10:00:00.000Z'),
+         isActive: true,
          createdAt: new Date('2026-04-06T10:00:00.000Z'),
          updatedAt: new Date('2026-04-06T10:00:00.000Z'),
       });
@@ -389,6 +400,7 @@ describe('UsersService', () => {
          heightCm: null,
          birthDate: null,
          emailVerifiedAt: null,
+         isActive: true,
          createdAt: new Date('2026-03-28T10:00:00.000Z'),
          updatedAt: new Date('2026-03-28T10:00:00.000Z'),
       });
@@ -411,6 +423,7 @@ describe('UsersService', () => {
          heightCm: null,
          birthDate: null,
          emailVerifiedAt: null,
+         isActive: true,
          createdAt: new Date('2026-03-28T10:00:00.000Z'),
          updatedAt: new Date('2026-03-28T10:00:00.000Z'),
       });
@@ -418,5 +431,156 @@ describe('UsersService', () => {
       await expect(service.findOne(coachUser, 'athlete_2')).rejects.toThrow(
          'User with id "athlete_2" not found',
       );
+   });
+
+   it('allows an admin to deactivate a user and clears their refresh token', async () => {
+      prismaService.user.findUnique.mockResolvedValue({
+         id: 'athlete_1',
+         role: UserRole.USER,
+         coachId: coachUser.sub,
+      });
+      prismaService.user.update.mockResolvedValue({
+         id: 'athlete_1',
+         email: 'athlete@gymapp.dev',
+         username: null,
+         firstName: 'Laura',
+         lastName: 'Atleta',
+         role: UserRole.USER,
+         coachId: coachUser.sub,
+         weightKg: null,
+         heightCm: null,
+         birthDate: null,
+         emailVerifiedAt: null,
+         isActive: false,
+         createdAt: new Date('2026-03-28T10:00:00.000Z'),
+         updatedAt: new Date('2026-03-28T10:00:00.000Z'),
+      });
+
+      const result = await service.changeStatus(adminUser, 'athlete_1', false);
+
+      expect(prismaService.user.update).toHaveBeenCalledWith(
+         expect.objectContaining({
+            where: { id: 'athlete_1' },
+            data: {
+               isActive: false,
+               hashedRefreshToken: null,
+            },
+         }),
+      );
+      expect(result.isActive).toBe(false);
+   });
+
+   it('allows an admin to activate a user without clearing their refresh token', async () => {
+      prismaService.user.findUnique.mockResolvedValue({
+         id: 'athlete_1',
+         role: UserRole.USER,
+         coachId: coachUser.sub,
+      });
+      prismaService.user.update.mockResolvedValue({
+         id: 'athlete_1',
+         email: 'athlete@gymapp.dev',
+         username: null,
+         firstName: 'Laura',
+         lastName: 'Atleta',
+         role: UserRole.USER,
+         coachId: coachUser.sub,
+         weightKg: null,
+         heightCm: null,
+         birthDate: null,
+         emailVerifiedAt: null,
+         isActive: true,
+         createdAt: new Date('2026-03-28T10:00:00.000Z'),
+         updatedAt: new Date('2026-03-28T10:00:00.000Z'),
+      });
+
+      const result = await service.changeStatus(adminUser, 'athlete_1', true);
+
+      expect(prismaService.user.update).toHaveBeenCalledWith(
+         expect.objectContaining({
+            where: { id: 'athlete_1' },
+            data: {
+               isActive: true,
+               hashedRefreshToken: undefined,
+            },
+         }),
+      );
+      expect(result.isActive).toBe(true);
+   });
+
+   it('rejects admin attempts to change their own status', async () => {
+      prismaService.user.findUnique.mockResolvedValue({
+         id: adminUser.sub,
+         role: UserRole.ADMIN,
+         coachId: null,
+      });
+
+      await expect(
+         service.changeStatus(adminUser, adminUser.sub, false),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(prismaService.user.update).not.toHaveBeenCalled();
+   });
+
+   it('allows a coach to change the status of an assigned athlete', async () => {
+      prismaService.user.findUnique.mockResolvedValue({
+         id: 'athlete_1',
+         role: UserRole.USER,
+         coachId: coachUser.sub,
+      });
+      prismaService.user.update.mockResolvedValue({
+         id: 'athlete_1',
+         email: 'athlete@gymapp.dev',
+         username: null,
+         firstName: 'Laura',
+         lastName: 'Atleta',
+         role: UserRole.USER,
+         coachId: coachUser.sub,
+         weightKg: null,
+         heightCm: null,
+         birthDate: null,
+         emailVerifiedAt: null,
+         isActive: false,
+         createdAt: new Date('2026-03-28T10:00:00.000Z'),
+         updatedAt: new Date('2026-03-28T10:00:00.000Z'),
+      });
+
+      await service.changeStatus(coachUser, 'athlete_1', false);
+
+      expect(prismaService.user.update).toHaveBeenCalledWith(
+         expect.objectContaining({
+            where: { id: 'athlete_1' },
+            data: {
+               isActive: false,
+               hashedRefreshToken: null,
+            },
+         }),
+      );
+   });
+
+   it('rejects coach status changes for athletes outside their scope', async () => {
+      prismaService.user.findUnique.mockResolvedValue({
+         id: 'athlete_2',
+         role: UserRole.USER,
+         coachId: 'other_coach',
+      });
+
+      await expect(
+         service.changeStatus(coachUser, 'athlete_2', false),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(prismaService.user.update).not.toHaveBeenCalled();
+   });
+
+   it('rejects user role attempts to change user status', async () => {
+      const regularUser = {
+         sub: 'user_1',
+         email: 'user@gymapp.dev',
+         role: UserRole.USER,
+         tokenType: 'access' as const,
+      };
+
+      await expect(
+         service.changeStatus(regularUser, 'user_2', false),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(prismaService.user.findUnique).not.toHaveBeenCalled();
+      expect(prismaService.user.update).not.toHaveBeenCalled();
    });
 });

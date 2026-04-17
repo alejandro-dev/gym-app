@@ -50,6 +50,10 @@ export class UserResponseDto {
    /** Fecha de nacimiento serializada en ISO, si existe. */
    birthDate!: string | null;
 
+   @ApiProperty({ example: true })
+   /** Estado del usuario. */
+   isActive!: boolean;
+
    @ApiProperty({ example: '2026-03-28T15:10:00.000Z' })
    /** Fecha de creacion serializada en ISO. */
    createdAt!: string;

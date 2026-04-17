@@ -1,5 +1,6 @@
 import {
    BadRequestException,
+   ForbiddenException,
    Injectable,
    NotFoundException,
 } from '@nestjs/common';
@@ -26,6 +27,7 @@ type SelectedUserRecord = {
    heightCm: number | null;
    birthDate: Date | null;
    emailVerifiedAt: Date | null;
+   isActive: boolean;
    createdAt: Date;
    updatedAt: Date;
 };
@@ -63,6 +65,7 @@ export class UsersService {
       heightCm: true,
       birthDate: true,
       emailVerifiedAt: true,
+      isActive: true,
       createdAt: true,
       updatedAt: true,
    } satisfies Prisma.UserSelect;
@@ -135,6 +138,7 @@ export class UsersService {
     * @throws NotFoundException si no existe
     */
    async findOne(currentUser: AuthenticatedUser, id: string): Promise<User> {
+      // Consultamos el registro
       const user = await this.prisma.user.findUnique({
          where: { id },
          select: this.userSelect,
@@ -144,6 +148,7 @@ export class UsersService {
       if (!user) throw new NotFoundException(`User with id "${id}" not found`);
       this.assertCanAccessUser(currentUser, user);
 
+      // Retornamos el registro
       return this.toPublicUser(user);
    }
 
@@ -173,6 +178,7 @@ export class UsersService {
       );
 
       try {
+         // Creamos el registro
          const user = await this.prisma.user.create({
             data: this.toCreateData(createUserDto, {
                passwordHash,
@@ -182,6 +188,7 @@ export class UsersService {
             select: this.userSelect,
          });
 
+         // Enviamos un correo de bienvenida
          await this.accountOnboardingService.enqueueWelcomeEmail({
             userId: user.id,
             email: user.email,
@@ -189,6 +196,7 @@ export class UsersService {
             temporaryPassword,
          });
 
+         // Retornamos el registro creado
          return this.toPublicUser(user);
       } catch (error) {
          handlePrismaError(error, 'user');
@@ -204,19 +212,24 @@ export class UsersService {
     * @throws NotFoundException si el usuario no existe
     */
    async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+      // Validamos que el usuario exista
       const existingUser = await this.ensureUserExists(id);
+
+      // Validamos que el coach asignado sea válido
       await this.validateCoachAssignment(
          updateUserDto.role ?? existingUser.role,
          updateUserDto.coachId,
       );
 
       try {
+         // Actualizamos el registro
          const user = await this.prisma.user.update({
             where: { id },
             data: this.toUpdateData(updateUserDto),
             select: this.userSelect,
          });
 
+         // Retornamos el registro actualizado
          return this.toPublicUser(user);
       } catch (error) {
          handlePrismaError(error, 'user');
@@ -231,13 +244,43 @@ export class UsersService {
     * @throws NotFoundException si no existe
     */
    async remove(id: string): Promise<User> {
+      // Validamos que el usuario exista
       await this.ensureUserExists(id);
 
+      // Eliminamos el registro
       const user = await this.prisma.user.delete({
          where: { id },
          select: this.userSelect,
       });
 
+      // Retornamos el registro eliminado
+      return this.toPublicUser(user);
+   }
+
+   /**
+    * Cambia el estado de un usuario.
+    *
+    * @param id - Identificador del usuario
+    * @param isActive - Nuevo estado del usuario
+    * @returns Usuario actualizado
+    * @throws NotFoundException si el usuario no existe
+    */
+   async changeStatus(
+      userAuth: AuthenticatedUser,
+      id: string, 
+      isActive: boolean
+   ) {
+      // Validamos que el coach asignado sea válido y que el usuario exista y sea del coach
+      await this.assertCanAccessUserById(userAuth, id);
+
+      // Actualizamos el registro
+      const user = await this.prisma.user.update({
+         where: { id },
+         data: { isActive, hashedRefreshToken: isActive ? undefined : null },
+         select: this.userSelect,
+      });
+
+      // Retornamos el registro actualizado
       return this.toPublicUser(user);
    }
 
@@ -464,5 +507,39 @@ export class UsersService {
             'The assigned coach must be an existing user with role COACH.',
          );
       }
+   }
+
+   /**
+    * Comprueba si el usuario autenticado puede acceder al registro solicitado.
+    * En el caso de un coach, el usuario debe ser un atleta asignado a ese coach.
+    *
+    * @param currentUser - Usuario autenticado que intenta acceder al recurso
+    * @param userId - Identificador del usuario objetivo
+    * @throws NotFoundException si el recurso queda fuera de su ámbito de acceso
+    * @throws BadRequestException si el usuario intenta cambiar su propio estado
+    */
+   private async assertCanAccessUserById(
+      currentUser: AuthenticatedUser,
+      userId: string,
+   ) {
+      if (currentUser.role === UserRole.USER) {
+         throw new ForbiddenException('Users cannot change user status');
+      }
+
+      const user = await this.prisma.user.findUnique({
+         where: { id: userId },
+         select: { id: true, role: true, coachId: true },
+      });
+
+      // Si no existe lanza NotFoundException
+      if (!user) throw new NotFoundException(`User with id "${userId}" not found`);
+      this.assertCanAccessUser(currentUser, user);
+
+      // Si el usuario es admin y el usuario solicitado es el mismo, lanza BadRequestException
+      if (currentUser.role === UserRole.ADMIN && userId === currentUser.sub) {
+         throw new BadRequestException(`You cannot change your own status.`);
+      }
+
+      return user;
    }
 }

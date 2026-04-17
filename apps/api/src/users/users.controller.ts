@@ -10,13 +10,17 @@ import {
    UseGuards,
 } from '@nestjs/common';
 import {
+   ApiBadRequestResponse,
+   ApiBody,
    ApiCreatedResponse,
    ApiBearerAuth,
+   ApiForbiddenResponse,
    ApiNotFoundResponse,
    ApiOkResponse,
    ApiOperation,
    ApiQuery,
    ApiTags,
+   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -30,6 +34,7 @@ import { UsersService } from './users.service';
 import type { User, UsersListResponse } from '@gym-app/types';
 import { UserResponseDto } from './dto/user-response.dto';
 import { UsersListResponseDto } from './dto/users-list-response.dto';
+import { ChangeUserStatusDto } from './dto/change-user-status.dto';
 
 /**
  * Controlador REST para gestionar usuarios.
@@ -180,5 +185,41 @@ export class UsersController {
    @Roles(UserRole.ADMIN)
    remove(@Param('id') id: string): Promise<User> {
       return this.usersService.remove(id);
+   }
+
+   /**
+    * Cambia el estado de un usuario.
+    *
+    * @param id - Identificador del usuario
+    * @param isActive - Nuevo estado del usuario
+    * @returns Usuario actualizado
+    */
+   @ApiOperation({ summary: 'Cambiar estado de usuario' })
+   @ApiBody({ type: ChangeUserStatusDto })
+   @ApiOkResponse({
+      description: 'Estado del usuario actualizado correctamente.',
+      type: UserResponseDto,
+   })
+   @ApiBadRequestResponse({
+      description: 'Payload inválido o intento de cambiar el estado propio.',
+   })
+   @ApiUnauthorizedResponse({
+      description: 'Token ausente, inválido o expirado.',
+   })
+   @ApiForbiddenResponse({
+      description:
+         'El usuario autenticado no tiene permiso para cambiar este estado.',
+   })
+   @ApiNotFoundResponse({
+      description: 'Usuario no encontrado o fuera del ámbito del coach.',
+   })
+   @Patch(':id/status')
+   @Roles(UserRole.ADMIN, UserRole.COACH)
+   changeStatus(
+      @CurrentUser() user: AuthenticatedUser,
+      @Param('id') id: string,
+      @Body() statusDto: ChangeUserStatusDto,
+   ): Promise<User> {
+      return this.usersService.changeStatus(user, id, statusDto.isActive);
    }
 }

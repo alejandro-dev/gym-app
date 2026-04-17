@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { type PaginationState } from "@tanstack/react-table";
 
 import { DataTableContent } from "./data-table-content";
@@ -12,6 +11,9 @@ import { useDeleteUser } from "../hooks/use-delete-user";
 import { useUserColumns } from "../hooks/use-user-columns";
 import { useUserForm } from "../hooks/use-user-form";
 import { useUsersDataTable } from "../hooks/use-users-data-table";
+import { useCallback, useState } from "react";
+import { ChangeStatusUserDialog } from "./change-status-user";
+import { useChangeStatusUser } from "../hooks/use-change-status-user";
 
 type DataTableProps = {
    data: User[];
@@ -43,17 +45,18 @@ export function DataTable({
    onClearFilters
 }: DataTableProps) {
    const pageCount = Math.max(Math.ceil(total / pageSize), 1);
-   const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
-   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
+   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+   const [isDetailOpen, setIsDetailOpen] = useState(false);
    const userForm = useUserForm();
    const deleteUser = useDeleteUser();
+   const changeStatusUser = useChangeStatusUser();
 
-   const handleViewUser = React.useCallback((user: User) => {
+   const handleViewUser = useCallback((user: User) => {
       setSelectedUser(user);
       setIsDetailOpen(true);
    }, []);
 
-   const handleDetailOpenChange = React.useCallback((open: boolean) => {
+   const handleDetailOpenChange = useCallback((open: boolean) => {
       setIsDetailOpen(open);
 
       if (!open) {
@@ -66,6 +69,7 @@ export function DataTable({
       onDelete: deleteUser.openDelete,
       onEdit: userForm.openEdit,
       onView: handleViewUser,
+      onChangeStatus: changeStatusUser.openChange,
    });
 
    const {
@@ -103,6 +107,13 @@ export function DataTable({
                onOpenChange={deleteUser.handleOpenChange}
             />
          )}
+         <ChangeStatusUserDialog
+            isConfirming={changeStatusUser.isConfirming}
+            isOpen={changeStatusUser.isOpen}
+            user={changeStatusUser.selectedUser}
+            onConfirm={changeStatusUser.handleConfirm}
+            onOpenChange={changeStatusUser.handleOpenChange}
+         />
          <UserDetailDialog
             currentUserRole={currentUserRole}
             isOpen={isDetailOpen}
