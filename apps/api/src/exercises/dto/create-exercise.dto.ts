@@ -1,6 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ExerciseCategory, MuscleGroup } from '@prisma/client';
-import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
+import {
+   IsBoolean,
+   IsEnum,
+   IsOptional,
+   IsString,
+   IsUrl,
+} from 'class-validator';
 
 /**
  * Datos necesarios para crear un ejercicio.
@@ -56,4 +62,13 @@ export class CreateExerciseDto {
    @IsOptional()
    @IsBoolean()
    isCompound?: boolean;
+
+   @ApiPropertyOptional({
+      example: 'https://example.com/videos/barbell-back-squat.mp4',
+      nullable: true,
+   })
+   /** URL opcional de un video de ejercicio. */
+   @IsOptional()
+   @IsUrl()
+   videoUrl?: string | null;
 }

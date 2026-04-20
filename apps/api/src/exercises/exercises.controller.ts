@@ -3,15 +3,22 @@ import {
    Controller,
    Delete,
    Get,
+   MaxFileSizeValidator,
    Param,
+   ParseFilePipe,
    Patch,
    Post,
    Query,
+   UploadedFile,
    UseGuards,
+   UseInterceptors,
 } from '@nestjs/common';
 import {
+   ApiBadRequestResponse,
    ApiBearerAuth,
+   ApiBody,
    ApiConflictResponse,
+   ApiConsumes,
    ApiCreatedResponse,
    ApiNotFoundResponse,
    ApiOkResponse,
@@ -20,6 +27,8 @@ import {
    ApiTags,
 } from '@nestjs/swagger';
 import { ExerciseCategory, MuscleGroup, UserRole } from '@prisma/client';
+import type { Express } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AccessTokenGuard } from '../auth/guards/access-token.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -29,6 +38,12 @@ import { ExerciseResponseDto } from './dto/exercise-response.dto';
 import { ExercisesListResponseDto } from './dto/exercises-list-response.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import type { ExercisesListResponse } from '@gym-app/types';
+import {
+   EXERCISE_IMAGE_FIELD,
+   exerciseImageMulterOptions,
+   MAX_EXERCISE_IMAGE_SIZE,
+} from './upload/exercise-image-multer.options';
+import { unlink } from 'node:fs/promises';
 
 /**
  * Controlador base para exponer endpoints del dominio de ejercicios.
@@ -195,5 +210,64 @@ export class ExercisesController {
    @Roles(UserRole.ADMIN, UserRole.COACH)
    remove(@Param('id') id: string): Promise<ExerciseResponseDto> {
       return this.exercisesService.remove(id);
+   }
+
+   /**
+    * Actualiza la imagen de un ejercicio existente.
+    *
+    * @param id - Identificador del ejercicio
+    * @param file - Archivo subido
+    * @returns Ejercicio actualizado
+    */
+   @ApiConsumes('multipart/form-data')
+   @ApiOperation({ summary: 'Actualizar imagen de ejercicio' })
+   @ApiBody({
+      schema: {
+         type: 'object',
+         properties: {
+            image: {
+               type: 'string',
+               format: 'binary',
+            },
+         },
+         required: ['image'],
+      },
+   })
+   @ApiOkResponse({
+      description: 'Imagen del ejercicio actualizada correctamente.',
+      type: ExerciseResponseDto,
+   })
+   @ApiBadRequestResponse({
+      description:
+         'La imagen es obligatoria, supera el tamaño máximo o no tiene un tipo permitido.',
+   })
+   @ApiNotFoundResponse({ description: 'Ejercicio no encontrado.' })
+   @Patch(':id/image')
+   @Roles(UserRole.ADMIN, UserRole.COACH)
+   @UseInterceptors(
+      FileInterceptor(EXERCISE_IMAGE_FIELD, exerciseImageMulterOptions),
+   )
+   async updateImage(
+      @Param('id') id: string,
+      @UploadedFile(
+         new ParseFilePipe({
+            validators: [
+               new MaxFileSizeValidator({ maxSize: MAX_EXERCISE_IMAGE_SIZE }),
+            ],
+         }),
+      )
+      file: Express.Multer.File,
+   ): Promise<ExerciseResponseDto> {
+      // Construimos la URL publica de la imagen.
+      const imageUrl = `/uploads/exercises/${file.filename}`;
+
+      try {
+         // Actualizamos la imagen en la base de datos
+         return await this.exercisesService.updateImage(id, imageUrl);
+      } catch (error) {
+         // Si ocurre un error, eliminamos la imagen subida para evitar archivos huérfanos
+         await unlink(file.path).catch(() => undefined);
+         throw error;
+      }
    }
 }

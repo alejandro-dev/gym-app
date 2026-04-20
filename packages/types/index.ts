@@ -110,6 +110,8 @@ export interface Exercise {
   equipment: string | null;
   isCompound: boolean;
   category: ExerciseCategory;
+  imageUrl: string | null;
+  videoUrl: string | null;
   createdAt: string;
   updatedAt: string;
 }

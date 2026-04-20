@@ -47,6 +47,20 @@ export class ExerciseResponseDto {
    /** Indica si el ejercicio es multiarticular. */
    isCompound!: boolean;
 
+   @ApiPropertyOptional({
+      example: '/uploads/exercises/1234567890-123456789.jpg',
+      nullable: true,
+   })
+   /** URL relativa de la imagen del ejercicio. */
+   imageUrl!: string | null;
+
+   @ApiPropertyOptional({
+      example: 'https://www.youtube.com/watch?v=abc123xyz',
+      nullable: true,
+   })
+   /** URL de un video demostrativo del ejercicio. */
+   videoUrl!: string | null;
+
    @ApiProperty({ example: '2026-03-21T10:00:00.000Z' })
    /** Fecha de creacion del ejercicio en formato ISO. */
    createdAt!: Date;

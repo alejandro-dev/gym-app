@@ -1,8 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExerciseCategory, MuscleGroup } from '@prisma/client';
 import type { ExercisesListResponse } from '@gym-app/types';
+import { unlink } from 'node:fs/promises';
 import { ExercisesController } from './exercises.controller';
 import { ExercisesService } from './exercises.service';
+
+jest.mock('node:fs/promises', () => ({
+   unlink: jest.fn(),
+}));
 
 type CreateExerciseDto = {
    name: string;
@@ -13,9 +18,17 @@ type CreateExerciseDto = {
    category: ExerciseCategory;
    equipment: string | null;
    isCompound: boolean;
+   videoUrl: string | null;
 };
 
 type UpdateExerciseDto = Partial<CreateExerciseDto>;
+
+type ExerciseRecord = CreateExerciseDto & {
+   id: string;
+   imageUrl: string | null;
+   createdAt: Date;
+   updatedAt: Date;
+};
 
 describe('ExercisesController', () => {
    let controller: ExercisesController;
@@ -28,7 +41,7 @@ describe('ExercisesController', () => {
    };
 
    const exercisesServiceMock: {
-      create: jest.Mock<Promise<typeof exerciseRecord>, [CreateExerciseDto]>;
+      create: jest.Mock<Promise<ExerciseRecord>, [CreateExerciseDto]>;
       findAll: jest.Mock<
          Promise<ExercisesListResponse>,
          [
@@ -39,14 +52,12 @@ describe('ExercisesController', () => {
             ExerciseCategory | undefined,
          ]
       >;
-      findOne: jest.Mock<Promise<typeof exerciseRecord>, [string]>;
-      update: jest.Mock<
-         Promise<typeof exerciseRecord>,
-         [string, UpdateExerciseDto]
-      >;
-      remove: jest.Mock<Promise<typeof exerciseRecord>, [string]>;
+      findOne: jest.Mock<Promise<ExerciseRecord>, [string]>;
+      update: jest.Mock<Promise<ExerciseRecord>, [string, UpdateExerciseDto]>;
+      updateImage: jest.Mock<Promise<ExerciseRecord>, [string, string]>;
+      remove: jest.Mock<Promise<ExerciseRecord>, [string]>;
    } = {
-      create: jest.fn<Promise<typeof exerciseRecord>, [CreateExerciseDto]>(),
+      create: jest.fn<Promise<ExerciseRecord>, [CreateExerciseDto]>(),
       findAll: jest.fn<
          Promise<ExercisesListResponse>,
          [
@@ -57,12 +68,10 @@ describe('ExercisesController', () => {
             ExerciseCategory | undefined,
          ]
       >(),
-      findOne: jest.fn<Promise<typeof exerciseRecord>, [string]>(),
-      update: jest.fn<
-         Promise<typeof exerciseRecord>,
-         [string, UpdateExerciseDto]
-      >(),
-      remove: jest.fn<Promise<typeof exerciseRecord>, [string]>(),
+      findOne: jest.fn<Promise<ExerciseRecord>, [string]>(),
+      update: jest.fn<Promise<ExerciseRecord>, [string, UpdateExerciseDto]>(),
+      updateImage: jest.fn<Promise<ExerciseRecord>, [string, string]>(),
+      remove: jest.fn<Promise<ExerciseRecord>, [string]>(),
    };
 
    const createExerciseDto: CreateExerciseDto = {
@@ -74,15 +83,17 @@ describe('ExercisesController', () => {
       category: ExerciseCategory.STRENGTH,
       equipment: 'Barbell',
       isCompound: true,
+      videoUrl: 'https://example.com/videos/barbell-bench-press.mp4',
    };
 
    const updateExerciseDto: UpdateExerciseDto = {
       description: 'Updated pressing movement description.',
    };
 
-   const exerciseRecord = {
+   const exerciseRecord: ExerciseRecord = {
       id: 'exercise_456',
       ...createExerciseDto,
+      imageUrl: null,
       createdAt: new Date('2026-03-21T10:00:00.000Z'),
       updatedAt: new Date('2026-03-21T10:00:00.000Z'),
    };
@@ -230,6 +241,51 @@ describe('ExercisesController', () => {
             exerciseRecord.id,
          );
          expect(result).toEqual(exerciseRecord);
+      });
+   });
+
+   describe('updateImage', () => {
+      it('updates exercise image with the uploaded file name', async () => {
+         const uploadedFile = {
+            filename: 'exercise-exercise_456-image.png',
+            path: '/tmp/exercise-exercise_456-image.png',
+         } as Express.Multer.File;
+
+         exercisesServiceMock.updateImage.mockResolvedValue({
+            ...exerciseRecord,
+            imageUrl: `/uploads/exercises/${uploadedFile.filename}`,
+         });
+
+         const result = await controller.updateImage(
+            exerciseRecord.id,
+            uploadedFile,
+         );
+
+         expect(exercisesServiceMock.updateImage).toHaveBeenCalledWith(
+            exerciseRecord.id,
+            `/uploads/exercises/${uploadedFile.filename}`,
+         );
+         expect(result).toEqual({
+            ...exerciseRecord,
+            imageUrl: `/uploads/exercises/${uploadedFile.filename}`,
+         });
+      });
+
+      it('removes the uploaded file when the service fails', async () => {
+         const uploadedFile = {
+            filename: 'exercise-exercise_456-image.png',
+            path: '/tmp/exercise-exercise_456-image.png',
+         } as Express.Multer.File;
+         const error = new Error('service failed');
+
+         exercisesServiceMock.updateImage.mockRejectedValue(error);
+         (unlink as jest.Mock).mockResolvedValue(undefined);
+
+         await expect(
+            controller.updateImage(exerciseRecord.id, uploadedFile),
+         ).rejects.toThrow(error);
+
+         expect(unlink).toHaveBeenCalledWith(uploadedFile.path);
       });
    });
 });

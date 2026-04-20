@@ -106,12 +106,17 @@ export async function backendFetch<T>(path: string, options?: RequestInit): Prom
    const token = cookieStore.get(TOKEN_COOKIE_NAME)?.value;
    const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE_NAME)?.value;
 
+   // Si el body es un FormData, no podemos establecer el Content-Type a JSON.
+   const isFormData = options?.body instanceof FormData;
+
    // Función para hacer la petición al backend con el token de acceso actual.
+   // Si el body es un FormData, no podemos establecer el Content-Type a JSON.
    const makeRequest = (accessToken?: string) =>
       fetch(`${process.env.NEST_API_URL}${path}`, {
          ...options,
          headers: {
-            "Content-Type": "application/json",
+            // Si mandamos un FormData, no ponemos el Content-Type a JSON.
+            ...(!isFormData && { "Content-Type": "application/json" }),
             ...(options?.headers || {}),
             ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
          },

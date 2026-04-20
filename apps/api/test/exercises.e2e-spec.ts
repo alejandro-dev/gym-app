@@ -2,6 +2,8 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExerciseCategory, MuscleGroup, UserRole } from '@prisma/client';
 import * as cookieParser from 'cookie-parser';
+import { unlink } from 'node:fs/promises';
+import { join } from 'node:path';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
@@ -105,6 +107,8 @@ describe('ExercisesController (e2e)', () => {
             category: payload.category,
             equipment: payload.equipment,
             isCompound: payload.isCompound,
+            imageUrl: null,
+            videoUrl: payload.videoUrl,
             id: anyString,
             createdAt: anyString,
             updatedAt: anyString,
@@ -241,6 +245,37 @@ describe('ExercisesController (e2e)', () => {
       );
    });
 
+   it('updates an exercise image', async () => {
+      const exercise = await prisma.exercise.create({
+         data: buildCreateExercisePayload('image-upload'),
+      });
+      const imageBuffer = Buffer.from(
+         'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/6X7L6sAAAAASUVORK5CYII=',
+         'base64',
+      );
+
+      const response = await request(app.getHttpServer())
+         .patch(apiPath(`/exercises/${exercise.id}/image`))
+         .set('Authorization', `Bearer ${adminAccessToken}`)
+         .attach('image', imageBuffer, {
+            filename: 'exercise.png',
+            contentType: 'image/png',
+         })
+         .expect(200);
+      const responseBody = response.body as { id: string; imageUrl: string };
+
+      expect(responseBody.id).toBe(exercise.id);
+      expect(responseBody.imageUrl).toMatch(
+         /^\/uploads\/exercises\/exercise-.+\.png$/,
+      );
+
+      const uploadedImagePath = join(
+         process.cwd(),
+         responseBody.imageUrl.replace(/^\//, ''),
+      );
+      await unlink(uploadedImagePath).catch(() => undefined);
+   });
+
    it('returns 404 when updating a missing exercise', async () => {
       await request(app.getHttpServer())
          .patch(apiPath('/exercises/missing-exercise-id'))
@@ -349,6 +384,7 @@ describe('ExercisesController (e2e)', () => {
          category: ExerciseCategory.STRENGTH,
          equipment: 'Barbell',
          isCompound: true,
+         videoUrl: `https://example.com/videos/${suffix}.mp4`,
       };
    }
 

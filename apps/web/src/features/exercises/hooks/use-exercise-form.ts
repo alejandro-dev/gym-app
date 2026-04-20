@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -10,6 +9,7 @@ import {
    type CreateExercisePayload,
    updateExercise,
    type UpdateExercisePayload,
+   uploadExerciseImage,
 } from "@/services/exercisesService";
 import type { Exercise } from "@gym-app/types";
 import {
@@ -17,17 +17,24 @@ import {
    type ExerciseFormValues,
 } from "../components/form-exercise";
 import { exerciseSchema } from "../schemas/exercise.schema";
+import { useState } from "react";
 
 type SaveExerciseMutationInput =
    | {
         mode: "create";
         payload: CreateExercisePayload;
+        imageFile: File | null;
      }
    | {
         mode: "edit";
         exerciseId: string;
         payload: UpdateExercisePayload;
+        imageFile: File | null;
      };
+
+type SaveExerciseMutationResult = {
+   imageUploadFailed: boolean;
+};
 
 const EXERCISE_ERROR_MESSAGES: StatusMessageMap = {
    400: "Revise los datos del ejercicio y vuelva a intentarlo",
@@ -38,32 +45,58 @@ const EXERCISE_ERROR_MESSAGES: StatusMessageMap = {
 
 export function useExerciseForm() {
    const queryClient = useQueryClient();
-   const [selectedExercise, setSelectedExercise] =
-      React.useState<Exercise | null>(null);
-   const [isOpen, setIsOpen] = React.useState(false);
-   const [values, setValues] = React.useState<ExerciseFormValues>(
+   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+   const [isOpen, setIsOpen] = useState(false);
+   const [values, setValues] = useState<ExerciseFormValues>(
       EMPTY_EXERCISE_FORM_VALUES,
    );
+   const [imageFile, setImageFile] = useState<File | null>(null);
+   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
 
+   // Limpiamos el formulario
    const reset = () => {
       setSelectedExercise(null);
       setValues(EMPTY_EXERCISE_FORM_VALUES);
+      setImageFile(null);
+      setImagePreviewUrl(null);
    };
 
-   const saveMutation = useMutation({
-      mutationFn: async (input: SaveExerciseMutationInput) => {
-         if (input.mode === "create") {
-            return createExercise(input.payload);
+   // Guardamos los cambios en el formulario
+   const saveMutation = useMutation<
+      SaveExerciseMutationResult,
+      Error,
+      SaveExerciseMutationInput
+   >({
+      mutationFn: async (input) => {
+         // Elegimos si crear o editar un ejercicio
+         const savedExercise = input.mode === "create"
+            ? await createExercise(input.payload)
+            : await updateExercise(input.exerciseId, input.payload);
+
+         // Si no hay imagen, no subimos nada
+         if (!input.imageFile) {
+            return { imageUploadFailed: false };
          }
 
-         return updateExercise(input.exerciseId, input.payload);
+         try {
+            // Subimos la imagen
+            await uploadExerciseImage(savedExercise.id, input.imageFile);
+            return { imageUploadFailed: false };
+         } catch {
+            return { imageUploadFailed: true };
+         }
       },
-      onSuccess: async (_, input) => {
-         toast.success(
-            input.mode === "create"
-               ? "Ejercicio creado correctamente"
-               : "Ejercicio actualizado correctamente",
-         );
+      onSuccess: async (result, input) => {
+         if (result.imageUploadFailed) {
+            toast.warning("Ejercicio guardado, pero no se pudo subir la imagen");
+         } else {
+            toast.success(
+               input.mode === "create"
+                  ? "Ejercicio creado correctamente"
+                  : "Ejercicio actualizado correctamente",
+            );
+         }
+
          setIsOpen(false);
          reset();
          await queryClient.invalidateQueries({ queryKey: ["exercises"] });
@@ -73,11 +106,13 @@ export function useExerciseForm() {
       },
    });
 
+   // Abrimos el formulario para crear un nuevo ejercicio
    const openCreate = () => {
       reset();
       setIsOpen(true);
    };
 
+   // Abrimos el formulario para editar un ejercicio existente
    const openEdit = (exercise: Exercise) => {
       setSelectedExercise(exercise);
       setValues({
@@ -89,15 +124,20 @@ export function useExerciseForm() {
          category: exercise.category,
          equipment: exercise.equipment ?? "",
          isCompound: exercise.isCompound,
+         videoUrl: exercise.videoUrl ?? ""
       });
+      setImageFile(null);
+      setImagePreviewUrl(exercise.imageUrl);
       setIsOpen(true);
    };
 
+   // Cambiamos el estado del formulario
    const handleOpenChange = (open: boolean) => {
       setIsOpen(open);
       if (!open) reset();
    };
 
+   // Actualizamos los valores del formulario
    const handleValueChange = (
       event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
    ) => {
@@ -108,6 +148,7 @@ export function useExerciseForm() {
       }));
    };
 
+   // Actualizamos el grupo muscular del ejercicio
    const handleMuscleGroupChange = (
       muscleGroup: ExerciseFormValues["muscleGroup"],
    ) => {
@@ -117,6 +158,7 @@ export function useExerciseForm() {
       }));
    };
 
+   // Actualizamos la categoría del ejercicio
    const handleCategoryChange = (category: ExerciseFormValues["category"]) => {
       setValues((current) => ({
          ...current,
@@ -124,6 +166,7 @@ export function useExerciseForm() {
       }));
    };
 
+   // Actualizamos el estado de la composición del ejercicio
    const handleIsCompoundChange = (isCompound: boolean) => {
       setValues((current) => ({
          ...current,
@@ -131,9 +174,11 @@ export function useExerciseForm() {
       }));
    };
 
+   // Evento de envío del formulario
    const handleSubmit: React.FormEventHandler<HTMLFormElement> = (event) => {
       event.preventDefault();
 
+      // Validamos el formulario
       const result = exerciseSchema.safeParse({
          name: values.name.trim(),
          slug: values.slug.trim(),
@@ -143,17 +188,21 @@ export function useExerciseForm() {
          category: values.category,
          equipment: values.equipment.trim(),
          isCompound: values.isCompound,
+         videoUrl: values.videoUrl?.trim()
       });
 
+      // Si el formulario no es válido, mostramos un mensaje de error
       if (!result.success) {
          toast.warning(result.error.issues[0]?.message ?? "Formulario inválido");
          return;
       }
 
+      // Si hay un ejercicio seleccionado, actualizamos el ejercicio
       if (selectedExercise) {
          saveMutation.mutate({
             mode: "edit",
             exerciseId: selectedExercise.id,
+            imageFile,
             payload: {
                name: result.data.name,
                slug: result.data.slug,
@@ -163,14 +212,17 @@ export function useExerciseForm() {
                category: result.data.category,
                equipment: result.data.equipment,
                isCompound: result.data.isCompound,
+               videoUrl: result.data.videoUrl
             },
          });
 
          return;
       }
 
+      // Si no hay ejercicio seleccionado, creamos un nuevo ejercicio
       saveMutation.mutate({
          mode: "create",
+         imageFile,
          payload: {
             name: result.data.name,
             slug: result.data.slug,
@@ -180,21 +232,44 @@ export function useExerciseForm() {
             category: result.data.category,
             equipment: result.data.equipment,
             isCompound: result.data.isCompound,
+            videoUrl: result.data.videoUrl
          },
       });
    };
+
+   // Evento de cambio de archivo de imagen
+   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      // Obtenemos el archivo seleccionado
+      const file = event.target.files?.[0] ?? null;
+
+      // Añadimos el archivo a la lista de subidas
+      setImageFile(file);
+
+      // Si no hay archivo, mostramos la imagen del ejercicio seleccionado o limpiamos la vista previa
+      if (!file) {
+         setImagePreviewUrl(selectedExercise?.imageUrl ?? null);
+         return;
+      }
+
+      // Creamos una vista previa de la imagen
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreviewUrl(previewUrl);
+   };
+
 
    return {
       isOpen,
       isSaving: saveMutation.isPending,
       selectedExercise,
       values,
+      imagePreviewUrl,
       handleCategoryChange,
       handleIsCompoundChange,
       handleMuscleGroupChange,
       handleOpenChange,
       handleSubmit,
       handleValueChange,
+      handleImageChange,
       openCreate,
       openEdit,
    };

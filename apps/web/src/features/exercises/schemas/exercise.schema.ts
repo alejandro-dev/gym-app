@@ -13,6 +13,16 @@ const optionalTextField = z.preprocess((value) => {
   return trimmedValue === "" ? null : trimmedValue;
 }, z.string().min(1).nullable());
 
+const optionalUrlField = z.preprocess((value) => {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  const trimmedValue = value.trim();
+  return trimmedValue === "" ? null : trimmedValue;
+}, z.url("Introduce una URL válida").nullable());
+
+
 export const exerciseSchema = z.object({
   name: z.string().trim().min(1, "Nombre es obligatorio"),
   slug: z.string().trim().min(1, "Slug es obligatorio"),
@@ -22,6 +32,7 @@ export const exerciseSchema = z.object({
   category: z.enum(EXERCISE_CATEGORY_VALUES),
   equipment: optionalTextField,
   isCompound: z.boolean(),
+  videoUrl: optionalUrlField,
 });
 
 export type ExerciseInput = z.infer<typeof exerciseSchema>;
