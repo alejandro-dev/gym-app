@@ -95,6 +95,8 @@ model Exercise {
    category     ExerciseCategory @default(STRENGTH)
    equipment    String?
    isCompound   Boolean     @default(false)
+   imageUrl     String?
+   videoUrl     String?
    createdAt    DateTime    @default(now())
    updatedAt    DateTime    @updatedAt
 

@@ -28,6 +28,32 @@ export function useExerciseColumns({
 }: UseExerciseColumnsParams) {
    return [
       {
+         id: "image",
+         header: "Imagen",
+         cell: ({ row }) => {
+            const imageUrl = row.original.imageUrl;
+
+            return (
+               <div className="flex size-10 items-center justify-center overflow-hidden rounded-lg border bg-muted">
+                  {imageUrl ? (
+                     // eslint-disable-next-line @next/next/no-img-element
+                     <img
+                        src={imageUrl}
+                        alt={`Imagen de ${row.original.name}`}
+                        className="h-full w-full object-cover"
+                     />
+                  ) : (
+                     <span className="text-xs font-medium text-muted-foreground">
+                        {row.original.name.charAt(0).toUpperCase()}
+                     </span>
+                  )}
+               </div>
+            );
+         },
+         enableSorting: false,
+         enableHiding: false,
+      },
+      {
          accessorKey: "name",
          header: "Nombre",
          cell: ({ row }) => (

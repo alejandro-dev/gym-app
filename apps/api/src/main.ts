@@ -4,9 +4,11 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
 import { REFRESH_TOKEN_COOKIE_NAME } from './auth/constants/auth.constants';
 import { AppModule } from './app.module';
+import { join } from 'node:path';
+import { NestExpressApplication } from '@nestjs/platform-express/interfaces/nest-express-application.interface';
 
 async function bootstrap() {
-   const app = await NestFactory.create(AppModule);
+   const app = await NestFactory.create<NestExpressApplication>(AppModule);
    app.setGlobalPrefix('api');
    app.use(cookieParser());
    app.useGlobalPipes(
@@ -16,6 +18,10 @@ async function bootstrap() {
          forbidNonWhitelisted: true,
       }),
    );
+
+   app.useStaticAssets(join(process.cwd(), 'uploads'), {
+      prefix: '/uploads',
+   });
 
    const swaggerConfig = new DocumentBuilder()
       .setTitle('Gym App API')

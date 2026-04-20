@@ -71,13 +71,15 @@ export function DataTable({
             isOpen={exerciseForm.isOpen}
             isSaving={exerciseForm.isSaving}
             mode={exerciseForm.selectedExercise ? "edit" : "create"}
+            imagePreviewUrl={exerciseForm.imagePreviewUrl}
+            values={exerciseForm.values}
             onOpenChange={exerciseForm.handleOpenChange}
             onMuscleGroupChange={exerciseForm.handleMuscleGroupChange}
             onCategoryChange={exerciseForm.handleCategoryChange}
             onIsCompoundChange={exerciseForm.handleIsCompoundChange}
             onSubmit={exerciseForm.handleSubmit}
             onValueChange={exerciseForm.handleValueChange}
-            values={exerciseForm.values}
+            onImageChange={exerciseForm.handleImageChange}
          />
          <DeleteExerciseDialog
             isDeleting={deleteExercise.isDeleting}

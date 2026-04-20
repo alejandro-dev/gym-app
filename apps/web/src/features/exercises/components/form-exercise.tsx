@@ -49,6 +49,7 @@ export type ExerciseFormValues = {
    category: ExerciseCategory;
    equipment: string;
    isCompound: boolean;
+   videoUrl: string;
 };
 
 // Valores por defecto para el formulario de creación de ejercicio.
@@ -61,6 +62,7 @@ export const EMPTY_EXERCISE_FORM_VALUES: ExerciseFormValues = {
    category: "STRENGTH",
    equipment: "",
    isCompound: false,
+   videoUrl: ""
 };
 
 // Dialogo para crear o editar un ejercicio.
@@ -68,6 +70,8 @@ type AddUExerciseDialogProps = {
    isOpen: boolean;
    isSaving: boolean;
    mode: "create" | "edit";
+   imagePreviewUrl: string | null;
+   values: ExerciseFormValues;
    onOpenChange: (open: boolean) => void;
    onCategoryChange: (category: ExerciseCategory) => void;
    onMuscleGroupChange: (muscleGroup: MuscleGroup) => void;
@@ -76,20 +80,22 @@ type AddUExerciseDialogProps = {
    onValueChange: (
       event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
    ) => void;
-   values: ExerciseFormValues;
+   onImageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
 export function AddExerciseDialog({
    isOpen,
    isSaving,
    mode,
+   imagePreviewUrl,
+   values,
    onOpenChange,
    onCategoryChange,
    onMuscleGroupChange,
    onIsCompoundChange,
    onSubmit,
    onValueChange,
-   values,
+   onImageChange,
 }: AddUExerciseDialogProps) {
    const isEditMode = mode === "edit";
 
@@ -232,6 +238,45 @@ export function AddExerciseDialog({
                               className="min-h-28 resize-y"
                               placeholder="Paso a paso, técnica, respiración y puntos clave."
                            />
+                        </Field>
+                     </div>
+                     <div className="col-span-6 sm:col-span-3">
+                        <Field>
+                           <FieldLabel htmlFor="image">Imagen</FieldLabel>
+                           <Input
+                              id="image"
+                              name="image"
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp,image/gif"
+                              onChange={onImageChange}
+                           />
+                           <FieldDescription>
+                              Selecciona una imagen PNG, JPG, WEBP o GIF. Máximo 5MB.
+                           </FieldDescription>
+
+                           {imagePreviewUrl ? (
+                              <div className="overflow-hidden rounded-lg border mb-2">
+                                 <img
+                                    src={imagePreviewUrl}
+                                    alt="Vista previa del ejercicio"
+                                    className="h-40 w-40 object-cover"
+                                 />
+                              </div>
+                           ) : null}
+                        </Field>
+                        <Field>
+                           <FieldLabel htmlFor="videoUrl">Video URL</FieldLabel>
+                           <Input
+                              id="videoUrl"
+                              name="videoUrl"
+                              type="url"
+                              value={values.videoUrl}
+                              onChange={onValueChange}
+                              placeholder="https://www.youtube.com/watch?v=..."
+                           />
+                           <FieldDescription>
+                              Pega una URL completa, incluyendo https://.
+                           </FieldDescription>
                         </Field>
                      </div>
                   </FieldGroup>

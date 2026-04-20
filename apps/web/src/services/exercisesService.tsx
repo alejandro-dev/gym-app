@@ -23,6 +23,7 @@ export interface CreateExercisePayload {
 	category: ExerciseCategory;
 	equipment: string | null;
 	isCompound: boolean;
+	videoUrl: string | null;
 }
 
 export interface UpdateExercisePayload {
@@ -34,6 +35,7 @@ export interface UpdateExercisePayload {
 	category: ExerciseCategory;
 	equipment: string | null;
 	isCompound: boolean;
+	videoUrl: string | null;
 }
 
 // Construye la URL para listar/buscar ejercicios con paginación.
@@ -97,5 +99,20 @@ export async function deleteExercise(id: string): Promise<Exercise> {
 	return fetchJson<Exercise>(`/api/exercises/${id}`, {
 		method: "DELETE",
 		headers: { "Content-Type": "application/json" },
+	});
+}
+
+// Función que actualiza la imagen de un ejercicio existente.
+export async function uploadExerciseImage(id: string, image: File): Promise<Exercise> {
+	// Creamos un FormData para enviar la imagen como multipart/form-data.
+	const formData = new FormData();
+
+	// Agregamos el archivo a subir.
+	formData.append("image", image);
+
+	// Enviamos la petición.
+	return fetchJson<Exercise>(`/api/exercises/${id}/image`, {
+		method: "PATCH",
+		body: formData,
 	});
 }

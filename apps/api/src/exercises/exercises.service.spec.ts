@@ -1,8 +1,13 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExerciseCategory, MuscleGroup, Prisma } from '@prisma/client';
+import { unlink } from 'node:fs/promises';
 import { PrismaService } from '../prisma/prisma.service';
 import { ExercisesService } from './exercises.service';
+
+jest.mock('node:fs/promises', () => ({
+   unlink: jest.fn(),
+}));
 
 type CreateExerciseDto = {
    name: string;
@@ -13,6 +18,7 @@ type CreateExerciseDto = {
    category: ExerciseCategory;
    equipment: string | null;
    isCompound: boolean;
+   videoUrl: string | null;
 };
 
 type UpdateExerciseDto = Partial<CreateExerciseDto>;
@@ -27,6 +33,8 @@ type ExerciseRecord = {
    category: ExerciseCategory;
    equipment: string | null;
    isCompound: boolean;
+   imageUrl: string | null;
+   videoUrl: string | null;
    createdAt: Date;
    updatedAt: Date;
 };
@@ -93,6 +101,7 @@ describe('ExercisesService', () => {
       category: ExerciseCategory.STRENGTH,
       equipment: 'Barbell',
       isCompound: true,
+      videoUrl: 'https://example.com/videos/barbell-back-squat.mp4',
    };
 
    const updatedExerciseDto: UpdateExerciseDto = {
@@ -103,6 +112,7 @@ describe('ExercisesService', () => {
    const exerciseRecord: ExerciseRecord = {
       id: 'exercise_123',
       ...createExerciseDto,
+      imageUrl: null,
       createdAt: new Date('2026-03-21T10:00:00.000Z'),
       updatedAt: new Date('2026-03-21T10:00:00.000Z'),
    };
@@ -147,6 +157,8 @@ describe('ExercisesService', () => {
             category: true,
             equipment: true,
             isCompound: true,
+            imageUrl: true,
+            videoUrl: true,
             createdAt: true,
             updatedAt: true,
          });
@@ -200,6 +212,8 @@ describe('ExercisesService', () => {
             category: true,
             equipment: true,
             isCompound: true,
+            imageUrl: true,
+            videoUrl: true,
             createdAt: true,
             updatedAt: true,
          });
@@ -303,6 +317,8 @@ describe('ExercisesService', () => {
             category: true,
             equipment: true,
             isCompound: true,
+            imageUrl: true,
+            videoUrl: true,
             createdAt: true,
             updatedAt: true,
          });
@@ -346,6 +362,7 @@ describe('ExercisesService', () => {
             category: undefined,
             equipment: updatedExerciseDto.equipment,
             isCompound: undefined,
+            videoUrl: undefined,
          });
          expect(updateArgs.select).toMatchObject({
             id: true,
@@ -357,6 +374,8 @@ describe('ExercisesService', () => {
             category: true,
             equipment: true,
             isCompound: true,
+            imageUrl: true,
+            videoUrl: true,
             createdAt: true,
             updatedAt: true,
          });
@@ -395,10 +414,64 @@ describe('ExercisesService', () => {
       });
    });
 
+   describe('updateImage', () => {
+      it('updates the image URL and deletes the previous local image', async () => {
+         const previousImageUrl = '/uploads/exercises/previous.png';
+         const nextImageUrl = '/uploads/exercises/next.png';
+         const updatedRecord = {
+            ...exerciseRecord,
+            imageUrl: nextImageUrl,
+         };
+
+         prismaMock.exercise.findUnique.mockResolvedValue({
+            id: exerciseRecord.id,
+            imageUrl: previousImageUrl,
+         });
+         prismaMock.exercise.update.mockResolvedValue(updatedRecord);
+         (unlink as jest.Mock).mockResolvedValue(undefined);
+
+         const result = await service.updateImage(
+            exerciseRecord.id,
+            nextImageUrl,
+         );
+         const [findUniqueArgs] = prismaMock.exercise.findUnique.mock.calls[0];
+         const [updateArgs] = prismaMock.exercise.update.mock.calls[0];
+
+         expect(findUniqueArgs).toEqual({
+            where: { id: exerciseRecord.id },
+            select: { id: true, imageUrl: true },
+         });
+         expect(updateArgs.where).toEqual({ id: exerciseRecord.id });
+         expect(updateArgs.data).toEqual({ imageUrl: nextImageUrl });
+         expect(updateArgs.select).toMatchObject({
+            id: true,
+            imageUrl: true,
+            videoUrl: true,
+         });
+         expect(unlink).toHaveBeenCalledWith(
+            expect.stringContaining('previous.png'),
+         );
+         expect(result).toEqual(updatedRecord);
+      });
+
+      it('throws NotFoundException when updating image for a missing exercise', async () => {
+         prismaMock.exercise.findUnique.mockResolvedValue(null);
+
+         await expect(
+            service.updateImage(
+               'missing_exercise',
+               '/uploads/exercises/next.png',
+            ),
+         ).rejects.toBeInstanceOf(NotFoundException);
+         expect(prismaMock.exercise.update).not.toHaveBeenCalled();
+      });
+   });
+
    describe('remove', () => {
       it('verifies existence and returns the deleted exercise', async () => {
          prismaMock.exercise.findUnique.mockResolvedValue({
             id: exerciseRecord.id,
+            imageUrl: exerciseRecord.imageUrl,
          });
          prismaMock.exercise.delete.mockResolvedValue(exerciseRecord);
 
@@ -408,7 +481,7 @@ describe('ExercisesService', () => {
 
          expect(findUniqueArgs).toEqual({
             where: { id: exerciseRecord.id },
-            select: { id: true },
+            select: { id: true, imageUrl: true },
          });
          expect(deleteArgs.where).toEqual({ id: exerciseRecord.id });
          expect(deleteArgs.select).toMatchObject({
@@ -419,7 +492,10 @@ describe('ExercisesService', () => {
             instructions: true,
             muscleGroup: true,
             equipment: true,
+            category: true,
             isCompound: true,
+            imageUrl: true,
+            videoUrl: true,
             createdAt: true,
             updatedAt: true,
          });

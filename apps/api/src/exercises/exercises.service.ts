@@ -1,10 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ExerciseCategory, MuscleGroup, Prisma } from '@prisma/client';
+import { unlink } from 'node:fs/promises';
+import { join, normalize, relative } from 'node:path';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
 import { handlePrismaError } from '../prisma/prisma-error.util';
+import { EXERCISE_IMAGES_DIR } from './upload/exercise-image-multer.options';
 import type { Exercise } from '@gym-app/types';
+
+// Directorio de subida de imágenes de ejercicios
+const EXERCISE_IMAGES_PUBLIC_PREFIX = '/uploads/exercises/';
 
 type SelectedExerciseRecord = {
    id: string;
@@ -16,6 +22,8 @@ type SelectedExerciseRecord = {
    category: ExerciseCategory;
    equipment: string | null;
    isCompound: boolean;
+   imageUrl: string | null;
+   videoUrl: string | null;
    createdAt: Date;
    updatedAt: Date;
 };
@@ -45,6 +53,8 @@ export class ExercisesService {
       category: true,
       equipment: true,
       isCompound: true,
+      imageUrl: true,
+      videoUrl: true,
       createdAt: true,
       updatedAt: true,
    } satisfies Prisma.ExerciseSelect;
@@ -182,12 +192,43 @@ export class ExercisesService {
     */
    async remove(id: string) {
       // Verifica si el ejercicio existe
-      await this.ensureExerciseExists(id);
+      const exercise = await this.findExistingExerciseImage(id);
 
-      return await this.prisma.exercise.delete({
+      // Eliminamos el ejercicio en la base de datos
+      const deletedExercise = await this.prisma.exercise.delete({
          where: { id },
          select: this.exerciseSelect,
       });
+
+      // Eliminamos la imágen del ejercicio
+      await this.deleteLocalExerciseImage(exercise.imageUrl);
+
+      return deletedExercise;
+   }
+
+   /**
+    * Actualiza la imagen publica asociada a un ejercicio.
+    *
+    * @param id - Identificador del ejercicio
+    * @param imageUrl - URL publica de la imagen subida
+    * @returns Ejercicio actualizado
+    * @throws NotFoundException si el ejercicio no existe
+    */
+   async updateImage(id: string, imageUrl: string) {
+      // Verifica si el ejercicio existe
+      const exercise = await this.findExistingExerciseImage(id);
+
+      // Actualizamos la imagen en la base de datos
+      const updatedExercise = await this.prisma.exercise.update({
+         where: { id },
+         data: { imageUrl },
+         select: this.exerciseSelect,
+      });
+
+      // Eliminamos la imagen antigua
+      await this.deleteLocalExerciseImage(exercise.imageUrl);
+
+      return updatedExercise;
    }
 
    /**
@@ -208,6 +249,7 @@ export class ExercisesService {
          category: createExerciseDto.category,
          equipment: createExerciseDto.equipment,
          isCompound: createExerciseDto.isCompound ?? false,
+         videoUrl: createExerciseDto.videoUrl,
       };
    }
 
@@ -229,6 +271,7 @@ export class ExercisesService {
          category: updateExerciseDto.category,
          equipment: updateExerciseDto.equipment,
          isCompound: updateExerciseDto.isCompound,
+         videoUrl: updateExerciseDto.videoUrl,
       };
    }
 
@@ -262,5 +305,74 @@ export class ExercisesService {
          createdAt: exercise.createdAt.toISOString(),
          updatedAt: exercise.updatedAt.toISOString(),
       };
+   }
+
+   /**
+    * Convierte la URL de una imagen de ejercicio en una ruta de archivo local.
+    *
+    * @param imageUrl - URL de la imagen de ejercicio
+    * @returns Ruta de archivo de la imagen de ejercicio
+    */
+   private resolveLocalExerciseImagePath(imageUrl: string | null) {
+      // Si la imagen no es de ejercicio, no se debe eliminar
+      if (!imageUrl?.startsWith(EXERCISE_IMAGES_PUBLIC_PREFIX)) {
+         return null;
+      }
+
+      // Eliminamos el prefijo de la URL de la imagen para obtener la ruta relativa dentro del directorio de imágenes de ejercicios
+      const filename = imageUrl.slice(EXERCISE_IMAGES_PUBLIC_PREFIX.length);
+
+      // Normalizamos la ruta relativa para evitar errores de ruta relativa y unimos con el directorio base de imágenes de ejercicios para obtener la ruta absoluta
+      const resolvedPath = normalize(join(EXERCISE_IMAGES_DIR, filename));
+      const relativePath = relative(EXERCISE_IMAGES_DIR, resolvedPath);
+
+      // Si la ruta relativa es relativa o es una ruta de archivo vacía, no se debe eliminar
+      if (relativePath.startsWith('..') || relativePath === '') {
+         return null;
+      }
+
+      return resolvedPath;
+   }
+
+   /**
+    * Elimina la imagen de ejercicio si existe.
+    *
+    * @param imageUrl - URL de la imagen de ejercicio
+    * @returns Promesa resuelta cuando la imagen se elimina
+    */
+   private async deleteLocalExerciseImage(imageUrl: string | null) {
+      // Consultamos la ruta de archivo de la imagen de ejercicio
+      const imagePath = this.resolveLocalExerciseImagePath(imageUrl);
+
+      // Si la ruta de archivo no existe, no se debe eliminar
+      if (!imagePath) {
+         return;
+      }
+
+      // Eliminamos la imagen de ejercicio local
+      await unlink(imagePath).catch(() => undefined);
+   }
+
+   /**
+    * Verifica que el ejercicio existe antes de actualizar o eliminar.
+    *
+    * @param id - Identificador del ejercicio
+    * @returns Promesa resuelta cuando el ejercicio existe
+    * @throws NotFoundException si no existe
+    */
+   private async findExistingExerciseImage(id: string) {
+      const exercise = await this.prisma.exercise.findUnique({
+         where: { id },
+         select: {
+            id: true,
+            imageUrl: true,
+         },
+      });
+
+      if (!exercise) {
+         throw new NotFoundException(`Exercise with id "${id}" not found`);
+      }
+
+      return exercise;
    }
 }
