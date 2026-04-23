@@ -2,14 +2,13 @@ import { Alert } from 'react-native';
 import { router } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-
-import { login } from '@/services/api/authService';
 import { setAccessToken } from '@/services/storage/secure-storage';
 import {
    loginSchema,
    type LoginFormValues,
    type LoginSubmitValues,
 } from '@/features/auth/schemas/login.schema';
+import { signIn } from '@/services/api/sessionService';
 
 // Valores por defecto para el formulario de inicio de sesión
 const DEFAULT_VALUES: LoginFormValues = {
@@ -28,13 +27,13 @@ export default function useLoginView() {
    // Evento de envío del formulario y validación
    const handleLogin = form.handleSubmit(async (values) => {
       try {
-         const response = await login({
+         // Realizar la solicitud de inicio de sesión a la API
+         const response = await signIn({
             email: values.email,
             password: values.password,
          });
 
-         await setAccessToken(response.accessToken);
-
+         // Restablecer el formulario y redireccionar al usuario a la página de inicio
          form.reset(DEFAULT_VALUES);
          router.replace('/(protected)');
       } catch (error) {
