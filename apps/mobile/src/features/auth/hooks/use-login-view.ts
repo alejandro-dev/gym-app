@@ -28,7 +28,7 @@ export default function useLoginView() {
    const handleLogin = form.handleSubmit(async (values) => {
       try {
          // Realizar la solicitud de inicio de sesión a la API
-         const response = await signIn({
+         await signIn({
             email: values.email,
             password: values.password,
          });
