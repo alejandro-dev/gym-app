@@ -14,6 +14,7 @@ import { promisify } from 'util';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { AuthTokenPayload } from './interfaces/auth-token-payload.interface';
 import { hashValue } from './utils/hash-value.utils';
 import { AccountOnboardingService } from './account-onboarding.service';
@@ -212,6 +213,37 @@ export class AuthService {
    }
 
    /**
+    * Actualiza los datos personales editables del perfil autenticado.
+    *
+    * @param userId - Identificador del usuario autenticado
+    * @param updateProfileDto - Datos personales a actualizar
+    * @returns Perfil publico actualizado
+    * @throws UnauthorizedException si el usuario no existe
+    */
+   async updateProfile(userId: string, updateProfileDto: UpdateProfileDto) {
+      await this.ensureProfileExists(userId);
+
+      const user = await this.prisma.user.update({
+         where: { id: userId },
+         data: {
+            firstName: updateProfileDto.firstName,
+            lastName: updateProfileDto.lastName,
+            weightKg: updateProfileDto.weightKg,
+            heightCm: updateProfileDto.heightCm,
+            birthDate:
+               updateProfileDto.birthDate === undefined
+                  ? undefined
+                  : updateProfileDto.birthDate === null
+                    ? null
+                    : new Date(updateProfileDto.birthDate),
+         },
+         select: this.publicUserSelect,
+      });
+
+      return user;
+   }
+
+   /**
     * Rota el refresh token y devuelve un nuevo par de tokens.
     *
     * @param refreshToken - Refresh token actual
@@ -294,6 +326,21 @@ export class AuthService {
       });
 
       return { message: 'Logged out successfully' };
+   }
+
+   /**
+    * Comprueba que el perfil autenticado existe.
+    *
+    * @param userId - Identificador del usuario autenticado
+    * @throws UnauthorizedException si el usuario no existe
+    */
+   private async ensureProfileExists(userId: string) {
+      const user = await this.prisma.user.findUnique({
+         where: { id: userId },
+         select: { id: true },
+      });
+
+      if (!user) throw new UnauthorizedException('User not found');
    }
 
    /**

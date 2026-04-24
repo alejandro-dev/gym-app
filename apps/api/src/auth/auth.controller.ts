@@ -2,6 +2,7 @@ import {
    Body,
    Controller,
    Get,
+   Patch,
    Post,
    Req,
    Res,
@@ -24,6 +25,7 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { AccessTokenGuard } from './guards/access-token.guard';
 import { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 import { AuthService } from './auth.service';
@@ -140,6 +142,29 @@ export class AuthController {
    @Get('me')
    me(@CurrentUser() user: AuthenticatedUser) {
       return this.authService.getProfile(user.sub);
+   }
+
+   /**
+    * Actualiza los datos personales del usuario autenticado.
+    *
+    * @param user - Usuario autenticado
+    * @param updateProfileDto - Datos personales editables
+    * @returns Perfil publico actualizado
+    */
+   @ApiOperation({ summary: 'Actualizar perfil autenticado' })
+   @ApiBearerAuth()
+   @ApiBody({ type: UpdateProfileDto })
+   @ApiOkResponse({ description: 'Perfil actualizado correctamente.' })
+   @ApiUnauthorizedResponse({
+      description: 'Token ausente, inválido o expirado.',
+   })
+   @UseGuards(AccessTokenGuard)
+   @Patch('me')
+   updateMe(
+      @CurrentUser() user: AuthenticatedUser,
+      @Body() updateProfileDto: UpdateProfileDto,
+   ) {
+      return this.authService.updateProfile(user.sub, updateProfileDto);
    }
 
    /**
