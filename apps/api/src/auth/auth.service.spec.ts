@@ -262,6 +262,61 @@ describe('AuthService', () => {
       );
    });
 
+   it('updates the authenticated profile editable fields', async () => {
+      const updatedUser = {
+         id: 'user-1',
+         email: 'alex@example.com',
+         username: 'alex',
+         firstName: 'Alex',
+         lastName: 'Garcia',
+         role: 'USER',
+         weightKg: 82.5,
+         heightCm: 180,
+         birthDate: new Date('1995-06-20T00:00:00.000Z'),
+         isActive: true,
+         createdAt: new Date('2024-01-01T00:00:00.000Z'),
+         updatedAt: new Date('2024-01-02T00:00:00.000Z'),
+      };
+
+      prismaServiceMock.user.findUnique.mockResolvedValueOnce({ id: 'user-1' });
+      prismaServiceMock.user.update.mockResolvedValueOnce(updatedUser);
+
+      await expect(
+         service.updateProfile('user-1', {
+            firstName: 'Alex',
+            lastName: 'Garcia',
+            weightKg: 82.5,
+            heightCm: 180,
+            birthDate: '1995-06-20T00:00:00.000Z',
+         }),
+      ).resolves.toEqual(updatedUser);
+
+      expect(prismaServiceMock.user.update).toHaveBeenCalledWith(
+         expect.objectContaining({
+            where: { id: 'user-1' },
+            data: {
+               firstName: 'Alex',
+               lastName: 'Garcia',
+               weightKg: 82.5,
+               heightCm: 180,
+               birthDate: new Date('1995-06-20T00:00:00.000Z'),
+            },
+         }),
+      );
+   });
+
+   it('throws UnauthorizedException when updating a missing profile', async () => {
+      prismaServiceMock.user.findUnique.mockResolvedValueOnce(null);
+
+      await expect(
+         service.updateProfile('missing-user', {
+            firstName: 'Alex',
+         }),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+
+      expect(prismaServiceMock.user.update).not.toHaveBeenCalled();
+   });
+
    it('verifies email and clears verification fields when token matches', async () => {
       prismaServiceMock.user.findMany.mockResolvedValue([
          {

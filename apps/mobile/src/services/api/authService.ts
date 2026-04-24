@@ -10,12 +10,12 @@ export interface LoginPayload {
 export interface RegisterPayload {
    email: string;
    password: string;
-   username: string;
-   firstName: string;
-   lastName: string;
-   weightKg: number;
-   heightCm: number;
-   birthDate: string;
+   username?: string;
+   firstName?: string;
+   lastName?: string;
+   weightKg?: number;
+   heightCm?: number;
+   birthDate?: string;
 }
 
 // Tipo que representa un usuario autenticado

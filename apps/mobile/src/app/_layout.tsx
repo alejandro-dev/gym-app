@@ -6,7 +6,10 @@ import React from 'react';
 import { useColorScheme } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 
+import { QueryProvider } from '@/components/query-provider';
 import { buildNavigationTheme, buildPaperTheme } from '@/theme';
+import { getAppBackground } from '@/theme/colors';
+
 
 export default function RootLayout() {
 	const colorScheme = useColorScheme();
@@ -14,17 +17,19 @@ export default function RootLayout() {
 
 	return (
 		<PaperProvider theme={buildPaperTheme(isDark)}>
-			<ThemeProvider value={buildNavigationTheme(isDark)}>
-				<Stack
-					screenOptions={{
-						headerShown: false,
-						animation: 'fade',
-						contentStyle: {
-							backgroundColor: isDark ? '#020617' : '#f8fafc',
-						},
-					}}
-				/>
-			</ThemeProvider>
+			<QueryProvider>
+				<ThemeProvider value={buildNavigationTheme(isDark)}>
+					<Stack
+						screenOptions={{
+							headerShown: false,
+							animation: 'fade',
+							contentStyle: {
+								backgroundColor: getAppBackground(isDark),
+							},
+						}}
+					/>
+				</ThemeProvider>
+			</QueryProvider>
 		</PaperProvider>
 	);
 }

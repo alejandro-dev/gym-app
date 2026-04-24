@@ -1,5 +1,7 @@
 import Constants from 'expo-constants';
 
+import { getAccessToken } from '@/services/storage/secure-storage';
+
 // Tipo que representa un error de la API
 type ApiErrorPayload = {
    message?: string | string[];
@@ -50,10 +52,13 @@ function getErrorMessage(payload: ApiErrorPayload | null, fallback: string) {
 
 // Envía una petición a la API y devuelve el resultado
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+   const accessToken = await getAccessToken();
+
    const response = await fetch(`${getApiBaseUrl()}${path}`, {
       ...init,
       headers: {
          'Content-Type': 'application/json',
+         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
          ...(init?.headers ?? {}),
       },
    });

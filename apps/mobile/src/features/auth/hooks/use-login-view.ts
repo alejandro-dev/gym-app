@@ -12,8 +12,8 @@ import { signIn } from '@/services/api/sessionService';
 
 // Valores por defecto para el formulario de inicio de sesión
 const DEFAULT_VALUES: LoginFormValues = {
-   email: '',
-   password: '',
+   email: 'usuario@gym.local',
+   password: 'Demo1234!',
 };
 
 export default function useLoginView() {
@@ -33,9 +33,10 @@ export default function useLoginView() {
             password: values.password,
          });
 
-         // Restablecer el formulario y redireccionar al usuario a la página de inicio
+         // Restablecer el formulario y redireccionar al usuario
+         // a una ruta concreta del stack protegido.
          form.reset(DEFAULT_VALUES);
-         router.replace('/(protected)');
+         router.replace('/(protected)/(tabs)');
       } catch (error) {
          const message =
             error instanceof Error ? error.message : 'No se pudo iniciar sesion';
