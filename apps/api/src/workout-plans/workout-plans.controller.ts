@@ -18,7 +18,9 @@ import {
    ApiOkResponse,
    ApiOperation,
    ApiTags,
+   ApiTooManyRequestsResponse,
 } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { WorkoutPlansService } from './workout-plans.service';
 import { CreateWorkoutPlanDto } from './dto/create-workout-plan.dto';
 import { UpdateWorkoutPlanDto } from './dto/update-workout-plan.dto';
@@ -31,6 +33,7 @@ import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { WorkoutPlan, WorkoutPlansListResponse } from '@gym-app/types';
 import { AssignUserDto } from './dto/assign-user.dto';
+import { WRITE_ENDPOINT_RATE_LIMIT } from '../rate-limit/rate-limit.constants';
 
 /**
  * Controlador base para exponer endpoints del dominio de planes de entrenamiento.
@@ -137,6 +140,12 @@ export class WorkoutPlansController {
    @ApiConflictResponse({
       description: 'Ya existe un recurso relacionado que entra en conflicto.',
    })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Post()
    create(
       @CurrentUser() user: AuthenticatedUser,
@@ -162,6 +171,12 @@ export class WorkoutPlansController {
    @ApiConflictResponse({
       description: 'Ya existe un recurso relacionado que entra en conflicto.',
    })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Patch(':id')
    update(
       @CurrentUser() user: AuthenticatedUser,
@@ -184,6 +199,12 @@ export class WorkoutPlansController {
       type: WorkoutPlanResponseDto,
    })
    @ApiNotFoundResponse({ description: 'Plan de entrenamiento no encontrado.' })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Delete(':id')
    remove(
       @CurrentUser() user: AuthenticatedUser,
@@ -209,6 +230,12 @@ export class WorkoutPlansController {
    @ApiConflictResponse({
       description: 'Ya existe un recurso relacionado que entra en conflicto.',
    })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Patch(':id/assign-user')
    assignUser(
       @CurrentUser() user: AuthenticatedUser,

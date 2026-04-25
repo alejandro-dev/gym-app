@@ -15,7 +15,9 @@ import {
    ApiOkResponse,
    ApiOperation,
    ApiTags,
+   ApiTooManyRequestsResponse,
 } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { PersonalRecordsService } from './personal-records.service';
 import { CreatePersonalRecordDto } from './dto/create-personal-record.dto';
 import { UpdatePersonalRecordDto } from './dto/update-personal-record.dto';
@@ -26,6 +28,7 @@ import { AccessTokenGuard } from 'src/auth/guards/access-token.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+import { WRITE_ENDPOINT_RATE_LIMIT } from '../rate-limit/rate-limit.constants';
 
 /**
  * Controlador base para exponer endpoints del dominio de records personales.
@@ -96,6 +99,12 @@ export class PersonalRecordsController {
       description: 'Record personal creado correctamente.',
       type: PersonalRecordResponseDto,
    })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Post()
    create(
       @Body() createPersonalRecordDto: CreatePersonalRecordDto,
@@ -117,6 +126,12 @@ export class PersonalRecordsController {
       type: PersonalRecordResponseDto,
    })
    @ApiNotFoundResponse({ description: 'Record personal no encontrado.' })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Patch(':id')
    update(
       @CurrentUser() user: AuthenticatedUser,
@@ -143,6 +158,12 @@ export class PersonalRecordsController {
       type: PersonalRecordResponseDto,
    })
    @ApiNotFoundResponse({ description: 'Record personal no encontrado.' })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Delete(':id')
    remove(
       @CurrentUser() user: AuthenticatedUser,

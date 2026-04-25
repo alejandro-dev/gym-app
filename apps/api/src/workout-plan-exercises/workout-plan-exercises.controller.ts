@@ -18,7 +18,9 @@ import {
    ApiOkResponse,
    ApiOperation,
    ApiTags,
+   ApiTooManyRequestsResponse,
 } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { WorkoutPlanExerciseService } from './workout-plan-exercises.service';
 import { CreateWorkoutPlanExerciseDto } from './dto/create-workout-plan-exercise.dto';
 import { WorkoutPlanExerciseResponseDto } from './dto/workout-plan-exercise-response.dto';
@@ -29,6 +31,7 @@ import { UserRole } from '@prisma/client';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+import { WRITE_ENDPOINT_RATE_LIMIT } from '../rate-limit/rate-limit.constants';
 
 /**
  * Controlador base para exponer endpoints del dominio de ejercicios en plan de trabajo.
@@ -128,6 +131,12 @@ export class WorkoutPlanExerciseController {
       description:
          'Ya existe un ejercicio en esa posicion para el plan indicado.',
    })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Post()
    create(
       @Body() createWorkoutPlanExerciseDto: CreateWorkoutPlanExerciseDto,
@@ -158,6 +167,12 @@ export class WorkoutPlanExerciseController {
       description:
          'Ya existe un ejercicio en esa posicion para el plan indicado.',
    })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Patch(':id')
    update(
       @CurrentUser() user: AuthenticatedUser,
@@ -187,6 +202,12 @@ export class WorkoutPlanExerciseController {
    @ApiNotFoundResponse({
       description: 'Ejercicio en plan de entrenamiento no encontrado.',
    })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Delete(':id')
    remove(
       @CurrentUser() user: AuthenticatedUser,

@@ -9,6 +9,11 @@ import { NestExpressApplication } from '@nestjs/platform-express/interfaces/nest
 
 async function bootstrap() {
    const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+   if (shouldTrustProxy()) {
+      app.set('trust proxy', 1);
+   }
+
    app.setGlobalPrefix('api');
    app.use(cookieParser());
    app.useGlobalPipes(
@@ -42,4 +47,24 @@ async function bootstrap() {
 
    await app.listen(process.env.PORT ?? 3000);
 }
+
+/**
+ * Decide si Express debe confiar en el proxy frontal para resolver la IP real
+ * del cliente, necesaria para que el rate limiting funcione correctamente en
+ * producción detrás de balanceadores o plataformas gestionadas.
+ */
+function shouldTrustProxy() {
+   const configuredValue = process.env.TRUST_PROXY?.trim().toLowerCase();
+
+   if (configuredValue === 'true' || configuredValue === '1') {
+      return true;
+   }
+
+   if (configuredValue === 'false' || configuredValue === '0') {
+      return false;
+   }
+
+   return process.env.NODE_ENV === 'production';
+}
+
 void bootstrap();

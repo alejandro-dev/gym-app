@@ -1,6 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserRole } from '@prisma/client';
 
+jest.mock('@nestjs/throttler', () => ({
+   Throttle: () => () => undefined,
+   ThrottlerGuard: class {},
+}));
+
 jest.mock(
    'src/auth/guards/access-token.guard',
    () => ({ AccessTokenGuard: class {} }),

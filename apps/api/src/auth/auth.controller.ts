@@ -19,6 +19,7 @@ import {
    ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Request, Response } from 'express';
+import { Throttle, ThrottlerGuard, SkipThrottle } from '@nestjs/throttler';
 import { REFRESH_TOKEN_COOKIE_NAME } from './constants/auth.constants';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { LoginDto } from './dto/login.dto';
@@ -28,17 +29,20 @@ import { AccessTokenGuard } from './guards/access-token.guard';
 import { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 import { AuthService } from './auth.service';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { AUTH_PUBLIC_RATE_LIMITS } from '../rate-limit/rate-limit.constants';
 
 /**
  * Endpoints de autenticacion con JWT.
  */
 @ApiTags('auth')
+@UseGuards(ThrottlerGuard)
 @Controller('auth')
 export class AuthController {
    constructor(private readonly authService: AuthService) {}
 
    /**
     * Registra un usuario nuevo y devuelve access y refresh token.
+    * Se limita a 3 peticiones por hora y por IP.
     *
     * @param registerDto - Datos de registro del usuario
     * @param response - Respuesta HTTP donde se escribe la cookie del refresh token
@@ -46,6 +50,7 @@ export class AuthController {
     */
    @ApiOperation({ summary: 'Registrar usuario' })
    @ApiOkResponse({ description: 'Usuario registrado correctamente.' })
+   @Throttle(AUTH_PUBLIC_RATE_LIMITS.register)
    @Post('register')
    async register(
       @Body() registerDto: RegisterDto,
@@ -62,6 +67,7 @@ export class AuthController {
 
    /**
     * Inicia sesion con email y password.
+    * Se limita a 5 peticiones por 15 minutos y por IP.
     *
     * @param loginDto - Credenciales de acceso
     * @param response - Respuesta HTTP donde se escribe la cookie del refresh token
@@ -75,6 +81,7 @@ export class AuthController {
    @ApiUnauthorizedResponse({
       description: 'Invalid credentials.',
    })
+   @Throttle(AUTH_PUBLIC_RATE_LIMITS.login)
    @Post('login')
    async login(
       @Body() loginDto: LoginDto,
@@ -91,6 +98,7 @@ export class AuthController {
 
    /**
     * Renueva access y refresh token a partir del refresh token actual.
+    * Se limita a 20 peticiones por 5 minutos y por IP.
     *
     * @param request - Peticion HTTP para leer la cookie del refresh token
     * @param refreshTokenDto - Cuerpo opcional con el refresh token
@@ -105,6 +113,7 @@ export class AuthController {
       description: 'Opcional si el refresh token viaja en cookie httpOnly.',
    })
    @ApiOkResponse({ description: 'Tokens renovados correctamente.' })
+   @Throttle(AUTH_PUBLIC_RATE_LIMITS.refresh)
    @Post('refresh')
    async refresh(
       @Req() request: Request,
@@ -136,6 +145,7 @@ export class AuthController {
    @ApiOperation({ summary: 'Obtener perfil autenticado' })
    @ApiBearerAuth()
    @ApiOkResponse({ description: 'Perfil del usuario autenticado.' })
+   @SkipThrottle()
    @UseGuards(AccessTokenGuard)
    @Get('me')
    me(@CurrentUser() user: AuthenticatedUser) {
@@ -152,6 +162,7 @@ export class AuthController {
    @ApiOperation({ summary: 'Cerrar sesion' })
    @ApiBearerAuth()
    @ApiOkResponse({ description: 'Sesion cerrada correctamente.' })
+   @SkipThrottle()
    @UseGuards(AccessTokenGuard)
    @Post('logout')
    async logout(
@@ -164,6 +175,7 @@ export class AuthController {
 
    /**
     * Verifica el token de verificación de email.
+    * Se limita a 10 peticiones por hora y por IP para evitar abuso.
     *
     * @param verifyEmailDto - Token de verificación de email
     * @returns Datos del usuario verificado
@@ -177,6 +189,7 @@ export class AuthController {
    @ApiUnauthorizedResponse({
       description: 'Invalid or expired verification token.',
    })
+   @Throttle(AUTH_PUBLIC_RATE_LIMITS.verifyEmail)
    @Post('verify-email')
    verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
       return this.authService.verifyEmail(verifyEmailDto.token);

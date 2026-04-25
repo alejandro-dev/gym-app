@@ -18,7 +18,9 @@ import {
    ApiOkResponse,
    ApiOperation,
    ApiTags,
+   ApiTooManyRequestsResponse,
 } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { WorkoutSessionsService } from './workout-sessions.service';
 import { WorkoutSessionResponseDto } from './dto/workout-session-response.dto';
 import { UpdateWorkoutSessionDto } from './dto/update-workout-session.dto';
@@ -29,6 +31,7 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { UserRole } from '@prisma/client';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+import { WRITE_ENDPOINT_RATE_LIMIT } from '../rate-limit/rate-limit.constants';
 
 /**
  * Controlador base para exponer endpoints del dominio de sesiones de entrenamiento.
@@ -113,6 +116,12 @@ export class WorkoutSessionsController {
    @ApiConflictResponse({
       description: 'Ya existe un recurso relacionado que entra en conflicto.',
    })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Post()
    create(
       @Body() createWorkoutSessionDto: CreateWorkoutSessionDto,
@@ -139,6 +148,12 @@ export class WorkoutSessionsController {
    @ApiConflictResponse({
       description: 'Ya existe un recurso relacionado que entra en conflicto.',
    })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Patch(':id')
    update(
       @CurrentUser() user: AuthenticatedUser,
@@ -167,6 +182,12 @@ export class WorkoutSessionsController {
    @ApiNotFoundResponse({
       description: 'Sesion de entrenamiento no encontrada.',
    })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Delete(':id')
    remove(
       @CurrentUser() user: AuthenticatedUser,
@@ -193,6 +214,12 @@ export class WorkoutSessionsController {
    @ApiConflictResponse({
       description: 'La sesion de entrenamiento ya estaba completada.',
    })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Post(':id/complete')
    completeSession(
       @CurrentUser() user: AuthenticatedUser,

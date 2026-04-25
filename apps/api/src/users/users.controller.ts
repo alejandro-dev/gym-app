@@ -12,6 +12,7 @@ import {
 import {
    ApiBadRequestResponse,
    ApiBody,
+   ApiTooManyRequestsResponse,
    ApiCreatedResponse,
    ApiBearerAuth,
    ApiForbiddenResponse,
@@ -22,6 +23,7 @@ import {
    ApiTags,
    ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { UserRole } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -35,6 +37,7 @@ import type { User, UsersListResponse } from '@gym-app/types';
 import { UserResponseDto } from './dto/user-response.dto';
 import { UsersListResponseDto } from './dto/users-list-response.dto';
 import { ChangeUserStatusDto } from './dto/change-user-status.dto';
+import { WRITE_ENDPOINT_RATE_LIMIT } from '../rate-limit/rate-limit.constants';
 
 /**
  * Controlador REST para gestionar usuarios.
@@ -138,6 +141,12 @@ export class UsersController {
          'Usuario creado correctamente. La cuenta queda verificada y se envía una contraseña temporal por email.',
       type: UserResponseDto,
    })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Post()
    @Roles(UserRole.ADMIN, UserRole.COACH)
    create(
@@ -160,6 +169,12 @@ export class UsersController {
       type: UserResponseDto,
    })
    @ApiNotFoundResponse({ description: 'Usuario no encontrado.' })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Patch(':id')
    @Roles(UserRole.ADMIN)
    update(
@@ -181,6 +196,12 @@ export class UsersController {
       type: UserResponseDto,
    })
    @ApiNotFoundResponse({ description: 'Usuario no encontrado.' })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Delete(':id')
    @Roles(UserRole.ADMIN)
    remove(@Param('id') id: string): Promise<User> {
@@ -213,6 +234,12 @@ export class UsersController {
    @ApiNotFoundResponse({
       description: 'Usuario no encontrado o fuera del ámbito del coach.',
    })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Patch(':id/status')
    @Roles(UserRole.ADMIN, UserRole.COACH)
    changeStatus(

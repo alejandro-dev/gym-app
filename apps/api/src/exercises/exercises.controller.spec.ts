@@ -5,6 +5,11 @@ import { unlink } from 'node:fs/promises';
 import { ExercisesController } from './exercises.controller';
 import { ExercisesService } from './exercises.service';
 
+jest.mock('@nestjs/throttler', () => ({
+   Throttle: () => () => undefined,
+   ThrottlerGuard: class {},
+}));
+
 jest.mock('node:fs/promises', () => ({
    unlink: jest.fn(),
 }));
