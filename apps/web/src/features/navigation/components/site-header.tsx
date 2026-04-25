@@ -18,6 +18,10 @@ const ROUTE_COPY: Record<string, { title: string; description: string }> = {
       title: "Gestion de ejercicios",
       description: "Consulta, organiza y administra los ejercicios del gimnasio",
    },
+   "/profile": {
+      title: "Perfil",
+      description: "Actualiza tu informacion personal y la seguridad de tu cuenta",
+   },
 }
 
 export function SiteHeader() {

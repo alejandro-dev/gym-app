@@ -380,4 +380,84 @@ describe('AuthService', () => {
 
       expect(prismaServiceMock.user.update).not.toHaveBeenCalled();
    });
+
+   it('changes password when the current password is valid', async () => {
+      prismaServiceMock.user.findUnique.mockResolvedValueOnce({
+         id: 'user-1',
+         passwordHash: 'stored-hash',
+      });
+      prismaServiceMock.user.update.mockResolvedValueOnce(undefined);
+      jest
+         .spyOn(service as never, 'verifyValue')
+         .mockResolvedValueOnce(true as never)
+         .mockResolvedValueOnce(false as never);
+
+      await expect(
+         service.changePassword('user-1', {
+            currentPassword: 'supersecreto123',
+            newPassword: 'nuevasegura123',
+         }),
+      ).resolves.toEqual({ message: 'Password updated successfully' });
+
+      expect(prismaServiceMock.user.update).toHaveBeenCalledWith(
+         expect.objectContaining({
+            where: { id: 'user-1' },
+            data: {
+               passwordHash: expect.stringContaining(':') as string,
+            },
+         }),
+      );
+   });
+
+   it('throws UnauthorizedException when changing password for a missing user', async () => {
+      prismaServiceMock.user.findUnique.mockResolvedValueOnce(null);
+
+      await expect(
+         service.changePassword('missing-user', {
+            currentPassword: 'supersecreto123',
+            newPassword: 'nuevasegura123',
+         }),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+
+      expect(prismaServiceMock.user.update).not.toHaveBeenCalled();
+   });
+
+   it('throws UnauthorizedException when current password is invalid', async () => {
+      prismaServiceMock.user.findUnique.mockResolvedValueOnce({
+         id: 'user-1',
+         passwordHash: 'stored-hash',
+      });
+      jest
+         .spyOn(service as never, 'verifyValue')
+         .mockResolvedValueOnce(false as never);
+
+      await expect(
+         service.changePassword('user-1', {
+            currentPassword: 'incorrecta123',
+            newPassword: 'nuevasegura123',
+         }),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+
+      expect(prismaServiceMock.user.update).not.toHaveBeenCalled();
+   });
+
+   it('throws BadRequestException when the new password matches the current one', async () => {
+      prismaServiceMock.user.findUnique.mockResolvedValueOnce({
+         id: 'user-1',
+         passwordHash: 'stored-hash',
+      });
+      jest
+         .spyOn(service as never, 'verifyValue')
+         .mockResolvedValueOnce(true as never)
+         .mockResolvedValueOnce(true as never);
+
+      await expect(
+         service.changePassword('user-1', {
+            currentPassword: 'supersecreto123',
+            newPassword: 'supersecreto123',
+         }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      expect(prismaServiceMock.user.update).not.toHaveBeenCalled();
+   });
 });

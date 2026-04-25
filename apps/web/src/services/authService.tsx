@@ -32,6 +32,19 @@ export interface AuthVerifyEmailInput {
    token: string;
 }
 
+export interface UpdateProfileInput {
+   firstName?: string | null;
+   lastName?: string | null;
+   weightKg?: number | null;
+   heightCm?: number | null;
+   birthDate?: string | null;
+}
+
+export interface ChangePasswordInput {
+   currentPassword: string;
+   newPassword: string;
+}
+
 export async function login(input: AuthLoginInput) {
    return fetchJson<LoginResponse>("/api/auth/login", {
       method: "POST",
@@ -51,6 +64,22 @@ export async function register(input: AuthRegisterInput) {
 export async function verifyEmail(input: AuthVerifyEmailInput) {
    return fetchJson<AuthMessageResponse>("/api/auth/verify-email", {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+   });
+}
+
+export async function updateProfile(input: UpdateProfileInput) {
+   return fetchJson<User>("/api/auth/me", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+   });
+}
+
+export async function changePassword(input: ChangePasswordInput) {
+   return fetchJson<AuthMessageResponse>("/api/auth/password", {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
    });
