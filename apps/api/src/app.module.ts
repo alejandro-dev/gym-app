@@ -11,12 +11,21 @@ import { WorkoutSetsModule } from './workout-sets/workout-sets.module';
 import { PersonalRecordsModule } from './personal-records/personal-records.module';
 import { BullmqModule } from './bullmq/bullmq.module';
 import { BullmqTestModule } from './bullmq/bullmq-test.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
    imports: [
       ConfigModule.forRoot({
          isGlobal: true,
       }),
+      // Añade el módulo de Throttler con la configuracion de 60 segundos y 20 peticiones por IP
+      ThrottlerModule.forRoot([
+         {
+            name: 'default',
+            ttl: 60_000,
+            limit: 20,
+         },
+      ]),
       PrismaModule,
       AuthModule,
       UsersModule,

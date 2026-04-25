@@ -25,9 +25,11 @@ import {
    ApiOperation,
    ApiQuery,
    ApiTags,
+   ApiTooManyRequestsResponse,
 } from '@nestjs/swagger';
 import { ExerciseCategory, MuscleGroup, UserRole } from '@prisma/client';
 import type { Express } from 'express';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AccessTokenGuard } from '../auth/guards/access-token.guard';
@@ -44,6 +46,10 @@ import {
    MAX_EXERCISE_IMAGE_SIZE,
 } from './upload/exercise-image-multer.options';
 import { unlink } from 'node:fs/promises';
+import {
+   COSTLY_UPLOAD_RATE_LIMIT,
+   WRITE_ENDPOINT_RATE_LIMIT,
+} from '../rate-limit/rate-limit.constants';
 
 /**
  * Controlador base para exponer endpoints del dominio de ejercicios.
@@ -161,6 +167,12 @@ export class ExercisesController {
    @ApiConflictResponse({
       description: 'Ya existe un ejercicio con el mismo nombre o slug.',
    })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Roles(UserRole.ADMIN, UserRole.COACH)
    @Post()
    create(
@@ -185,6 +197,12 @@ export class ExercisesController {
    @ApiConflictResponse({
       description: 'Ya existe un ejercicio con el mismo nombre o slug.',
    })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Patch(':id')
    @Roles(UserRole.ADMIN, UserRole.COACH)
    update(
@@ -206,6 +224,12 @@ export class ExercisesController {
       type: ExerciseResponseDto,
    })
    @ApiNotFoundResponse({ description: 'Ejercicio no encontrado.' })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Delete(':id')
    @Roles(UserRole.ADMIN, UserRole.COACH)
    remove(@Param('id') id: string): Promise<ExerciseResponseDto> {
@@ -242,6 +266,11 @@ export class ExercisesController {
          'La imagen es obligatoria, supera el tamaño máximo o no tiene un tipo permitido.',
    })
    @ApiNotFoundResponse({ description: 'Ejercicio no encontrado.' })
+   @ApiTooManyRequestsResponse({
+      description: 'Se superó el límite temporal para subidas de imagen.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(COSTLY_UPLOAD_RATE_LIMIT)
    @Patch(':id/image')
    @Roles(UserRole.ADMIN, UserRole.COACH)
    @UseInterceptors(

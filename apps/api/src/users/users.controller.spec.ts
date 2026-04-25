@@ -5,6 +5,11 @@ import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import type { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 
+jest.mock('@nestjs/throttler', () => ({
+   Throttle: () => () => undefined,
+   ThrottlerGuard: class {},
+}));
+
 type UsersServiceMock = {
    findAll: jest.MockedFunction<
       (

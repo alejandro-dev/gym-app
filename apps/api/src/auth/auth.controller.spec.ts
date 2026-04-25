@@ -2,6 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
+jest.mock('@nestjs/throttler', () => ({
+   SkipThrottle: () => () => undefined,
+   Throttle: () => () => undefined,
+   ThrottlerGuard: class {},
+}));
+
 describe('AuthController', () => {
    let controller: AuthController;
    const authServiceMock = {

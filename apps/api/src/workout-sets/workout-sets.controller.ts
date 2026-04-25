@@ -18,7 +18,9 @@ import {
    ApiOkResponse,
    ApiOperation,
    ApiTags,
+   ApiTooManyRequestsResponse,
 } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { WorkoutSetsService } from './workout-sets.service';
 import { CreateWorkoutSetDto } from './dto/create-workout-set.dto';
 import { UpdateWorkoutSetDto } from './dto/update-workout-set.dto';
@@ -29,6 +31,7 @@ import { UserRole } from '@prisma/client';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+import { WRITE_ENDPOINT_RATE_LIMIT } from '../rate-limit/rate-limit.constants';
 
 /**
  * Controlador base para exponer endpoints del dominio de series de entrenamiento.
@@ -112,6 +115,12 @@ export class WorkoutSetsController {
       description:
          'Ya existe una serie con la misma sesion, ejercicio y numero.',
    })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Post()
    create(
       @Body() createWorkoutSetDto: CreateWorkoutSetDto,
@@ -139,6 +148,12 @@ export class WorkoutSetsController {
       description:
          'Ya existe una serie con la misma sesion, ejercicio y numero.',
    })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Patch(':id')
    update(
       @CurrentUser() user: AuthenticatedUser,
@@ -163,6 +178,12 @@ export class WorkoutSetsController {
    @ApiNotFoundResponse({
       description: 'Serie de entrenamiento no encontrada.',
    })
+   @ApiTooManyRequestsResponse({
+      description:
+         'Se superó el límite temporal para operaciones de escritura.',
+   })
+   @UseGuards(ThrottlerGuard)
+   @Throttle(WRITE_ENDPOINT_RATE_LIMIT)
    @Delete(':id')
    remove(
       @CurrentUser() user: AuthenticatedUser,

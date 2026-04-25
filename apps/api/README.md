@@ -62,6 +62,22 @@ $ pnpm run test:e2e:local
 $ pnpm run test:cov
 ```
 
+## Rate limiting
+
+The API uses `@nestjs/throttler` for public auth endpoints and authenticated write or costly endpoints.
+
+### `TRUST_PROXY`
+
+Set `TRUST_PROXY=true` when the API runs behind a reverse proxy or load balancer so Express and the throttler resolve the real client IP correctly.
+
+If `TRUST_PROXY` is not defined, the API enables `trust proxy` automatically in `production`.
+
+### Current storage and scaling
+
+The current throttling storage is in-memory, which is fine for local development and a single API instance.
+
+When the API is scaled to multiple instances, move throttling storage to Redis so limits are shared across instances.
+
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
