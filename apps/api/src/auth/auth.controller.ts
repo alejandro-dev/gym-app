@@ -26,6 +26,7 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { AccessTokenGuard } from './guards/access-token.guard';
 import { AuthenticatedUser } from './interfaces/authenticated-user.interface';
@@ -175,6 +176,29 @@ export class AuthController {
       @Body() updateProfileDto: UpdateProfileDto,
    ) {
       return this.authService.updateProfile(user.sub, updateProfileDto);
+   }
+
+   /**
+    * Cambia la contrasena del usuario autenticado.
+    *
+    * @param user - Usuario autenticado
+    * @param changePasswordDto - Contrasena actual y nueva
+    * @returns Confirmacion de cambio de contrasena
+    */
+   @ApiOperation({ summary: 'Cambiar contrasena autenticada' })
+   @ApiBearerAuth()
+   @ApiBody({ type: ChangePasswordDto })
+   @ApiOkResponse({ description: 'Contrasena actualizada correctamente.' })
+   @ApiUnauthorizedResponse({
+      description: 'Token ausente, inválido o contrasena actual incorrecta.',
+   })
+   @UseGuards(AccessTokenGuard)
+   @Patch('me/password')
+   changePassword(
+      @CurrentUser() user: AuthenticatedUser,
+      @Body() changePasswordDto: ChangePasswordDto,
+   ) {
+      return this.authService.changePassword(user.sub, changePasswordDto);
    }
 
    /**

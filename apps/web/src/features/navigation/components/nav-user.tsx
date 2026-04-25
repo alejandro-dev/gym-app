@@ -1,12 +1,12 @@
 "use client"
 
 import {
-   IconCreditCard,
    IconDotsVertical,
    IconLogout,
    IconNotification,
    IconUserCircle,
 } from "@tabler/icons-react"
+import Link from "next/link"
 
 import { useAuthLogout } from "@/features/auth/hooks/use-auth-logout"
 import {
@@ -94,9 +94,11 @@ export function NavUser({
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup>
-                     <DropdownMenuItem>
-                        <IconUserCircle />
-                        Perfil
+                     <DropdownMenuItem asChild>
+                        <Link href="/profile">
+                           <IconUserCircle />
+                           Perfil
+                        </Link>
                      </DropdownMenuItem>
                      <DropdownMenuItem>
                         <IconNotification />

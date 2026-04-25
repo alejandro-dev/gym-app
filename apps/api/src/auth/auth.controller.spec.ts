@@ -11,6 +11,7 @@ jest.mock('@nestjs/throttler', () => ({
 describe('AuthController', () => {
    let controller: AuthController;
    const authServiceMock = {
+      changePassword: jest.fn(),
       verifyEmail: jest.fn(),
    };
 
@@ -47,5 +48,30 @@ describe('AuthController', () => {
          'valid-token-value',
       );
       expect(result).toEqual({ message: 'Email verified successfully' });
+   });
+
+   it('changes the authenticated user password', async () => {
+      authServiceMock.changePassword.mockResolvedValue({
+         message: 'Password updated successfully',
+      });
+
+      const result = await controller.changePassword(
+         {
+            sub: 'user-1',
+            email: 'alex@example.com',
+            role: 'USER',
+            tokenType: 'access',
+         },
+         {
+            currentPassword: 'supersecreto123',
+            newPassword: 'nuevasegura123',
+         },
+      );
+
+      expect(authServiceMock.changePassword).toHaveBeenCalledWith('user-1', {
+         currentPassword: 'supersecreto123',
+         newPassword: 'nuevasegura123',
+      });
+      expect(result).toEqual({ message: 'Password updated successfully' });
    });
 });

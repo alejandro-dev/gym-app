@@ -14,6 +14,7 @@ import { promisify } from 'util';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { AuthTokenPayload } from './interfaces/auth-token-payload.interface';
 import { hashValue } from './utils/hash-value.utils';
@@ -241,6 +242,53 @@ export class AuthService {
       });
 
       return user;
+   }
+
+   /**
+    * Cambia la contrasena del usuario autenticado tras verificar la actual.
+    *
+    * @param userId - Identificador del usuario autenticado
+    * @param changePasswordDto - Contrasena actual y nueva
+    * @returns Confirmacion de cambio
+    * @throws UnauthorizedException si el usuario no existe o la contrasena actual no coincide
+    * @throws BadRequestException si la nueva contrasena coincide con la actual
+    */
+   async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
+      const user = await this.prisma.user.findUnique({
+         where: { id: userId },
+         select: { id: true, passwordHash: true },
+      });
+
+      if (!user) throw new UnauthorizedException('User not found');
+
+      const isCurrentPasswordValid = await this.verifyValue(
+         changePasswordDto.currentPassword,
+         user.passwordHash,
+      );
+
+      if (!isCurrentPasswordValid) {
+         throw new UnauthorizedException('Current password is incorrect');
+      }
+
+      const isSamePassword = await this.verifyValue(
+         changePasswordDto.newPassword,
+         user.passwordHash,
+      );
+
+      if (isSamePassword) {
+         throw new BadRequestException(
+            'New password must be different from current password',
+         );
+      }
+
+      await this.prisma.user.update({
+         where: { id: userId },
+         data: {
+            passwordHash: await hashValue(changePasswordDto.newPassword),
+         },
+      });
+
+      return { message: 'Password updated successfully' };
    }
 
    /**
