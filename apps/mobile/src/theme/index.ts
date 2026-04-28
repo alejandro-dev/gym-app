@@ -19,8 +19,6 @@ const palette = {
 		text: '#0f172a',
 		muted: '#475569',
 		border: '#cbd5e1',
-		bgButton: '#2563eb',
-		textButton: '#ffffff',
 	},
 	dark: {
 		background: '#020617',

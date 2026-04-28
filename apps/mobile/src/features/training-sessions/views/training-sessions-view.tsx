@@ -1,34 +1,30 @@
-import { memo, useState } from "react";
-import { StyleSheet } from 'react-native';
-import {
-   Text,
-   Avatar,
-   Button,
-   Card,
-   List,
-   useTheme,
-   Tooltip,
-   Appbar,
-} from 'react-native-paper';
+import BottomSheet from '@gorhom/bottom-sheet';
+import { router } from 'expo-router';
+import { memo, type RefObject } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Button, List, Text, useTheme } from 'react-native-paper';
 
-const TrainingSessionsView = () => {
-   const [expanded, setExpanded] = useState<boolean>(true);
+import { WorkoutPlanCard } from '../components/workout-plan-card';
+import { useTrainingSessionsView } from '../hooks/use-training-sessions-view';
 
-   const _handlePress = () => {
-      setExpanded(!expanded);
-   };
+interface TrainingSessionsViewProps {
+   bottomSheetRef: RefObject<BottomSheet | null>;
+}
+
+const TrainingSessionsView = ({ bottomSheetRef }: TrainingSessionsViewProps) => {
+   const { expanded, setExpanded, data, isLoading, isError, workoutPlans,handleOpenWorkoutOptions} = useTrainingSessionsView({ bottomSheetRef });
+
+   const theme = useTheme();
 
    return (
-      <>
-         <List.Section 
-            title="Rutinas" 
-            titleStyle={styles.sectionTitle}
-         >
+      <View style={styles.container}>
+         <List.Section title="Rutinas" titleStyle={styles.sectionTitle}>
             <Button
                mode="contained"
+               onPress={() => router.navigate('/training-sessions/new')}
                contentStyle={[
                   styles.buttonContent,
-                  { backgroundColor: useTheme().colors.onPrimary },
+                  { backgroundColor: theme.colors.primary },
                ]}
                labelStyle={styles.buttonLabel}
                style={styles.button}
@@ -38,43 +34,42 @@ const TrainingSessionsView = () => {
 
             <List.Accordion
                expanded={expanded}
-               onPress={_handlePress}
-               title="Mis rutinas (1)"
+               onPress={() => setExpanded((current) => !current)}
+               title={`Mis rutinas (${data?.total ?? 0})`}
                style={styles.accordion}
                contentStyle={styles.accordionContent}
-               titleStyle={[
-                  styles.accordionTitle,
-                  { color: '#cbd5e1' }
-               ]}
+               titleStyle={[styles.accordionTitle, { color: '#cbd5e1' }]}
                rippleColor="transparent"
             >
-               <Card
-                  style={styles.card}
-                  mode="outlined"
-               >
-                  <Card.Title
-                     title="Push"
-                     right={(props) => <Tooltip title="More options">
-                     <Appbar.Action icon='dots-horizontal' onPress={() => {}} />
-                  </Tooltip>}
-                  />
-                  
-                  <Card.Content>
-                     <Text>
-                     Pecho, hombro y triceps.
-                     </Text>
-                  </Card.Content>
-               </Card>
+               {isLoading ? (
+                  <Text style={styles.stateText}>Cargando rutinas...</Text>
+               ) : isError ? (
+                  <Text style={styles.stateText}>No se pudieron cargar las rutinas.</Text>
+               ) : workoutPlans.length === 0 ? (
+                  <Text style={styles.stateText}>Todavía no tienes rutinas.</Text>
+               ) : (
+                  <View style={styles.list}>
+                     {workoutPlans.map((workoutPlan) => (
+                        <WorkoutPlanCard
+                           key={workoutPlan.id}
+                           workoutPlan={workoutPlan}
+                           onOpenOptions={handleOpenWorkoutOptions}
+                        />
+                     ))}
+                  </View>
+               )}
             </List.Accordion>
          </List.Section>
-      </>
-      
+      </View>
    );
 };
 
 export default memo(TrainingSessionsView);
 
 const styles = StyleSheet.create({
+   container: {
+      flex: 1,
+   },
    button: {
       borderRadius: 18,
       borderCurve: 'continuous',
@@ -105,7 +100,11 @@ const styles = StyleSheet.create({
       fontSize: 16,
       marginLeft: 0,
    },
-   card: {
-      margin: 0,
-  },
+   list: {
+      gap: 12,
+   },
+   stateText: {
+      color: '#cbd5e1',
+      paddingVertical: 12,
+   },
 });
