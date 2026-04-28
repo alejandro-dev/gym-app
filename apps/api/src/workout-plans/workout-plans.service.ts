@@ -476,10 +476,7 @@ export class WorkoutPlansService {
    ): Prisma.WorkoutPlanWhereInput | undefined {
       if (user.role === UserRole.USER) {
          return {
-            OR: [
-               { userId: user.sub },
-               { createdById: user.sub }
-            ]
+            OR: [{ userId: user.sub }, { createdById: user.sub }],
          };
       }
 

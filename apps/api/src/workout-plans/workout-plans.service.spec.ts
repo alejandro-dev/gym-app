@@ -434,10 +434,7 @@ describe('WorkoutPlansService', () => {
             createdAt: 'desc',
          });
          expect(findManyArgs.where).toEqual({
-            OR: [
-               { userId: currentUser.sub },
-               { createdById: currentUser.sub },
-            ],
+            OR: [{ userId: currentUser.sub }, { createdById: currentUser.sub }],
          });
          expect(result).toMatchObject({
             total: orderedWorkoutPlans.length,
