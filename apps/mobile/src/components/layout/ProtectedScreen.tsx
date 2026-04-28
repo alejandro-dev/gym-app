@@ -7,7 +7,10 @@ interface ProtectedScreenProps {
    style?: StyleProp<ViewStyle>;
 }
 
-export function ProtectedScreen({ children, style }: ProtectedScreenProps) {
+export function ProtectedScreen({
+   children,
+   style,
+}: ProtectedScreenProps) {
    return (
       <SafeAreaView
          edges={['top', 'left', 'right']}

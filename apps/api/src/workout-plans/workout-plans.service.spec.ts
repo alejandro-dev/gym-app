@@ -406,7 +406,7 @@ describe('WorkoutPlansService', () => {
    });
 
    describe('findAll', () => {
-      it('returns only the authenticated user workout plans when role is USER', async () => {
+      it('returns workout plans owned or created by the authenticated user when role is USER', async () => {
          const orderedWorkoutPlans = [
             updatedWorkoutPlanRecord,
             workoutPlanRecord,
@@ -433,7 +433,9 @@ describe('WorkoutPlansService', () => {
          expect(findManyArgs.orderBy).toEqual({
             createdAt: 'desc',
          });
-         expect(findManyArgs.where).toEqual({ userId: currentUser.sub });
+         expect(findManyArgs.where).toEqual({
+            OR: [{ userId: currentUser.sub }, { createdById: currentUser.sub }],
+         });
          expect(result).toMatchObject({
             total: orderedWorkoutPlans.length,
             page: 0,

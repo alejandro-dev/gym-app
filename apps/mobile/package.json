@@ -11,8 +11,9 @@
     "lint": "expo lint"
   },
   "dependencies": {
-    "@gym-app/types": "workspace:*",
     "@expo/metro-runtime": "^6.1.2",
+    "@gorhom/bottom-sheet": "^5.2.10",
+    "@gym-app/types": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
     "@react-native-vector-icons/material-design-icons": "^13.1.0",
     "@react-navigation/bottom-tabs": "^7.4.0",

@@ -5,7 +5,7 @@ import { ErrorCode } from "@/services/errors/ErrorCode";
 import { forbidden, redirect } from "next/navigation";
 
 export default async function ExercisesPage() {
-   await requireRoles(["ADMIN", "COACH"]);
+   await requireRoles(["ADMIN"]);
    
    let initialData;
 
