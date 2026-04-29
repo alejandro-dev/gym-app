@@ -1,18 +1,20 @@
-import BottomSheet from '@gorhom/bottom-sheet';
 import { router } from 'expo-router';
-import { memo, type RefObject } from 'react';
+import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, List, Text, useTheme } from 'react-native-paper';
+import type { WorkoutPlan } from '@gym-app/types';
 
 import { WorkoutPlanCard } from '../components/workout-plan-card';
 import { useTrainingSessionsView } from '../hooks/use-training-sessions-view';
 
 interface TrainingSessionsViewProps {
-   bottomSheetRef: RefObject<BottomSheet | null>;
+   onOpenWorkoutOptions: (workoutPlan: WorkoutPlan) => void;
 }
 
-const TrainingSessionsView = ({ bottomSheetRef }: TrainingSessionsViewProps) => {
-   const { expanded, setExpanded, data, isLoading, isError, workoutPlans,handleOpenWorkoutOptions} = useTrainingSessionsView({ bottomSheetRef });
+const TrainingSessionsView = ({
+   onOpenWorkoutOptions,
+}: TrainingSessionsViewProps) => {
+   const { expanded, isLoading, isError, workoutPlans, setExpanded } = useTrainingSessionsView();
 
    const theme = useTheme();
 
@@ -35,7 +37,7 @@ const TrainingSessionsView = ({ bottomSheetRef }: TrainingSessionsViewProps) => 
             <List.Accordion
                expanded={expanded}
                onPress={() => setExpanded((current) => !current)}
-               title={`Mis rutinas (${data?.total ?? 0})`}
+               title={`Mis rutinas (${workoutPlans?.length ?? 0})`}
                style={styles.accordion}
                contentStyle={styles.accordionContent}
                titleStyle={[styles.accordionTitle, { color: '#cbd5e1' }]}
@@ -53,7 +55,7 @@ const TrainingSessionsView = ({ bottomSheetRef }: TrainingSessionsViewProps) => 
                         <WorkoutPlanCard
                            key={workoutPlan.id}
                            workoutPlan={workoutPlan}
-                           onOpenOptions={handleOpenWorkoutOptions}
+                           onOpenOptions={onOpenWorkoutOptions}
                         />
                      ))}
                   </View>
@@ -79,8 +81,6 @@ const styles = StyleSheet.create({
    },
    buttonLabel: {
       fontSize: 16,
-      fontWeight: '600',
-      color: '#fff',
    },
    sectionTitle: {
       fontSize: 18,

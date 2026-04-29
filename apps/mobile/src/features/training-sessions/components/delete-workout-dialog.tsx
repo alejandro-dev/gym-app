@@ -1,28 +1,71 @@
 import { StyleSheet, View } from 'react-native';
-import { Button, Portal, Dialog, useTheme, type MD3Theme } from 'react-native-paper';
+import {
+   Button,
+   Portal,
+   Dialog,
+   Text,
+   useTheme,
+   type MD3Theme,
+} from 'react-native-paper';
+import type { WorkoutPlan } from '@gym-app/types';
 
 interface DeleteWorkoutDialogProps {
    visible: boolean;
+   workoutPlan: WorkoutPlan | null;
+   isDeleting: boolean;
    close: () => void;
+   onConfirm: () => void;
 }
 
-export const DeleteWorkoutDialog = (function DeleteWorkoutDialog({
+// Dialogo para confirmar la eliminación de una rutina.
+export const DeleteWorkoutDialog = function DeleteWorkoutDialog({
    visible,
+   workoutPlan,
+   isDeleting,
    close,
+   onConfirm,
 }: DeleteWorkoutDialogProps) {
    const theme = useTheme();
    const styles = getStyles(theme);
 
    return (
       <Portal>
-         <Dialog onDismiss={close} visible={visible} dismissable={false} style={styles.dialog}>
-            <Dialog.Title style={styles.title}>¿Estás seguro de que quieres eliminar esta rutina?</Dialog.Title>
+         <Dialog
+            onDismiss={isDeleting ? undefined : close}
+            visible={visible}
+            dismissable={!isDeleting}
+            style={styles.dialog}
+         >
+            <Dialog.Title style={styles.title}>
+               ¿Eliminar rutina?
+            </Dialog.Title>
+
+            <Dialog.Content>
+               <Text style={styles.description}>
+                  {workoutPlan
+                     ? `Se eliminará permanentemente "${workoutPlan.name}". Esta acción no se puede deshacer.`
+                     : 'Esta acción no se puede deshacer.'}
+               </Text>
+            </Dialog.Content>
+
             <Dialog.Actions>
                <View style={styles.viewContainer}>
-                  <Button style={styles.buttonDelete} labelStyle={styles.buttonLabelDelete} onPress={close}>
-                     Borrar rutina
+                  <Button
+                     style={styles.buttonDelete}
+                     labelStyle={styles.buttonLabelDelete}
+                     disabled={isDeleting || !workoutPlan}
+                     loading={isDeleting}
+                     onPress={onConfirm}
+                  >
+                     {isDeleting ? 'Eliminando...' : 'Borrar rutina'}
                   </Button>
-                  <Button style={styles.button} labelStyle={styles.buttonLabel} onPress={close}>
+
+                  <Button
+                     style={styles.button}
+                     labelStyle={styles.buttonLabel}
+                     disabled={isDeleting}
+                     onPress={close}
+                  >
                      Cancelar
                   </Button>
                </View>
@@ -30,7 +73,7 @@ export const DeleteWorkoutDialog = (function DeleteWorkoutDialog({
          </Dialog>
       </Portal>
    );
-});
+};
 
 const getStyles = (theme: MD3Theme) =>
    StyleSheet.create({
@@ -41,6 +84,10 @@ const getStyles = (theme: MD3Theme) =>
          fontSize: 18,
          fontWeight: '600',
          color: '#fff',
+         textAlign: 'center',
+      },
+      description: {
+         color: '#cbd5e1',
          textAlign: 'center',
       },
       button: {

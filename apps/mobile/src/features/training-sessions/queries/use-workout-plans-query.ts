@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
    getWorkoutPlans,
    type SearchWorkoutPlansParams,
-} from '@/services/api/workoutPlanService';
+} from '@/services/api/workoutPlansService';
 
 import { workoutPlanQueryKeys } from './workout-plan-query-keys';
 

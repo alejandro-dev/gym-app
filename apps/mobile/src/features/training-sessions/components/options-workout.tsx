@@ -1,4 +1,5 @@
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import type { WorkoutPlan } from '@gym-app/types';
 import { memo, useMemo, type RefObject } from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
@@ -10,12 +11,17 @@ import {
 
 interface OptionsWorkoutProps {
    bottomSheetRef: RefObject<BottomSheet | null>;
+   selectedWorkoutPlan: WorkoutPlan | null;
    handleOpenDeleteWorkoutDialog: () => void;
+   handleOpenWorkoutDetail: (id: string) => void;
 }
 
+// Componente de opciones para la vista de rutinas. Mostramos las acciones disponibles para cada rutina.
 export const OptionsWorkout = memo(function OptionsWorkout({
    bottomSheetRef,
+   selectedWorkoutPlan,
    handleOpenDeleteWorkoutDialog,
+   handleOpenWorkoutDetail,
 }: OptionsWorkoutProps) {
    const theme = useTheme();
 
@@ -39,7 +45,15 @@ export const OptionsWorkout = memo(function OptionsWorkout({
             </Text>
             {/* Aquí viven las acciones que queremos mostrar al pulsar los tres puntos. */}
             <View style={styles.actions}>
-               <List.Item title="Editar rutina" left={(props) => <List.Icon {...props} icon="pencil-outline" />} />
+               <List.Item
+                  title="Editar rutina"
+                  left={(props) => <List.Icon {...props} icon="pencil-outline" />}
+                  disabled={!selectedWorkoutPlan}
+                  onPress={() => {
+                     if (!selectedWorkoutPlan) return;
+                     handleOpenWorkoutDetail(selectedWorkoutPlan.id);
+                  }}
+               />
                <Divider />
                <List.Item title="Duplicar rutina" left={(props) => <List.Icon {...props} icon="content-copy" />} />
                <Divider />

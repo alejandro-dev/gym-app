@@ -1,68 +1,62 @@
 import {
    createContext,
    type ReactNode,
+   useCallback,
    useContext,
    useMemo,
    useState,
 } from 'react';
-import type { ExerciseCategory, MuscleGroup } from '@gym-app/types';
+import type {
+   WorkoutPlanGoal,
+   WorkoutPlanLevel,
+} from '@gym-app/types';
 
-export type RoutineExerciseDraft = {
-   id: string;
-   exerciseId: string;
-   exerciseName: string;
-   muscleGroup: MuscleGroup;
-   category: ExerciseCategory;
-   equipment: string | null;
-   isCompound: boolean;
-   day: number | null;
-   order: number;
-   targetSets: number | null;
-   targetRepsMin: number | null;
-   targetRepsMax: number | null;
-   targetWeightKg: number | null;
-   restSeconds: number | null;
-   notes: string | null;
-};
+import { RoutineCatalogExercise, NewRoutineState, RoutineExerciseDraft, NewRoutineContextValue } from '../types';
 
-type NewRoutineState = {
-   name: string;
-   description: string;
-   durationWeeks: string;
-   selectedGoal: string;
-   selectedLevel: string;
-   status: string;
-   assignAthlete: boolean;
-   exercises: RoutineExerciseDraft[];
-};
-
-type NewRoutineContextValue = NewRoutineState & {
-   canCreateRoutine: boolean;
-   setName: (name: string) => void;
-   setDescription: (description: string) => void;
-   setDurationWeeks: (durationWeeks: string) => void;
-   setSelectedGoal: (selectedGoal: string) => void;
-   setSelectedLevel: (selectedLevel: string) => void;
-   setStatus: (status: string) => void;
-   setAssignAthlete: (assignAthlete: boolean) => void;
-   addExercise: (exercise: Omit<RoutineExerciseDraft, 'id' | 'order'>) => void;
-   removeExercise: (exerciseId: string) => void;
-};
-
+// Contexto para la vista de nueva rutina.
 const NewRoutineContext = createContext<NewRoutineContextValue | null>(null);
 
+// Función para proveer el contexto de nueva rutina.
 export function NewRoutineProvider({ children }: { children: ReactNode }) {
    const [name, setName] = useState('');
    const [description, setDescription] = useState('');
    const [durationWeeks, setDurationWeeks] = useState('');
-   const [selectedGoal, setSelectedGoal] = useState('Hipertrofia');
-   const [selectedLevel, setSelectedLevel] = useState('Intermedio');
+   const [selectedGoal, setSelectedGoal] =
+      useState<WorkoutPlanGoal>('HYPERTROPHY');
+   const [selectedLevel, setSelectedLevel] =
+      useState<WorkoutPlanLevel>('INTERMEDIATE');
    const [status, setStatus] = useState('active');
-   const [assignAthlete, setAssignAthlete] = useState(true);
    const [exercises, setExercises] = useState<RoutineExerciseDraft[]>([]);
+   const [selectedRoutineExercise, setSelectedRoutineExercise] =
+      useState<RoutineCatalogExercise | null>(null);
 
+   // Para crear exigimos nombre y al menos un ejercicio.
    const canCreateRoutine = name.trim().length > 0 && exercises.length > 0;
 
+   // Función para hydratar los datos de la rutina para mostrarlos en la vista.
+   const hydrateRoutineForEdit = useCallback(
+      (nextState: Partial<NewRoutineState>) => {
+         // Hidratamos solo los campos enviados para no pisar estado local que no
+         // forma parte de la carga básica, por ejemplo ejercicios en otro paso.
+         if (nextState.name !== undefined) setName(nextState.name);
+         if (nextState.description !== undefined)
+            setDescription(nextState.description);
+         if (nextState.durationWeeks !== undefined)
+            setDurationWeeks(nextState.durationWeeks);
+         if (nextState.selectedGoal !== undefined)
+            setSelectedGoal(nextState.selectedGoal);
+         if (nextState.selectedLevel !== undefined)
+            setSelectedLevel(nextState.selectedLevel);
+         if (nextState.status !== undefined) setStatus(nextState.status);
+         if (nextState.exercises !== undefined) setExercises(nextState.exercises);
+         if (nextState.selectedRoutineExercise !== undefined) {
+            setSelectedRoutineExercise(nextState.selectedRoutineExercise);
+         }
+      },
+      [],
+   );
+
+   // Datos de la rutina para mostrarlos en la vista.
    const value = useMemo<NewRoutineContextValue>(
       () => ({
          name,
@@ -71,8 +65,8 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
          selectedGoal,
          selectedLevel,
          status,
-         assignAthlete,
          exercises,
+         selectedRoutineExercise,
          canCreateRoutine,
          setName,
          setDescription,
@@ -80,8 +74,10 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
          setSelectedGoal,
          setSelectedLevel,
          setStatus,
-         setAssignAthlete,
+         setSelectedRoutineExercise,
+         hydrateRoutineForEdit,
          addExercise: (exercise) => {
+            // El orden se calcula por día para que cada día empiece en 1.
             setExercises((currentExercises) => [
                ...currentExercises,
                {
@@ -95,20 +91,32 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
             ]);
          },
          removeExercise: (exerciseId) => {
+            // Quitamos solo del borrador local; la eliminación en API vendrá luego.
             setExercises((currentExercises) =>
                currentExercises.filter((exercise) => exercise.id !== exerciseId),
             );
          },
+         resetRoutine: () => {
+            setName('');
+            setDescription('');
+            setDurationWeeks('');
+            setSelectedGoal('HYPERTROPHY');
+            setSelectedLevel('INTERMEDIATE');
+            setStatus('active');
+            setExercises([]);
+            setSelectedRoutineExercise(null);
+         },
       }),
       [
-         assignAthlete,
          canCreateRoutine,
          description,
          durationWeeks,
          exercises,
+         hydrateRoutineForEdit,
          name,
          selectedGoal,
          selectedLevel,
+         selectedRoutineExercise,
          status,
       ],
    );
@@ -120,6 +128,7 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
    );
 }
 
+// Función para obtener el contexto de nueva rutina.
 export function useNewRoutine() {
    const context = useContext(NewRoutineContext);
 

@@ -23,6 +23,20 @@ export default function ProtectedLayout() {
 					name="training-sessions/new-exercise"
 					options={{ headerShown: true, title: 'Añadir ejercicio' }}
 				/>
+				<Stack.Screen
+					name="training-sessions/exercise-picker"
+					options={{
+						headerShown: true,
+						title: 'Agregar ejercicio',
+					}}
+				/>
+				<Stack.Screen
+					name="training-sessions/[id]/edit"
+					options={{ 
+						headerShown: true, 
+						title: 'Editar rutina' 
+					}}
+				/>
 			</Stack>
 		</NewRoutineProvider>
 	);

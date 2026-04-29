@@ -1,12 +1,11 @@
-import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
    getExerciseCategoryLabelEs,
    getMuscleGroupLabelEs,
 } from '@gym-app/types';
-import { Button, Card, Chip, IconButton, Text } from 'react-native-paper';
+import { Button, Card, Chip, IconButton, Text, useTheme } from 'react-native-paper';
+import { RoutineExerciseDraft } from '../types';
 
-import type { RoutineExerciseDraft } from '../context/new-routine-context';
 
 interface RoutineExercisesCardProps {
    exercises: RoutineExerciseDraft[];
@@ -14,75 +13,78 @@ interface RoutineExercisesCardProps {
    onRemoveExercise: (exerciseId: string) => void;
 }
 
-const RoutineExercisesCard = ({
+// Componente para mostrar los ejercicios de la rutina y permitir añadir o eliminar ejercicios.
+export default function RoutineExercisesCard ({
    exercises,
    onAddExercise,
    onRemoveExercise,
-}: RoutineExercisesCardProps) => (
-   <Card mode="contained" style={styles.card}>
-      <Card.Content style={styles.cardContent}>
-         <View style={styles.sectionHeader}>
-            <View style={styles.sectionCopy}>
-               <Text variant="titleMedium" style={styles.sectionTitle}>
-                  Ejercicios
-               </Text>
-               <Text variant="bodySmall" style={styles.sectionHint}>
-                  Añade al menos un ejercicio para poder crear la rutina.
-               </Text>
-            </View>
-            <Chip compact>{exercises.length}</Chip>
-         </View>
+}: RoutineExercisesCardProps){
+   const theme = useTheme();
 
-         {exercises.length > 0 ? (
-            <View style={styles.exerciseList}>
-               {exercises.map((exercise) => (
-                  <View key={exercise.id} style={styles.exerciseItem}>
-                     <View style={styles.exerciseInfo}>
-                        <Text variant="titleSmall" style={styles.exerciseName}>
-                           {exercise.exerciseName}
-                        </Text>
-                        <Text variant="bodySmall" style={styles.sectionHint}>
-                           Día {exercise.day ?? 1} · Orden {exercise.order}
-                        </Text>
-                        <View style={styles.chipRow}>
-                           <Chip compact>{getMuscleGroupLabelEs(exercise.muscleGroup)}</Chip>
-                           <Chip compact>{getExerciseCategoryLabelEs(exercise.category)}</Chip>
-                           {exercise.equipment ? (
-                              <Chip compact>{exercise.equipment}</Chip>
-                           ) : null}
+   return (
+      <Card mode="contained" style={styles.card}>
+         <Card.Content style={styles.cardContent}>
+            <View style={styles.sectionHeader}>
+               <View style={styles.sectionCopy}>
+                  <Text variant="titleMedium" style={styles.sectionTitle}>
+                     Ejercicios
+                  </Text>
+                  <Text variant="bodySmall" style={styles.sectionHint}>
+                     Añade al menos un ejercicio para poder crear la rutina.
+                  </Text>
+               </View>
+               <Chip compact style={[{ backgroundColor: theme.colors.primary }]} textStyle={styles.chipText}>{exercises.length}</Chip>
+            </View>
+
+            {exercises.length > 0 ? (
+               <View style={styles.exerciseList}>
+                  {exercises.map((exercise) => (
+                     <View key={exercise.id} style={styles.exerciseItem}>
+                        <View style={styles.exerciseInfo}>
+                           <Text variant="titleSmall" style={styles.exerciseName}>
+                              {exercise.exerciseName}
+                           </Text>
+                           <Text variant="bodySmall" style={styles.sectionHint}>
+                              Día {exercise.day ?? 1} · Orden {exercise.order}
+                           </Text>
+                           <View style={styles.chipRow}>
+                              <Chip textStyle={styles.chipText} style={styles.chip} compact>{getMuscleGroupLabelEs(exercise.muscleGroup)}</Chip>
+                              <Chip textStyle={styles.chipText} style={styles.chip} compact>{getExerciseCategoryLabelEs(exercise.category)}</Chip>
+                              {exercise.equipment ? (
+                                 <Chip textStyle={styles.chipText} style={styles.chip} compact>{exercise.equipment}</Chip>
+                              ) : null}
+                           </View>
                         </View>
+                        <IconButton
+                           icon="delete-outline"
+                           size={22}
+                           onPress={() => onRemoveExercise(exercise.id)}
+                        />
                      </View>
-                     <IconButton
-                        icon="delete-outline"
-                        size={22}
-                        onPress={() => onRemoveExercise(exercise.id)}
-                     />
-                  </View>
-               ))}
-            </View>
-         ) : (
-            <View style={styles.emptyState}>
-               <Text variant="bodyMedium" style={styles.sectionHint}>
-                  Aún no hay ejercicios en este plan.
-               </Text>
-            </View>
-         )}
+                  ))}
+               </View>
+            ) : (
+               <View style={styles.emptyState}>
+                  <Text variant="bodyMedium" style={styles.sectionHint}>
+                     Aún no hay ejercicios en este plan.
+                  </Text>
+               </View>
+            )}
 
-         <Button
-            mode="outlined"
-            icon="plus"
-            onPress={onAddExercise}
-            contentStyle={styles.buttonContent}
-            labelStyle={styles.buttonLabel}
-            style={styles.button}
-         >
-            Añadir ejercicio
-         </Button>
-      </Card.Content>
-   </Card>
-);
-
-export default memo(RoutineExercisesCard);
+            <Button
+               mode="outlined"
+               icon="plus"
+               onPress={onAddExercise}
+               contentStyle={styles.buttonContent}
+               labelStyle={styles.buttonLabel}
+               style={styles.button}
+            >
+               Añadir ejercicio
+            </Button>
+         </Card.Content>
+      </Card>
+   );
+}
 
 const styles = StyleSheet.create({
    card: {
@@ -118,7 +120,7 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       borderRadius: 20,
       borderCurve: 'continuous',
-      backgroundColor: '#e2e8f0',
+      backgroundColor: '#1c1c1c',
       paddingLeft: 14,
       paddingVertical: 10,
    },
@@ -133,6 +135,12 @@ const styles = StyleSheet.create({
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 6,
+   },
+   chip: {
+      backgroundColor: '#334155',
+   },
+   chipText: {
+      color: '#fff',
    },
    emptyState: {
       minHeight: 96,

@@ -4,20 +4,17 @@ import type {
    ExerciseCategory,
    MuscleGroup,
    WorkoutPlan,
+   WorkoutPlanGoal,
+   WorkoutPlanLevel,
+} from "@gym-app/types";
+import {
+   WORKOUT_PLAN_GOAL_LABELS_ES,
+   WORKOUT_PLAN_GOAL_VALUES,
+   WORKOUT_PLAN_LEVEL_LABELS_ES,
+   WORKOUT_PLAN_LEVEL_VALUES,
 } from "@gym-app/types";
 
-export type WorkoutPlanGoal =
-   | "STRENGTH"
-   | "HYPERTROPHY"
-   | "FAT_LOSS"
-   | "ENDURANCE"
-   | "GENERAL_FITNESS"
-   | "REHAB";
-
-export type WorkoutPlanLevel =
-   | "BEGINNER"
-   | "INTERMEDIATE"
-   | "ADVANCED";
+export type { WorkoutPlanGoal, WorkoutPlanLevel };
 
 // Versión editable del item WorkoutPlanExercise para la UI.
 // Permite exerciseId null porque una fila nueva puede existir antes de elegir Exercise.
@@ -53,28 +50,12 @@ export type WorkoutPlanViewModel = Omit<WorkoutPlan, "exercises"> & {
    exercises?: WorkoutPlanExerciseDraft[];
 };
 
-export const WORKOUT_PLAN_GOAL_LABELS: Record<WorkoutPlanGoal, string> = {
-   STRENGTH: "Fuerza",
-   HYPERTROPHY: "Hipertrofia",
-   FAT_LOSS: "Pérdida de grasa",
-   ENDURANCE: "Resistencia",
-   GENERAL_FITNESS: "Fitness general",
-   REHAB: "Readaptación",
-};
+// Mantiene la API local que ya usa web, pero los datos salen del paquete común.
+export const WORKOUT_PLAN_GOAL_LABELS = WORKOUT_PLAN_GOAL_LABELS_ES;
+export const WORKOUT_PLAN_LEVEL_LABELS = WORKOUT_PLAN_LEVEL_LABELS_ES;
 
-export const WORKOUT_PLAN_LEVEL_LABELS: Record<WorkoutPlanLevel, string> = {
-   BEGINNER: "Principiante",
-   INTERMEDIATE: "Intermedio",
-   ADVANCED: "Avanzado",
-};
-
-export const WORKOUT_PLAN_GOALS = Object.keys(
-   WORKOUT_PLAN_GOAL_LABELS,
-) as WorkoutPlanGoal[];
-
-export const WORKOUT_PLAN_LEVELS = Object.keys(
-   WORKOUT_PLAN_LEVEL_LABELS,
-) as WorkoutPlanLevel[];
+export const WORKOUT_PLAN_GOALS = [...WORKOUT_PLAN_GOAL_VALUES];
+export const WORKOUT_PLAN_LEVELS = [...WORKOUT_PLAN_LEVEL_VALUES];
 
 export function getWorkoutPlanGoalLabel(goal?: WorkoutPlanGoal | null) {
    return goal ? WORKOUT_PLAN_GOAL_LABELS[goal] : "Sin objetivo";

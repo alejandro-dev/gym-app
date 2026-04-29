@@ -30,7 +30,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - api_uploads:/app/apps/api/uploads
+      - ./apps/api/uploads:/app/apps/api/uploads
 
   postgres:
     image: postgres:16
@@ -63,5 +63,4 @@ services:
       retries: 5
 
 volumes:
-  api_uploads:
   postgres_data:

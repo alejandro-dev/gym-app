@@ -22,6 +22,18 @@ export type WorkoutPlanGoal =
 
 export type WorkoutPlanLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
 
+// Valores canónicos que entiende la API. La UI usa labels solo para mostrar.
+export declare const WORKOUT_PLAN_GOAL_VALUES: readonly WorkoutPlanGoal[];
+export declare const WORKOUT_PLAN_LEVEL_VALUES: readonly WorkoutPlanLevel[];
+
+// Labels compartidos entre web y mobile.
+export declare const WORKOUT_PLAN_GOAL_LABELS_ES: Record<WorkoutPlanGoal, string>;
+export declare const WORKOUT_PLAN_LEVEL_LABELS_ES: Record<WorkoutPlanLevel, string>;
+
+// Helpers de presentación para no duplicar mapas en cada app.
+export declare function getWorkoutPlanGoalLabelEs(goal: WorkoutPlanGoal): string;
+export declare function getWorkoutPlanLevelLabelEs(level: WorkoutPlanLevel): string;
+
 export type WorkoutPlanType = "new" | "copy";
 
 export declare const ROLE_GROUP_VALUES: readonly UserRole[];

@@ -11,6 +11,7 @@ interface RoutineGeneralInfoCardProps {
    onDurationWeeksChange: (durationWeeks: string) => void;
 }
 
+// Componente para mostrar, añadir o actualizar los datos generales de la rutina.
 const RoutineGeneralInfoCard = ({
    name,
    description,
@@ -24,9 +25,6 @@ const RoutineGeneralInfoCard = ({
          <View style={styles.sectionHeader}>
             <Text variant="titleMedium" style={styles.sectionTitle}>
                Datos generales
-            </Text>
-            <Text variant="bodySmall" style={styles.sectionHint}>
-               Obligatorio
             </Text>
          </View>
 

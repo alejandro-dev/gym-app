@@ -1,64 +1,35 @@
-import { memo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { memo } from 'react';
+import {
+   KeyboardAvoidingView,
+   Platform,
+   Pressable,
+   StyleSheet,
+   View,
+} from 'react-native';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-   getExerciseCategoryLabelEs,
-   getMuscleGroupLabelEs,
-} from '@gym-app/types';
+import { getMuscleGroupLabelEs } from '@gym-app/types';
 import {
    Button,
    Card,
-   Chip,
    HelperText,
    Text,
    TextInput,
 } from 'react-native-paper';
 
+import { resolveApiImageUrl } from '@/services/api/media';
+
 import { useNewRoutine } from '../context/new-routine-context';
-import {
-   ROUTINE_EXERCISE_CATALOG,
-   type RoutineCatalogExercise,
-} from '../data/exercise-catalog';
+import useAddRoutineExerciseView from '../hooks/use-add-routine-exercise-view';
+import { RoutineCatalogExercise } from '../types';
 
 const AddRoutineExerciseView = () => {
    const insets = useSafeAreaInsets();
-   const { addExercise } = useNewRoutine();
-   const [selectedExercise, setSelectedExercise] =
-      useState<RoutineCatalogExercise | null>(null);
-   const [day, setDay] = useState('1');
-   const [targetSets, setTargetSets] = useState('');
-   const [targetRepsMin, setTargetRepsMin] = useState('');
-   const [targetRepsMax, setTargetRepsMax] = useState('');
-   const [targetWeightKg, setTargetWeightKg] = useState('');
-   const [restSeconds, setRestSeconds] = useState('');
-   const [notes, setNotes] = useState('');
-
-   const canAddExercise = Boolean(selectedExercise);
-
-   const handleAddExercise = () => {
-      if (!selectedExercise) return;
-
-      addExercise({
-         exerciseId: selectedExercise.id,
-         exerciseName: selectedExercise.name,
-         muscleGroup: selectedExercise.muscleGroup,
-         category: selectedExercise.category,
-         equipment: selectedExercise.equipment,
-         isCompound: selectedExercise.isCompound,
-         day: toOptionalNumber(day) ?? 1,
-         targetSets: toOptionalNumber(targetSets),
-         targetRepsMin: toOptionalNumber(targetRepsMin),
-         targetRepsMax: toOptionalNumber(targetRepsMax),
-         targetWeightKg: toOptionalNumber(targetWeightKg),
-         restSeconds: toOptionalNumber(restSeconds),
-         notes: notes.trim() ? notes.trim() : null,
-      });
-
-      router.back();
-   };
-
+   const { addExercise, selectedRoutineExercise, setSelectedRoutineExercise } = useNewRoutine();
+   const { canAddExercise, day, setDay, targetSets, setTargetSets, targetRepsMin, setTargetRepsMin, targetRepsMax, setTargetRepsMax, targetWeightKg, setTargetWeightKg, restSeconds, setRestSeconds, notes, setNotes, handleAddExercise } = useAddRoutineExerciseView({addExercise, selectedRoutineExercise, setSelectedRoutineExercise});
+   
    return (
       <KeyboardAvoidingView
          style={styles.keyboardAvoidingView}
@@ -86,48 +57,42 @@ const AddRoutineExerciseView = () => {
                         Ejercicio
                      </Text>
                      <Text variant="bodySmall" style={styles.sectionHint}>
-                        Selecciona un ejercicio existente, igual que en el editor web
-                        de planes.
+                        Selecciona un ejercicio existente para completar la
+                        prescripción.
                      </Text>
                   </View>
 
-                  <View style={styles.catalogList}>
-                     {ROUTINE_EXERCISE_CATALOG.map((exercise) => {
-                        const isSelected = selectedExercise?.id === exercise.id;
-
-                        return (
-                           <Card
-                              key={exercise.id}
-                              mode={isSelected ? 'contained' : 'outlined'}
-                              style={[
-                                 styles.exerciseOption,
-                                 isSelected ? styles.exerciseOptionSelected : null,
-                              ]}
-                              onPress={() => setSelectedExercise(exercise)}
-                           >
-                              <Card.Content style={styles.exerciseOptionContent}>
-                                 <Text variant="titleSmall" style={styles.exerciseName}>
-                                    {exercise.name}
-                                 </Text>
-                                 <View style={styles.chipRow}>
-                                    <Chip compact>
-                                       {getMuscleGroupLabelEs(exercise.muscleGroup)}
-                                    </Chip>
-                                    <Chip compact>
-                                       {getExerciseCategoryLabelEs(exercise.category)}
-                                    </Chip>
-                                    {exercise.equipment ? (
-                                       <Chip compact>{exercise.equipment}</Chip>
-                                    ) : null}
-                                    {exercise.isCompound ? (
-                                       <Chip compact>Multiarticular</Chip>
-                                    ) : null}
-                                 </View>
-                              </Card.Content>
-                           </Card>
-                        );
-                     })}
-                  </View>
+                  <Pressable
+                     style={styles.exerciseSelector}
+                     onPress={() =>
+                        router.navigate('/training-sessions/exercise-picker')
+                     }
+                  >
+                     {selectedRoutineExercise ? (
+                        <ExerciseThumbnail exercise={selectedRoutineExercise} />
+                     ) : (
+                        <View style={styles.emptyThumbnail}>
+                           <Text variant="titleMedium" style={styles.emptyThumbnailText}>
+                              +
+                           </Text>
+                        </View>
+                     )}
+                     <View style={styles.exerciseSelectorCopy}>
+                        <Text variant="titleSmall" style={styles.exerciseName}>
+                           {selectedRoutineExercise?.name ?? 'Seleccionar ejercicio'}
+                        </Text>
+                        <Text variant="bodySmall" style={styles.exerciseSubtitle}>
+                           {selectedRoutineExercise
+                              ? getMuscleGroupLabelEs(
+                                   selectedRoutineExercise.muscleGroup,
+                                )
+                              : 'Abrir listado de ejercicios'}
+                        </Text>
+                     </View>
+                     <Text variant="labelLarge" style={styles.changeLabel}>
+                        {selectedRoutineExercise ? 'Cambiar' : 'Buscar'}
+                     </Text>
+                  </Pressable>
                </Card.Content>
             </Card>
 
@@ -244,16 +209,30 @@ const AddRoutineExerciseView = () => {
 
 export default memo(AddRoutineExerciseView);
 
-function toOptionalNumber(value: string) {
-   const normalizedValue = value.trim().replace(',', '.');
+// Función para mostrar una imágen de ejercicio en la vista.
+function ExerciseThumbnail({ exercise }: { exercise: RoutineCatalogExercise }) {
+   // Obtenemos la URL de la imagen de ejercicio.
+   const imageUri = resolveApiImageUrl(exercise.imageUrl);
 
-   if (!normalizedValue) {
-      return null;
+   // Si no hay URL de imagen, mostramos un la inicial de la palabra del ejercicio.
+   if (!imageUri) {
+      return (
+         <View style={styles.emptyThumbnail}>
+            <Text variant="titleMedium" style={styles.emptyThumbnailText}>
+               {exercise.name.charAt(0).toUpperCase()}
+            </Text>
+         </View>
+      );
    }
 
-   const parsedValue = Number(normalizedValue);
-
-   return Number.isFinite(parsedValue) ? parsedValue : null;
+   return (
+      <Image
+         source={{ uri: imageUri }}
+         accessibilityLabel={`Imagen de ${exercise.name}`}
+         contentFit="cover"
+         style={styles.exerciseThumbnail}
+      />
+   );
 }
 
 const styles = StyleSheet.create({
@@ -283,26 +262,46 @@ const styles = StyleSheet.create({
       color: '#64748b',
       lineHeight: 18,
    },
-   catalogList: {
-      gap: 10,
-   },
-   exerciseOption: {
+   exerciseSelector: {
+      alignItems: 'center',
+      borderColor: '#dbe3ef',
       borderRadius: 20,
-      borderCurve: 'continuous',
+      borderWidth: 1,
+      flexDirection: 'row',
+      gap: 12,
+      padding: 12,
    },
-   exerciseOptionSelected: {
-      backgroundColor: '#dbeafe',
-   },
-   exerciseOptionContent: {
-      gap: 8,
+   exerciseSelectorCopy: {
+      flex: 1,
+      gap: 2,
    },
    exerciseName: {
       fontWeight: '800',
    },
-   chipRow: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 6,
+   exerciseSubtitle: {
+      color: '#64748b',
+   },
+   changeLabel: {
+      color: '#2563eb',
+      fontWeight: '800',
+   },
+   exerciseThumbnail: {
+      backgroundColor: '#e2e8f0',
+      borderRadius: 16,
+      height: 58,
+      width: 58,
+   },
+   emptyThumbnail: {
+      alignItems: 'center',
+      backgroundColor: '#e2e8f0',
+      borderRadius: 16,
+      height: 58,
+      justifyContent: 'center',
+      width: 58,
+   },
+   emptyThumbnailText: {
+      color: '#475569',
+      fontWeight: '800',
    },
    inputGrid: {
       flexDirection: 'row',
@@ -341,6 +340,6 @@ const styles = StyleSheet.create({
    },
    buttonLabel: {
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: '600',
    },
 });

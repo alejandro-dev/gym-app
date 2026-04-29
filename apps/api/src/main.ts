@@ -4,8 +4,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
 import { REFRESH_TOKEN_COOKIE_NAME } from './auth/constants/auth.constants';
 import { AppModule } from './app.module';
-import { join } from 'node:path';
 import { NestExpressApplication } from '@nestjs/platform-express/interfaces/nest-express-application.interface';
+import { UPLOADS_DIR } from './exercises/upload/exercise-image-multer.options';
 
 async function bootstrap() {
    const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -24,7 +24,7 @@ async function bootstrap() {
       }),
    );
 
-   app.useStaticAssets(join(process.cwd(), 'uploads'), {
+   app.useStaticAssets(UPLOADS_DIR, {
       prefix: '/uploads',
    });
 
