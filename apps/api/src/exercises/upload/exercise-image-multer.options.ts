@@ -2,14 +2,25 @@ import { BadRequestException } from '@nestjs/common';
 import type { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 import { diskStorage } from 'multer';
 import { randomUUID } from 'node:crypto';
-import { mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 // Nombre del campo de la imagen en el formulario de subida
 export const EXERCISE_IMAGE_FIELD = 'image';
 
+// Directorio raíz estable de la app API, independientemente de si el comando se
+// ejecuta desde el monorepo o desde apps/api.
+export const API_APP_DIR = existsSync(
+   join(process.cwd(), 'apps', 'api', 'package.json'),
+)
+   ? join(process.cwd(), 'apps', 'api')
+   : process.cwd();
+
+// Directorio público de subida de archivos
+export const UPLOADS_DIR = join(API_APP_DIR, 'uploads');
+
 // Directorio de subida de imágenes de ejercicios
-export const EXERCISE_IMAGES_DIR = join(process.cwd(), 'uploads', 'exercises');
+export const EXERCISE_IMAGES_DIR = join(UPLOADS_DIR, 'exercises');
 
 // Tamaño máximo de imagen de ejercicio
 export const MAX_EXERCISE_IMAGE_SIZE = 5 * 1024 * 1024;

@@ -1,4 +1,5 @@
-import type { SearchWorkoutPlansParams } from '@/services/api/workoutPlanService';
+import type { SearchWorkoutPlansParams } from '@/services/api/workoutPlansService';
+
 
 // Claves de consulta para las sesiones de entrenamiento
 export const workoutPlanQueryKeys = {
@@ -11,4 +12,8 @@ export const workoutPlanQueryKeys = {
    // Clave concreta para un listado con parámetros específicos.
    list: (params: SearchWorkoutPlansParams) =>
       [...workoutPlanQueryKeys.lists(), params] as const,
+
+   // Clave para obtener detalles de una rutina
+   detail: (id: string) => [...workoutPlanQueryKeys.all, 'detail', id] as const,
+
 };

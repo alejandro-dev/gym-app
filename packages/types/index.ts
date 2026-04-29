@@ -19,6 +19,49 @@ export type WorkoutPlanGoal =
   | "GENERAL_FITNESS"
   | "REHAB";
 export type WorkoutPlanLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+
+// Valores canónicos que entiende la API. La UI debe guardar estos enums,
+// y usar los mapas de labels solo para mostrar texto al usuario.
+export const WORKOUT_PLAN_GOAL_VALUES = [
+  "STRENGTH",
+  "HYPERTROPHY",
+  "FAT_LOSS",
+  "ENDURANCE",
+  "GENERAL_FITNESS",
+  "REHAB",
+] as const satisfies readonly WorkoutPlanGoal[];
+
+export const WORKOUT_PLAN_LEVEL_VALUES = [
+  "BEGINNER",
+  "INTERMEDIATE",
+  "ADVANCED",
+] as const satisfies readonly WorkoutPlanLevel[];
+
+// Labels compartidos para que web y mobile enseñen los mismos textos.
+export const WORKOUT_PLAN_GOAL_LABELS_ES: Record<WorkoutPlanGoal, string> = {
+  STRENGTH: "Fuerza",
+  HYPERTROPHY: "Hipertrofia",
+  FAT_LOSS: "Pérdida de grasa",
+  ENDURANCE: "Resistencia",
+  GENERAL_FITNESS: "Fitness general",
+  REHAB: "Readaptación",
+};
+
+export const WORKOUT_PLAN_LEVEL_LABELS_ES: Record<WorkoutPlanLevel, string> = {
+  BEGINNER: "Principiante",
+  INTERMEDIATE: "Intermedio",
+  ADVANCED: "Avanzado",
+};
+
+// Helpers pequeños para evitar que cada app indexe los mapas a mano.
+export function getWorkoutPlanGoalLabelEs(goal: WorkoutPlanGoal) {
+  return WORKOUT_PLAN_GOAL_LABELS_ES[goal];
+}
+
+export function getWorkoutPlanLevelLabelEs(level: WorkoutPlanLevel) {
+  return WORKOUT_PLAN_LEVEL_LABELS_ES[level];
+}
+
 export type WorkoutPlanType = "new" | "copy";
 
 export const ROLE_GROUP_VALUES = [

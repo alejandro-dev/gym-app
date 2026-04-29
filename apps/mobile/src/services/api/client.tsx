@@ -21,7 +21,7 @@ export class ApiError extends Error {
 }
 
 // Obtiene la URL base de la API
-function getApiBaseUrl() {
+export function getApiBaseUrl() {
    const apiUrl =
       process.env.EXPO_PUBLIC_API_URL ??
       (Constants.expoConfig?.extra?.apiUrl as string | undefined);
@@ -31,6 +31,15 @@ function getApiBaseUrl() {
    }
 
    return apiUrl.replace(/\/$/, '');
+}
+
+// Construye una URL absoluta contra la API, conservando URLs externas.
+export function buildApiUrl(pathOrUrl: string) {
+   if (/^https?:\/\//i.test(pathOrUrl)) {
+      return pathOrUrl;
+   }
+
+   return `${getApiBaseUrl()}${pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`}`;
 }
 
 // Obtiene el mensaje de error de la API
@@ -54,7 +63,7 @@ function getErrorMessage(payload: ApiErrorPayload | null, fallback: string) {
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
    const accessToken = await getAccessToken();
 
-   const response = await fetch(`${getApiBaseUrl()}${path}`, {
+   const response = await fetch(buildApiUrl(path), {
       ...init,
       headers: {
          'Content-Type': 'application/json',

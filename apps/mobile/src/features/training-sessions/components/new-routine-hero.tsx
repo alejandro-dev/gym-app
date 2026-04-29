@@ -2,7 +2,12 @@ import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Divider, Surface, Text, useTheme } from 'react-native-paper';
 
-const NewRoutineHero = () => {
+type NewRoutineHeroProps = {
+   durationWeeks: string;
+};
+
+// Componente cabecera de la pantalla de inicio de una nueva rutina.
+const NewRoutineHero = ({ durationWeeks }: NewRoutineHeroProps) => {
    const theme = useTheme();
 
    return (
@@ -29,7 +34,9 @@ const NewRoutineHero = () => {
             </View>
             <Divider style={styles.statDivider} />
             <View style={styles.stat}>
-               <Text style={styles.statValue}>8</Text>
+               <Text style={styles.statValue}>
+                  {durationWeeks === '' ? '0' : durationWeeks}
+               </Text>
                <Text style={styles.statLabel}>semanas</Text>
             </View>
             <Divider style={styles.statDivider} />

@@ -3,9 +3,10 @@ import { Appbar, Card, Text, Tooltip } from 'react-native-paper';
 
 type WorkoutPlanCardProps = {
    workoutPlan: WorkoutPlan;
-   onOpenOptions: () => void;
+   onOpenOptions: (workoutPlan: WorkoutPlan) => void;
 };
 
+// Componente para mostrar una rutina en una lista de rutinas.
 export function WorkoutPlanCard({
    workoutPlan,
    onOpenOptions,
@@ -17,7 +18,10 @@ export function WorkoutPlanCard({
             subtitle={workoutPlan.isActive ? 'Activa' : 'Inactiva'}
             right={() => (
                <Tooltip title="Opciones">
-                  <Appbar.Action icon="dots-horizontal" onPress={onOpenOptions} />
+                  <Appbar.Action
+                     icon="dots-horizontal"
+                     onPress={() => onOpenOptions(workoutPlan)}
+                  />
                </Tooltip>
             )}
          />

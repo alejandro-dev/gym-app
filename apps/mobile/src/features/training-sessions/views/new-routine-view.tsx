@@ -4,18 +4,26 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Button, HelperText } from 'react-native-paper';
+import {
+   WORKOUT_PLAN_GOAL_VALUES,
+   WORKOUT_PLAN_LEVEL_VALUES,
+} from '@gym-app/types';
 
 import NewRoutineHero from '../components/new-routine-hero';
-import RoutineAssignAthleteCard from '../components/routine-assign-athlete-card';
 import RoutineConfigCard from '../components/routine-config-card';
 import RoutineExercisesCard from '../components/routine-exercises-card';
 import RoutineGeneralInfoCard from '../components/routine-general-info-card';
-import { useNewRoutine } from '../context/new-routine-context';
+import useNewRutineView from '../hooks/use-new-rutine-view';
 
-const GOALS = ['Fuerza', 'Hipertrofia', 'Pérdida de grasa', 'Fitness general'];
-const LEVELS = ['Principiante', 'Intermedio', 'Avanzado'];
+const GOALS = WORKOUT_PLAN_GOAL_VALUES;
+const LEVELS = WORKOUT_PLAN_LEVEL_VALUES;
 
-const NewRoutineView = () => {
+type NewRoutineViewProps = {
+   mode?: 'create' | 'edit';
+};
+
+
+const NewRoutineView = ({ mode = 'create' }: NewRoutineViewProps) => {
    const insets = useSafeAreaInsets();
    const {
       name,
@@ -24,18 +32,25 @@ const NewRoutineView = () => {
       selectedGoal,
       selectedLevel,
       status,
-      assignAthlete,
       exercises,
       canCreateRoutine,
+      isCreatingRoutine,
       setName,
       setDescription,
       setDurationWeeks,
       setSelectedGoal,
       setSelectedLevel,
       setStatus,
-      setAssignAthlete,
       removeExercise,
-   } = useNewRoutine();
+      handleCreateRoutine,
+   } = useNewRutineView();
+
+   const isEditing = mode === 'edit';
+   
+   // En edición básica todavía no hidratamos ejercicios, así que basta nombre.
+   const canSubmitRoutine = isEditing
+      ? name.trim().length > 0
+      : canCreateRoutine;
 
    return (
       <KeyboardAvoidingView
@@ -57,7 +72,10 @@ const NewRoutineView = () => {
                { paddingBottom: insets.bottom + 28 },
             ]}
          >
-            <NewRoutineHero />
+            <NewRoutineHero 
+               durationWeeks={durationWeeks}
+            />
+
             <RoutineGeneralInfoCard
                name={name}
                description={description}
@@ -76,10 +94,6 @@ const NewRoutineView = () => {
                onLevelChange={setSelectedLevel}
                onStatusChange={setStatus}
             />
-            <RoutineAssignAthleteCard
-               assignAthlete={assignAthlete}
-               onAssignAthleteChange={setAssignAthlete}
-            />
             <RoutineExercisesCard
                exercises={exercises}
                onAddExercise={() => router.navigate('/training-sessions/new-exercise')}
@@ -87,18 +101,23 @@ const NewRoutineView = () => {
             />
 
             <View style={styles.actions}>
-               <HelperText type="info" visible={!canCreateRoutine} style={styles.createHint}>
-                  Completa el nombre y añade al menos un ejercicio para crear la rutina.
+               <HelperText type="info" visible={!canSubmitRoutine} style={styles.createHint}>
+                  {isEditing
+                     ? 'Completa el nombre para editar la rutina.'
+                     : 'Completa el nombre y añade al menos un ejercicio para crear la rutina.'}
                </HelperText>
                <Button
                   mode="contained"
-                  disabled={!canCreateRoutine}
+                  disabled={!canSubmitRoutine}
+                  loading={isCreatingRoutine}
+                  onPress={handleCreateRoutine}
                   contentStyle={styles.buttonContent}
                   labelStyle={styles.buttonLabel}
                   style={styles.button}
                >
-                  Crear rutina
+                  {isEditing ? 'Guardar cambios' : isCreatingRoutine ? 'Creando...' : 'Crear rutina'}
                </Button>
+
             </View>
          </KeyboardAwareScrollView>
       </KeyboardAvoidingView>
@@ -134,6 +153,6 @@ const styles = StyleSheet.create({
    },
    buttonLabel: {
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: '600',
    },
 });
