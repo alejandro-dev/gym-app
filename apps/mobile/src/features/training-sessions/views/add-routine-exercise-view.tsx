@@ -20,6 +20,7 @@ import {
 } from 'react-native-paper';
 
 import { resolveApiImageUrl } from '@/services/api/media';
+import { VIEW_COLORS } from '@/theme/colors';
 
 import { useNewRoutine } from '../context/new-routine-context';
 import useAddRoutineExerciseView from '../hooks/use-add-routine-exercise-view';
@@ -259,12 +260,12 @@ const styles = StyleSheet.create({
       fontWeight: '800',
    },
    sectionHint: {
-      color: '#64748b',
+      color: VIEW_COLORS.subtle,
       lineHeight: 18,
    },
    exerciseSelector: {
       alignItems: 'center',
-      borderColor: '#dbe3ef',
+      borderColor: VIEW_COLORS.softBorder,
       borderRadius: 20,
       borderWidth: 1,
       flexDirection: 'row',
@@ -279,28 +280,28 @@ const styles = StyleSheet.create({
       fontWeight: '800',
    },
    exerciseSubtitle: {
-      color: '#64748b',
+      color: VIEW_COLORS.subtle,
    },
    changeLabel: {
-      color: '#2563eb',
+      color: VIEW_COLORS.onDark,
       fontWeight: '800',
    },
    exerciseThumbnail: {
-      backgroundColor: '#e2e8f0',
+      backgroundColor: VIEW_COLORS.mediaPlaceholder,
       borderRadius: 16,
       height: 58,
       width: 58,
    },
    emptyThumbnail: {
       alignItems: 'center',
-      backgroundColor: '#e2e8f0',
+      backgroundColor: VIEW_COLORS.mediaPlaceholder,
       borderRadius: 16,
       height: 58,
       justifyContent: 'center',
       width: 58,
    },
    emptyThumbnailText: {
-      color: '#475569',
+      color: VIEW_COLORS.subtle,
       fontWeight: '800',
    },
    inputGrid: {

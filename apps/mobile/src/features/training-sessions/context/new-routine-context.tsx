@@ -29,6 +29,8 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
    const [exercises, setExercises] = useState<RoutineExerciseDraft[]>([]);
    const [selectedRoutineExercise, setSelectedRoutineExercise] =
       useState<RoutineCatalogExercise | null>(null);
+   const [originalExercises, setOriginalExercises] = useState<RoutineExerciseDraft[]>([]);
+
 
    // Para crear exigimos nombre y al menos un ejercicio.
    const canCreateRoutine = name.trim().length > 0 && exercises.length > 0;
@@ -52,6 +54,10 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
          if (nextState.selectedRoutineExercise !== undefined) {
             setSelectedRoutineExercise(nextState.selectedRoutineExercise);
          }
+         if (nextState.exercises !== undefined) {
+            setExercises(nextState.exercises);
+            setOriginalExercises(nextState.exercises);
+         }
       },
       [],
    );
@@ -68,6 +74,7 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
          exercises,
          selectedRoutineExercise,
          canCreateRoutine,
+         originalExercises,
          setName,
          setDescription,
          setDurationWeeks,
@@ -75,20 +82,30 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
          setSelectedLevel,
          setStatus,
          setSelectedRoutineExercise,
+         setOriginalExercises,
          hydrateRoutineForEdit,
+         // Añadimos un ejercicio a la rutina y calculamos el orden.
          addExercise: (exercise) => {
-            // El orden se calcula por día para que cada día empiece en 1.
-            setExercises((currentExercises) => [
-               ...currentExercises,
-               {
-                  ...exercise,
-                  id: `exercise-${Date.now()}`,
-                  order:
-                     currentExercises.filter(
-                        (currentExercise) => currentExercise.day === exercise.day,
-                     ).length + 1,
-               },
-            ]);
+            setExercises((currentExercises) => {
+               // Obtenemos los ejercicios del mismo día.
+               const exercisesInSameDay = currentExercises.filter(
+                  (currentExercise) => currentExercise.day === exercise.day,
+               );
+
+               // Calculamos el siguiente orden.
+               const nextOrder =
+                  Math.max(0, ...exercisesInSameDay.map((currentExercise) => currentExercise.order)) + 1;
+
+               // Añadimos el ejercicio y calculamos el orden.
+               return [
+                  ...currentExercises,
+                  {
+                     ...exercise,
+                     id: `exercise-${Date.now()}`,
+                     order: nextOrder,
+                  },
+               ];
+            });
          },
          removeExercise: (exerciseId) => {
             // Quitamos solo del borrador local; la eliminación en API vendrá luego.
@@ -105,6 +122,7 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
             setStatus('active');
             setExercises([]);
             setSelectedRoutineExercise(null);
+            setOriginalExercises([]);
          },
       }),
       [

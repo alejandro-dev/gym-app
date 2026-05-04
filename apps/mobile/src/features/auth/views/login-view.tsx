@@ -7,7 +7,9 @@ import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 import { AuthCard } from '@/features/auth/components/AuthCard';
 import { AuthFooterPrompt } from '@/features/auth/components/AuthFooterPrompt';
 import { AuthScreen } from '@/features/auth/components/AuthScreen';
+import { AUTH_INPUT_BACKGROUND, AUTH_INPUT_PROPS } from '@/features/auth/constants/auth-input';
 import useLoginView from '@/features/auth/hooks/use-login-view';
+import { VIEW_COLORS } from '@/theme/colors';
 
 const LoginView = () => {
    const { control, errors, isSubmitting, handleLogin } = useLoginView();
@@ -36,6 +38,7 @@ const LoginView = () => {
                      name="email"
                      render={({ field: { onChange, value } }) => (
                         <TextInput
+                           {...AUTH_INPUT_PROPS}
                            mode="outlined"
                            label="Email"
                            value={value}
@@ -45,6 +48,7 @@ const LoginView = () => {
                            keyboardType="email-address"
                            textContentType="emailAddress"
                            error={Boolean(errors.email)}
+                           style={styles.input}
                            contentStyle={styles.inputContent}
                            outlineStyle={styles.inputOutline}
                            left={<TextInput.Icon icon="email-outline" />}
@@ -62,6 +66,7 @@ const LoginView = () => {
                      name="password"
                      render={({ field: { onChange, value } }) => (
                         <TextInput
+                           {...AUTH_INPUT_PROPS}
                            mode="outlined"
                            label="Contrasena"
                            value={value}
@@ -70,6 +75,7 @@ const LoginView = () => {
                            autoComplete="password"
                            textContentType="password"
                            error={Boolean(errors.password)}
+                           style={styles.input}
                            contentStyle={styles.inputContent}
                            outlineStyle={styles.inputOutline}
                            left={<TextInput.Icon icon="lock-outline" />}
@@ -90,7 +96,7 @@ const LoginView = () => {
 
             <View className="gap-3">
                <Pressable onPress={() => {}}>
-                  <Text className="text-right text-sm font-medium text-sky-600 dark:text-sky-400">
+                  <Text style={styles.forgotPasswordText}>
                      ¿Has olvidado tu contrasena?
                   </Text>
                </Pressable>
@@ -135,9 +141,18 @@ const styles = StyleSheet.create({
       fontSize: 16,
       fontWeight: '600',
    },
+   forgotPasswordText: {
+      color: VIEW_COLORS.onDark,
+      fontSize: 14,
+      fontWeight: '500',
+      textAlign: 'right',
+   },
    inputOutline: {
       borderRadius: 18,
       borderCurve: 'continuous',
+   },
+   input: {
+      backgroundColor: AUTH_INPUT_BACKGROUND,
    },
    inputContent: {
       paddingHorizontal: 4,

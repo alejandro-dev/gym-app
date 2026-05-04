@@ -15,6 +15,9 @@ export type CreateWorkoutPlanExerciseParams = {
    notes: string | null;
 };
 
+export type UpdateWorkoutPlanExerciseParams = Omit<CreateWorkoutPlanExerciseParams, 'workoutPlanId'>;
+
+
 // Consulta de ejercicios de una rutina.
 export function getWorkoutPlanExercises(workoutPlanId: string) {
    const params = new URLSearchParams();
@@ -30,5 +33,20 @@ export function createWorkoutPlanExercise(payload: CreateWorkoutPlanExercisePara
    return apiFetch<WorkoutPlanExercise>('/api/workout-plan-exercises', {
       method: 'POST',
       body: JSON.stringify(payload),
+   });
+}
+
+// Actualiza un ejercicio dentro de una rutina.
+export function updateWorkoutPlanExercise(id: string, payload: UpdateWorkoutPlanExerciseParams) {
+   return apiFetch<WorkoutPlanExercise>(`/api/workout-plan-exercises/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+   });
+}
+
+// Elimina un ejercicio dentro de una rutina.
+export function deleteWorkoutPlanExercise(id: string) {
+   return apiFetch<WorkoutPlanExercise>(`/api/workout-plan-exercises/${id}`, {
+      method: 'DELETE',
    });
 }

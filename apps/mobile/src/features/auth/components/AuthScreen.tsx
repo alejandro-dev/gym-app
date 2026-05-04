@@ -13,7 +13,7 @@ export function AuthScreen({ children, footer, scrollRef }: AuthScreenProps) {
 	const insets = useSafeAreaInsets();
 
 	return (
-		<View className="flex-1 bg-slate-50 dark:bg-slate-950">
+		<View className="flex-1 bg-black">
 			<KeyboardAvoidingView
 				className="flex-1"
 				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -36,7 +36,7 @@ export function AuthScreen({ children, footer, scrollRef }: AuthScreenProps) {
 					keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
 					showsVerticalScrollIndicator={false}
 				>
-					<View className="flex-1 gap-8" style={{ paddingBottom: insets.bottom + 12 }}>
+					<View className="flex-1 gap-8" style={{ paddingBottom: insets.bottom + 12, paddingTop: insets.top }}>
 						<View className="gap-8">{children}</View>
 						{footer ? <View className="mt-auto items-center gap-2 pb-2">{footer}</View> : null}
 					</View>

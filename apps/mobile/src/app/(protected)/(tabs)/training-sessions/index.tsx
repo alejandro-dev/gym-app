@@ -67,6 +67,11 @@ export default function WorkoutsScreen() {
       }
    };
 
+   // Evento para abrir el dialogo para duplicar una rutina.
+   const handleDuplicateWorkout = (id: string) => {
+      bottomSheetRef.current?.close();
+      router.navigate(`/training-sessions/${id}/duplicate`);
+   };
 
    return (
       <>
@@ -81,6 +86,7 @@ export default function WorkoutsScreen() {
             selectedWorkoutPlan={selectedWorkoutPlan}
             handleOpenDeleteWorkoutDialog={handleOpenDeleteWorkoutDialog}
             handleOpenWorkoutDetail={handleOpenWorkoutDetail}
+            handleDuplicateWorkout={handleDuplicateWorkout}
          />
         
          <DeleteWorkoutDialog

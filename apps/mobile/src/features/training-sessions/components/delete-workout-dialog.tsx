@@ -87,7 +87,7 @@ const getStyles = (theme: MD3Theme) =>
          textAlign: 'center',
       },
       description: {
-         color: '#cbd5e1',
+         color: '#A3A3A3',
          textAlign: 'center',
       },
       button: {

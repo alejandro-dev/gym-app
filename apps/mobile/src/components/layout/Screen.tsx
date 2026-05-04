@@ -13,7 +13,7 @@ export function Screen({ children, footer, scrollRef }: ScreenProps) {
    const insets = useSafeAreaInsets();
 
    return (
-      <View className="flex-1 bg-slate-50 dark:bg-slate-950">
+      <View className="flex-1 bg-slate-50 dark:bg-black">
          <KeyboardAvoidingView
             className="flex-1"
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

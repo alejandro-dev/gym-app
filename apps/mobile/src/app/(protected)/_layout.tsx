@@ -37,6 +37,13 @@ export default function ProtectedLayout() {
 						title: 'Editar rutina' 
 					}}
 				/>
+				<Stack.Screen
+					name="training-sessions/[id]/duplicate"
+					options={{
+						headerShown: true,
+						title: 'Duplicar rutina',
+					}}
+				/>
 			</Stack>
 		</NewRoutineProvider>
 	);

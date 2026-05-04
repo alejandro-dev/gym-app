@@ -6,6 +6,7 @@ import { useProfileQuery } from '@/features/profile/queries/use-profile-query';
 
 import { useCreateRoutineMutation } from '../mutations/use-create-routine-mutation';
 import { useNewRoutine } from '../context/new-routine-context';
+import { toOptionalNumber } from '../utils/routine-form-utils';
 
 export default function useNewRutineView() {
    const routine = useNewRoutine();
@@ -67,17 +68,4 @@ export default function useNewRutineView() {
       isCreatingRoutine: createRoutineMutation.isPending,
       handleCreateRoutine,
    };
-}
-
-// Función para convertir una cadena de texto en un número opcional.
-function toOptionalNumber(value: string) {
-   const normalizedValue = value.trim().replace(',', '.');
-
-   if (!normalizedValue) {
-      return null;
-   }
-
-   const parsedValue = Number(normalizedValue);
-
-   return Number.isFinite(parsedValue) ? parsedValue : null;
 }

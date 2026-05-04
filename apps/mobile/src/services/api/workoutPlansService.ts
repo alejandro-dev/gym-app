@@ -18,6 +18,9 @@ export type CreateWorkoutPlanParams = {
    isActive: boolean;
 };
 
+// Parametros para actualizar una rutina
+export type UpdateWorkoutPlanParams = Partial<Omit<CreateWorkoutPlanParams, "userId">>;
+
 // Ruta de búsqueda de rutinas
 export function buildWorkoutPlansPath({
    page = 0,
@@ -46,6 +49,14 @@ export function getWorkoutPlan(id: string) {
 export function createWorkoutPlan(payload: CreateWorkoutPlanParams) {
    return apiFetch<WorkoutPlan>('/api/workout-plans', {
       method: 'POST',
+      body: JSON.stringify(payload),
+   });
+}
+
+// Función para actualizar una rutina.
+export function updateWorkoutPlan(id: string, payload: UpdateWorkoutPlanParams) {
+   return apiFetch<WorkoutPlan>(`/api/workout-plans/${id}`, {
+      method: 'PATCH',
       body: JSON.stringify(payload),
    });
 }

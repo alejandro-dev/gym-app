@@ -4,8 +4,9 @@ import {
    getMuscleGroupLabelEs,
 } from '@gym-app/types';
 import { Button, Card, Chip, IconButton, Text, useTheme } from 'react-native-paper';
+import { getChipColors } from '@/theme/colors';
 import { RoutineExerciseDraft } from '../types';
-
+import { VIEW_COLORS } from '@/theme/colors';
 
 interface RoutineExercisesCardProps {
    exercises: RoutineExerciseDraft[];
@@ -20,6 +21,7 @@ export default function RoutineExercisesCard ({
    onRemoveExercise,
 }: RoutineExercisesCardProps){
    const theme = useTheme();
+   const chipColors = getChipColors(theme.dark);
 
    return (
       <Card mode="contained" style={styles.card}>
@@ -33,13 +35,25 @@ export default function RoutineExercisesCard ({
                      Añade al menos un ejercicio para poder crear la rutina.
                   </Text>
                </View>
-               <Chip compact style={[{ backgroundColor: theme.colors.primary }]} textStyle={styles.chipText}>{exercises.length}</Chip>
+               <Chip
+                  compact
+                  style={[styles.activeChip, { backgroundColor: chipColors.activeBackground }]}
+                  textStyle={[styles.chipText, { color: chipColors.activeForeground }]}
+               >
+                  {exercises.length}
+               </Chip>
             </View>
 
             {exercises.length > 0 ? (
                <View style={styles.exerciseList}>
                   {exercises.map((exercise) => (
-                     <View key={exercise.id} style={styles.exerciseItem}>
+                     <View
+                        key={exercise.id}
+                        style={[
+                           styles.exerciseItem,
+                           { backgroundColor: theme.colors.surfaceVariant },
+                        ]}
+                     >
                         <View style={styles.exerciseInfo}>
                            <Text variant="titleSmall" style={styles.exerciseName}>
                               {exercise.exerciseName}
@@ -48,10 +62,46 @@ export default function RoutineExercisesCard ({
                               Día {exercise.day ?? 1} · Orden {exercise.order}
                            </Text>
                            <View style={styles.chipRow}>
-                              <Chip textStyle={styles.chipText} style={styles.chip} compact>{getMuscleGroupLabelEs(exercise.muscleGroup)}</Chip>
-                              <Chip textStyle={styles.chipText} style={styles.chip} compact>{getExerciseCategoryLabelEs(exercise.category)}</Chip>
+                              <Chip
+                                 textStyle={[styles.chipText, { color: chipColors.foreground }]}
+                                 style={[
+                                    styles.chip,
+                                    {
+                                       backgroundColor: chipColors.background,
+                                       borderColor: chipColors.border,
+                                    },
+                                 ]}
+                                 compact
+                              >
+                                 {getMuscleGroupLabelEs(exercise.muscleGroup)}
+                              </Chip>
+                              <Chip
+                                 textStyle={[styles.chipText, { color: chipColors.foreground }]}
+                                 style={[
+                                    styles.chip,
+                                    {
+                                       backgroundColor: chipColors.background,
+                                       borderColor: chipColors.border,
+                                    },
+                                 ]}
+                                 compact
+                              >
+                                 {getExerciseCategoryLabelEs(exercise.category)}
+                              </Chip>
                               {exercise.equipment ? (
-                                 <Chip textStyle={styles.chipText} style={styles.chip} compact>{exercise.equipment}</Chip>
+                                 <Chip
+                                    textStyle={[styles.chipText, { color: chipColors.foreground }]}
+                                    style={[
+                                       styles.chip,
+                                       {
+                                          backgroundColor: chipColors.background,
+                                          borderColor: chipColors.border,
+                                       },
+                                    ]}
+                                    compact
+                                 >
+                                    {exercise.equipment}
+                                 </Chip>
                               ) : null}
                            </View>
                         </View>
@@ -64,7 +114,7 @@ export default function RoutineExercisesCard ({
                   ))}
                </View>
             ) : (
-               <View style={styles.emptyState}>
+               <View style={[styles.emptyState, { borderColor: theme.colors.outline }]}>
                   <Text variant="bodyMedium" style={styles.sectionHint}>
                      Aún no hay ejercicios en este plan.
                   </Text>
@@ -109,20 +159,23 @@ const styles = StyleSheet.create({
       fontWeight: '800',
    },
    sectionHint: {
-      color: '#64748b',
+      color: '#737373',
       lineHeight: 18,
    },
    exerciseList: {
       gap: 10,
+      borderRadius: 20,
+      borderCurve: 'continuous',
    },
    exerciseItem: {
       flexDirection: 'row',
       alignItems: 'center',
       borderRadius: 20,
       borderCurve: 'continuous',
-      backgroundColor: '#1c1c1c',
       paddingLeft: 14,
       paddingVertical: 10,
+      borderWidth: 0.5,
+      borderColor: VIEW_COLORS.softBorder,
    },
    exerciseInfo: {
       flex: 1,
@@ -137,10 +190,13 @@ const styles = StyleSheet.create({
       gap: 6,
    },
    chip: {
-      backgroundColor: '#334155',
+      borderWidth: 1,
+   },
+   activeChip: {
+      borderWidth: 0,
    },
    chipText: {
-      color: '#fff',
+      fontWeight: '700',
    },
    emptyState: {
       minHeight: 96,
@@ -150,7 +206,7 @@ const styles = StyleSheet.create({
       borderCurve: 'continuous',
       borderWidth: 1,
       borderStyle: 'dashed',
-      borderColor: '#cbd5e1',
+      borderColor: '#E5E5E5',
       padding: 16,
    },
    button: {

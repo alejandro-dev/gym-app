@@ -32,6 +32,7 @@ export default function ProtectedHomeScreen() {
 const styles = StyleSheet.create({
    safeArea: {
       flex: 1,
+      paddingTop: 12,
    },
    content: {
       gap: 16,

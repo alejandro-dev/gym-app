@@ -10,8 +10,9 @@ export default function EditRoutineView() {
    const params = useLocalSearchParams<{ id?: string }>();
    const workoutPlanId = typeof params.id === "string" ? params.id : "";
 
-   const { data, isLoading, isError } = useEditRutineView(workoutPlanId);
-   
+   const { data, isLoading, isError, canUpdateRoutine, isUpdatingRoutine, handleUpdateRoutine } = useEditRutineView(workoutPlanId);
+
+   // Si estamos cargando la rutina, mostramos un indicador de carga.
    if (isLoading) {
       return (
          <View>
@@ -20,6 +21,7 @@ export default function EditRoutineView() {
       );
    }
 
+   // Si se ha producido un error al cargar la rutina, mostramos un mensaje de error.
    if (isError || !data) {
       return (
          <View>
@@ -28,5 +30,12 @@ export default function EditRoutineView() {
       );
    }
 
-   return <NewRoutineView mode="edit" />;
+   return (
+      <NewRoutineView
+         mode="edit"
+         canSubmitRoutine={canUpdateRoutine}
+         isSavingRoutine={isUpdatingRoutine}
+         onSubmitRoutine={handleUpdateRoutine}
+      />
+   );
 }
