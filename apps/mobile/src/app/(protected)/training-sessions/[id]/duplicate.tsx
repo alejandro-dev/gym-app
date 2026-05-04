@@ -1,15 +1,14 @@
 import { ProtectedScreen } from '@/components/layout/ProtectedScreen';
 import { useResetRoutineOnBack } from '@/features/training-sessions/hooks/use-reset-routine-on-back';
-import EditRoutineView from '@/features/training-sessions/views/edit-routine-view';
+import DuplicateRoutineView from '@/features/training-sessions/views/duplicate-routine-view';
 
-// Vista para editar una rutina existente.
-export default function EditRoutineScreen() {
+export default function DuplicateRoutineScreen() {
    // Reseteamos la rutina cuando se navega hacia atrás.
    useResetRoutineOnBack();
 
    return (
       <ProtectedScreen edges={['left', 'right']}>
-         <EditRoutineView />
+         <DuplicateRoutineView />
       </ProtectedScreen>
    );
 }

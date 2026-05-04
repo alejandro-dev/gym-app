@@ -40,6 +40,9 @@ export type NewRoutineState = {
    status: string;
    exercises: RoutineExerciseDraft[];
 
+   // Datos originales de la rutina para poder restaurar los ejercicios eliminados.
+   originalExercises: RoutineExerciseDraft[];
+
    // Ejercicio elegido en el listado de ejercicios antes de confirmarlo en la rutina.
    selectedRoutineExercise: RoutineCatalogExercise | null;
 };
@@ -58,6 +61,9 @@ export type NewRoutineContextValue = NewRoutineState & {
    // Función para resetear los datos de la rutina.
    resetRoutine: () => void;
    setSelectedRoutineExercise: (exercise: RoutineCatalogExercise | null) => void;
+
+   // Función para añadir un ejercicio a la rutina.
+   setOriginalExercises: (exercises: RoutineExerciseDraft[]) => void;
 
    // Precarga el formulario cuando entramos en modo edición.
    hydrateRoutineForEdit: (state: Partial<NewRoutineState>) => void;

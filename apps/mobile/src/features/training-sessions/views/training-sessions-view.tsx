@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { Button, List, Text, useTheme } from 'react-native-paper';
 import type { WorkoutPlan } from '@gym-app/types';
 
+import { VIEW_COLORS } from '@/theme/colors';
 import { WorkoutPlanCard } from '../components/workout-plan-card';
 import { useTrainingSessionsView } from '../hooks/use-training-sessions-view';
 
@@ -40,7 +41,7 @@ const TrainingSessionsView = ({
                title={`Mis rutinas (${workoutPlans?.length ?? 0})`}
                style={styles.accordion}
                contentStyle={styles.accordionContent}
-               titleStyle={[styles.accordionTitle, { color: '#cbd5e1' }]}
+               titleStyle={[styles.accordionTitle, { color: VIEW_COLORS.muted }]}
                rippleColor="transparent"
             >
                {isLoading ? (
@@ -85,7 +86,7 @@ const styles = StyleSheet.create({
    sectionTitle: {
       fontSize: 18,
       fontWeight: '700',
-      color: '#fff',
+      color: VIEW_COLORS.onDark,
       paddingLeft: 0,
    },
    accordion: {
@@ -104,7 +105,7 @@ const styles = StyleSheet.create({
       gap: 12,
    },
    stateText: {
-      color: '#cbd5e1',
+      color: VIEW_COLORS.muted,
       paddingVertical: 12,
    },
 });

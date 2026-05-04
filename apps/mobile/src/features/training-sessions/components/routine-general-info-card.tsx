@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
       fontWeight: '800',
    },
    sectionHint: {
-      color: '#64748b',
+      color: '#737373',
       lineHeight: 18,
    },
    inputOutline: {

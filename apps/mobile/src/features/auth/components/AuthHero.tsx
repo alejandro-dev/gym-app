@@ -11,8 +11,8 @@ interface AuthHeroProps {
 export function AuthHero({ badge = 'Gym App Mobile', title, description }: AuthHeroProps) {
 	return (
 		<View className="overflow-hidden rounded-[32px] border border-slate-200 bg-slate-900 px-6 py-7 dark:border-slate-800 dark:bg-slate-900">
-			<View className="absolute -top-12 -right-8 h-32 w-32 rounded-full bg-sky-400/20" />
-			<View className="absolute -bottom-10 -left-10 h-28 w-28 rounded-full bg-emerald-300/15" />
+			<View className="absolute -top-12 -right-8 h-32 w-32 rounded-full bg-white/10" />
+			<View className="absolute -bottom-10 -left-10 h-28 w-28 rounded-full bg-green-400/15" />
 			<View className="gap-6">
 				<View className="flex-row items-center justify-between">
 					<View className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5">

@@ -31,7 +31,7 @@ export default function HomeScreen() {
 					labelStyle={styles.buttonLabel}
 					style={styles.button}
 				>
-					Login
+					Iniciar sesión
 				</Button>
 
 				<Button

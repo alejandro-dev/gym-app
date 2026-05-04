@@ -15,6 +15,7 @@ import {
 } from 'react-native-paper';
 
 import { resolveApiImageUrl } from '@/services/api/media';
+import { VIEW_COLORS } from '@/theme/colors';
 import useExerciseListView from '../hooks/use-exercise-list-view';
 import { RoutineCatalogExercise } from '../types';
 
@@ -29,9 +30,9 @@ const ExerciseListView = () => {
                value={exerciseSearch}
                onChangeText={setExerciseSearch}
                placeholder="Buscar ejercicio"
-               placeholderTextColor="#8b8f9a"
-               iconColor="#8b8f9a"
-               inputStyle={styles.searchInput}
+               placeholderTextColor={theme.colors.onSurfaceVariant}
+               iconColor={theme.colors.onSurfaceVariant}
+               inputStyle={[styles.searchInput, { color: theme.colors.onSurface }]}
                style={[
                   styles.searchbar,
                   { backgroundColor: theme.colors.surfaceVariant },
@@ -39,10 +40,22 @@ const ExerciseListView = () => {
             />
 
             <View style={styles.sectionHeader}>
-               <Text variant="titleMedium" style={styles.sectionLabel}>
+               <Text
+                  variant="titleMedium"
+                  style={[styles.sectionLabel, { color: theme.colors.onSurfaceVariant }]}
+               >
                   Ejercicios populares
                </Text>
-               <Text variant="bodySmall" style={styles.resultCount}>
+               <Text
+                  variant="bodySmall"
+                  style={[
+                     styles.resultCount,
+                     {
+                        backgroundColor: theme.colors.tertiary,
+                        color: theme.colors.onTertiary,
+                     },
+                  ]}
+               >
                   {filteredExercises.length}
                </Text>
             </View>
@@ -58,7 +71,9 @@ const ExerciseListView = () => {
                         key={exercise.id}
                         exercise={exercise}
                         cardColor={theme.colors.surfaceVariant}
-                        indicatorColor={theme.colors.primary}
+                        foregroundColor={theme.colors.onSurface}
+                        indicatorColor={theme.colors.tertiary}
+                        mutedColor={theme.colors.onSurfaceVariant}
                         onPress={() => handleSelectExercise(exercise)}
                      />
                   ))
@@ -90,12 +105,16 @@ export default memo(ExerciseListView);
 function ExercisePickerItem({
    exercise,
    cardColor,
+   foregroundColor,
    indicatorColor,
+   mutedColor,
    onPress,
 }: {
    exercise: RoutineCatalogExercise;
    cardColor: string;
+   foregroundColor: string;
    indicatorColor: string;
+   mutedColor: string;
    onPress: () => void;
 }) {
    return (
@@ -107,10 +126,10 @@ function ExercisePickerItem({
          <Card.Content style={styles.exerciseItemContent}>
             <ExerciseThumbnail exercise={exercise} />
             <View style={styles.exerciseCopy}>
-               <Text variant="titleSmall" style={styles.exerciseName}>
+               <Text variant="titleSmall" style={[styles.exerciseName, { color: foregroundColor }]}>
                   {exercise.name}
                </Text>
-               <Text variant="bodySmall" style={styles.exerciseSubtitle}>
+               <Text variant="bodySmall" style={[styles.exerciseSubtitle, { color: mutedColor }]}>
                   {getMuscleGroupLabelEs(exercise.muscleGroup)}
                </Text>
             </View>
@@ -170,7 +189,6 @@ const styles = StyleSheet.create({
       height: 56,
    },
    searchInput: {
-      color: '#0f172a',
       fontSize: 16,
       minHeight: 0,
    },
@@ -180,13 +198,10 @@ const styles = StyleSheet.create({
       justifyContent: 'space-between',
    },
    sectionLabel: {
-      color: '#64748b',
       fontWeight: '700',
    },
    resultCount: {
-      backgroundColor: '#dbeafe',
       borderRadius: 999,
-      color: '#2563eb',
       fontWeight: '800',
       minWidth: 28,
       overflow: 'hidden',
@@ -211,21 +226,21 @@ const styles = StyleSheet.create({
       paddingVertical: 10,
    },
    exerciseThumbnail: {
-      backgroundColor: '#e2e8f0',
+      backgroundColor: VIEW_COLORS.mediaPlaceholder,
       borderRadius: 18,
       height: 64,
       width: 64,
    },
    emptyThumbnail: {
       alignItems: 'center',
-      backgroundColor: '#e2e8f0',
+      backgroundColor: VIEW_COLORS.mediaPlaceholder,
       borderRadius: 18,
       height: 64,
       justifyContent: 'center',
       width: 64,
    },
    emptyThumbnailText: {
-      color: '#475569',
+      color: VIEW_COLORS.subtle,
       fontWeight: '800',
    },
    exerciseCopy: {
@@ -233,13 +248,11 @@ const styles = StyleSheet.create({
       gap: 6,
    },
    exerciseName: {
-      color: '#ffffff',
       fontSize: 16,
       fontWeight: '700',
       lineHeight: 23,
    },
    exerciseSubtitle: {
-      color: '#64748b',
       fontSize: 14,
    },
    selectIndicator: {
@@ -250,7 +263,7 @@ const styles = StyleSheet.create({
       width: 34,
    },
    selectIndicatorText: {
-      color: '#ffffff',
+      color: VIEW_COLORS.accentForeground,
       fontSize: 20,
       fontWeight: '800',
       lineHeight: 22,

@@ -6,6 +6,7 @@ import {
    getWorkoutPlanGoalLabelEs,
    getWorkoutPlanLevelLabelEs,
 } from '@gym-app/types';
+import { getChipColors } from '@/theme/colors';
 
 interface RoutineConfigCardProps {
    // Los valores son enums de API; los labels se resuelven solo al pintar.
@@ -31,6 +32,7 @@ const RoutineConfigCard = ({
    onStatusChange,
 }: RoutineConfigCardProps) => {
    const theme = useTheme();
+   const chipColors = getChipColors(theme.dark);
 
    return(
       <Card mode="contained" style={styles.card}>
@@ -51,12 +53,21 @@ const RoutineConfigCard = ({
                         onPress={() => onGoalChange(goal)}
                         style={[
                            styles.chip,
+                           {
+                              backgroundColor: chipColors.background,
+                              borderColor: chipColors.border,
+                           },
                            selectedGoal === goal && {
-                              backgroundColor: theme.colors.primary,
+                              backgroundColor: chipColors.selectedBackground,
+                              borderColor: chipColors.selectedBackground,
                            },
                         ]}
-                        textStyle={styles.chipText}
-                        selectedColor={theme.colors.onSurface}
+                        textStyle={[
+                           styles.chipText,
+                           { color: chipColors.foreground },
+                           selectedGoal === goal && { color: chipColors.selectedForeground },
+                        ]}
+                        selectedColor={chipColors.selectedForeground}
                         showSelectedOverlay
                      >
                         {getWorkoutPlanGoalLabelEs(goal)}
@@ -77,12 +88,21 @@ const RoutineConfigCard = ({
                         onPress={() => onLevelChange(level)}
                         style={[
                            styles.chip,
+                           {
+                              backgroundColor: chipColors.background,
+                              borderColor: chipColors.border,
+                           },
                            selectedLevel === level && {
-                              backgroundColor: theme.colors.primary,
+                              backgroundColor: chipColors.selectedBackground,
+                              borderColor: chipColors.selectedBackground,
                            },
                         ]}
-                        textStyle={styles.chipText}
-                        selectedColor={theme.colors.onSurface}
+                        textStyle={[
+                           styles.chipText,
+                           { color: chipColors.foreground },
+                           selectedLevel === level && { color: chipColors.selectedForeground },
+                        ]}
+                        selectedColor={chipColors.selectedForeground}
                         showSelectedOverlay
                      >
                         {getWorkoutPlanLevelLabelEs(level)}
@@ -102,21 +122,21 @@ const RoutineConfigCard = ({
                      {
                         value: 'active',
                         label: 'Activo',
-                        checkedColor: theme.colors.onSurface,
-                        uncheckedColor: theme.colors.onSurface,
+                        checkedColor: chipColors.activeForeground,
+                        uncheckedColor: chipColors.foreground,
                         style: {
-                           backgroundColor: status === 'active' ? theme.colors.primary : '#1c1c1c',
-                           borderColor: status === 'active' ? theme.colors.primary : '#1c1c1c',
+                           backgroundColor: status === 'active' ? chipColors.activeBackground : chipColors.background,
+                           borderColor: status === 'active' ? chipColors.activeBackground : chipColors.border,
                         },
                      },
                      {
                         value: 'draft',
                         label: 'Borrador',
-                        checkedColor: theme.colors.onSurface,
-                        uncheckedColor: theme.colors.onSurface,
+                        checkedColor: chipColors.selectedForeground,
+                        uncheckedColor: chipColors.foreground,
                         style: {
-                           backgroundColor: status === 'draft' ? theme.colors.primary : '#1c1c1c',
-                           borderColor: status === 'draft' ? theme.colors.primary : '#1c1c1c',
+                           backgroundColor: status === 'draft' ? chipColors.selectedBackground : chipColors.background,
+                           borderColor: status === 'draft' ? chipColors.selectedBackground : chipColors.border,
                         },
                      },
                   ]}
@@ -155,10 +175,10 @@ const styles = StyleSheet.create({
    },
    chip: {
       borderRadius: 999,
-      backgroundColor: '#1c1c1c',
+      borderWidth: 1,
    },
    chipText: {
-      color: '#fff',
+      fontWeight: '700',
    },
    segmented: {
       borderRadius: 18,

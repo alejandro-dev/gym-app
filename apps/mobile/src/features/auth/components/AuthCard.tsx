@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Card, Text } from 'react-native-paper';
 
 interface AuthCardProps {
@@ -9,14 +9,11 @@ interface AuthCardProps {
 }
 
 export function AuthCard({ title, description, children }: AuthCardProps) {
-	const colorScheme = useColorScheme();
-	const isDark = colorScheme === 'dark';
-
 	return (
 		<Card
 			mode="elevated"
-			className="rounded-[32px] bg-white dark:bg-slate-900"
-			style={isDark ? styles.cardDark : styles.cardLight}
+			className="rounded-[32px] bg-neutral-950"
+			style={styles.card}
 		>
 			<Card.Content className="gap-6 p-6">
 				<React.Fragment>
@@ -31,10 +28,10 @@ export function AuthCard({ title, description, children }: AuthCardProps) {
 function CardHeader({ title, description }: { title: string; description: string }) {
 	return (
 		<React.Fragment>
-			<Text variant="titleLarge" className="font-semibold text-slate-900 dark:text-slate-50">
+			<Text variant="titleLarge" className="font-semibold text-neutral-50">
 				{title}
 			</Text>
-			<Text className="-mt-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
+			<Text className="-mt-4 text-sm leading-6 text-neutral-400">
 				{description}
 			</Text>
 		</React.Fragment>
@@ -42,14 +39,10 @@ function CardHeader({ title, description }: { title: string; description: string
 }
 
 const styles = StyleSheet.create({
-	cardLight: {
+	card: {
 		borderRadius: 32,
 		borderCurve: 'continuous',
-		boxShadow: '0 12px 32px rgba(15, 23, 42, 0.08)',
-	},
-	cardDark: {
-		borderRadius: 32,
-		borderCurve: 'continuous',
+		backgroundColor: '#171717',
 		boxShadow: '0 16px 36px rgba(0, 0, 0, 0.32)',
 	},
 });

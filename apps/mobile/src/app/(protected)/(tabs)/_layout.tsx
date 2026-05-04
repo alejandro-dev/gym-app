@@ -14,8 +14,8 @@ export default function ProtectedTabsLayout() {
          screenOptions={{
             headerShown: false,
             headerTitle: 'Gym App',
-            tabBarActiveTintColor: '#2563eb',
-            tabBarInactiveTintColor: '#64748b',
+            tabBarActiveTintColor: isDark ? '#FFFFFF' : '#0A0A0A',
+            tabBarInactiveTintColor: '#737373',
             tabBarStyle: {
                height: 56 + insets.bottom,
                paddingTop: 6,

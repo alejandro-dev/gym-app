@@ -14,6 +14,7 @@ interface OptionsWorkoutProps {
    selectedWorkoutPlan: WorkoutPlan | null;
    handleOpenDeleteWorkoutDialog: () => void;
    handleOpenWorkoutDetail: (id: string) => void;
+   handleDuplicateWorkout: (id: string) => void;
 }
 
 // Componente de opciones para la vista de rutinas. Mostramos las acciones disponibles para cada rutina.
@@ -22,6 +23,7 @@ export const OptionsWorkout = memo(function OptionsWorkout({
    selectedWorkoutPlan,
    handleOpenDeleteWorkoutDialog,
    handleOpenWorkoutDetail,
+   handleDuplicateWorkout,
 }: OptionsWorkoutProps) {
    const theme = useTheme();
 
@@ -55,7 +57,15 @@ export const OptionsWorkout = memo(function OptionsWorkout({
                   }}
                />
                <Divider />
-               <List.Item title="Duplicar rutina" left={(props) => <List.Icon {...props} icon="content-copy" />} />
+               <List.Item
+                  title="Duplicar rutina"
+                  left={(props) => <List.Icon {...props} icon="content-copy" />}
+                  disabled={!selectedWorkoutPlan}
+                  onPress={() => {
+                     if (!selectedWorkoutPlan) return;
+                     handleDuplicateWorkout(selectedWorkoutPlan.id);
+                  }}
+               />
                <Divider />
                <List.Item titleStyle={styles.titleDelete} title="Eliminar rutina" left={(props) => <List.Icon {...props} icon="delete-outline" color='#E02020' />} onPress={handleOpenDeleteWorkoutDialog} />
             </View>

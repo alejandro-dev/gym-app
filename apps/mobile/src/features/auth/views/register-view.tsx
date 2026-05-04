@@ -8,6 +8,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { AuthCard } from '@/features/auth/components/AuthCard';
 import { AuthFooterPrompt } from '@/features/auth/components/AuthFooterPrompt';
 import { AuthScreen } from '@/features/auth/components/AuthScreen';
+import { AUTH_INPUT_BACKGROUND, AUTH_INPUT_PROPS } from '@/features/auth/constants/auth-input';
 import useRegisterView from '@/features/auth/hooks/use-register-view';
 
 const RegisterView = () => {
@@ -38,6 +39,7 @@ const RegisterView = () => {
                      name="email"
                      render={({ field: { onChange, value } }) => (
                         <TextInput
+                           {...AUTH_INPUT_PROPS}
                            mode="outlined"
                            label="Email"
                            value={value}
@@ -47,6 +49,7 @@ const RegisterView = () => {
                            keyboardType="email-address"
                            textContentType="emailAddress"
                            error={Boolean(errors.email)}
+                           style={styles.input}
                            contentStyle={styles.inputContent}
                            outlineStyle={styles.inputOutline}
                            left={<TextInput.Icon icon="email-outline" />}
@@ -64,6 +67,7 @@ const RegisterView = () => {
                      name="username"
                      render={({ field: { onChange, value } }) => (
                         <TextInput
+                           {...AUTH_INPUT_PROPS}
                            mode="outlined"
                            label="Username"
                            value={value}
@@ -71,6 +75,7 @@ const RegisterView = () => {
                            autoCapitalize="none"
                            autoComplete="username"
                            error={Boolean(errors.username)}
+                           style={styles.input}
                            contentStyle={styles.inputContent}
                            outlineStyle={styles.inputOutline}
                            left={<TextInput.Icon icon="account-outline" />}
@@ -88,6 +93,7 @@ const RegisterView = () => {
                      name="birthDate"
                      render={({ field: { onChange, value } }) => (
                         <TextInput
+                           {...AUTH_INPUT_PROPS}
                            mode="outlined"
                            label="Fecha de nacimiento"
                            value={value}
@@ -95,6 +101,7 @@ const RegisterView = () => {
                            placeholder="1995-06-30"
                            autoCapitalize="none"
                            error={Boolean(errors.birthDate)}
+                           style={styles.input}
                            contentStyle={styles.inputContent}
                            outlineStyle={styles.inputOutline}
                            left={<TextInput.Icon icon="calendar-month-outline" />}
@@ -112,6 +119,7 @@ const RegisterView = () => {
                      name="password"
                      render={({ field: { onChange, value } }) => (
                         <TextInput
+                           {...AUTH_INPUT_PROPS}
                            mode="outlined"
                            label="Contrasena"
                            value={value}
@@ -120,6 +128,7 @@ const RegisterView = () => {
                            autoComplete="password"
                            textContentType="password"
                            error={Boolean(errors.password)}
+                           style={styles.input}
                            contentStyle={styles.inputContent}
                            outlineStyle={styles.inputOutline}
                            left={<TextInput.Icon icon="lock-outline" />}
@@ -143,6 +152,7 @@ const RegisterView = () => {
                      name="confirmPassword"
                      render={({ field: { onChange, value } }) => (
                         <TextInput
+                           {...AUTH_INPUT_PROPS}
                            mode="outlined"
                            label="Confirmar contrasena"
                            value={value}
@@ -151,6 +161,7 @@ const RegisterView = () => {
                            autoComplete="password"
                            textContentType="password"
                            error={Boolean(errors.confirmPassword)}
+                           style={styles.input}
                            contentStyle={styles.inputContent}
                            outlineStyle={styles.inputOutline}
                            left={<TextInput.Icon icon="shield-check-outline" />}
@@ -174,12 +185,14 @@ const RegisterView = () => {
                      name="firstName"
                      render={({ field: { onChange, value } }) => (
                         <TextInput
+                           {...AUTH_INPUT_PROPS}
                            mode="outlined"
                            label="Nombre"
                            value={value}
                            onChangeText={onChange}
                            autoCapitalize="words"
                            error={Boolean(errors.firstName)}
+                           style={styles.input}
                            contentStyle={[styles.inputContent, styles.inputWithoutIconContent]}
                            outlineStyle={styles.inputOutline}
                         />
@@ -194,12 +207,14 @@ const RegisterView = () => {
                      name="lastName"
                      render={({ field: { onChange, value } }) => (
                         <TextInput
+                           {...AUTH_INPUT_PROPS}
                            mode="outlined"
                            label="Apellidos"
                            value={value}
                            onChangeText={onChange}
                            autoCapitalize="words"
                            error={Boolean(errors.lastName)}
+                           style={styles.input}
                            contentStyle={[styles.inputContent, styles.inputWithoutIconContent]}
                            outlineStyle={styles.inputOutline}
                         />
@@ -216,12 +231,14 @@ const RegisterView = () => {
                      name="weightKg"
                      render={({ field: { onChange, value } }) => (
                         <TextInput
+                           {...AUTH_INPUT_PROPS}
                            mode="outlined"
                            label="Peso actual (kg)"
                            value={value}
                            onChangeText={onChange}
                            keyboardType="decimal-pad"
                            error={Boolean(errors.weightKg)}
+                           style={styles.input}
                            contentStyle={styles.inputContent}
                            outlineStyle={styles.inputOutline}
                            left={<TextInput.Icon icon="scale-bathroom" />}
@@ -238,12 +255,14 @@ const RegisterView = () => {
                         name="heightCm"
                         render={({ field: { onChange, value } }) => (
                            <TextInput
+                              {...AUTH_INPUT_PROPS}
                               mode="outlined"
                               label="Altura (cm)"
                               value={value}
                               onChangeText={onChange}
                               keyboardType="number-pad"
                               error={Boolean(errors.heightCm)}
+                              style={styles.input}
                               contentStyle={styles.inputContent}
                               outlineStyle={styles.inputOutline}
                               left={<TextInput.Icon icon="human-male-height" />}
@@ -289,6 +308,9 @@ const styles = StyleSheet.create({
    inputOutline: {
       borderRadius: 18,
       borderCurve: 'continuous',
+   },
+   input: {
+      backgroundColor: AUTH_INPUT_BACKGROUND,
    },
    inputContent: {
       paddingHorizontal: 4,

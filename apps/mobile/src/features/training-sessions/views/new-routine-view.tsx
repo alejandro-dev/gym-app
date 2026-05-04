@@ -13,17 +13,19 @@ import NewRoutineHero from '../components/new-routine-hero';
 import RoutineConfigCard from '../components/routine-config-card';
 import RoutineExercisesCard from '../components/routine-exercises-card';
 import RoutineGeneralInfoCard from '../components/routine-general-info-card';
-import useNewRutineView from '../hooks/use-new-rutine-view';
+import { useNewRoutine } from '../context/new-routine-context';
 
 const GOALS = WORKOUT_PLAN_GOAL_VALUES;
 const LEVELS = WORKOUT_PLAN_LEVEL_VALUES;
 
 type NewRoutineViewProps = {
-   mode?: 'create' | 'edit';
+   mode?: 'create' | 'edit' | 'duplicate';
+   canSubmitRoutine: boolean;
+   isSavingRoutine: boolean;
+   onSubmitRoutine: () => void;
 };
 
-
-const NewRoutineView = ({ mode = 'create' }: NewRoutineViewProps) => {
+const NewRoutineView = ({ mode = 'create', canSubmitRoutine, isSavingRoutine, onSubmitRoutine }: NewRoutineViewProps) => {
    const insets = useSafeAreaInsets();
    const {
       name,
@@ -33,8 +35,6 @@ const NewRoutineView = ({ mode = 'create' }: NewRoutineViewProps) => {
       selectedLevel,
       status,
       exercises,
-      canCreateRoutine,
-      isCreatingRoutine,
       setName,
       setDescription,
       setDurationWeeks,
@@ -42,15 +42,24 @@ const NewRoutineView = ({ mode = 'create' }: NewRoutineViewProps) => {
       setSelectedLevel,
       setStatus,
       removeExercise,
-      handleCreateRoutine,
-   } = useNewRutineView();
+   } = useNewRoutine();
 
+   // Comprobamos si se está actualizando o duplicando la rutina.
    const isEditing = mode === 'edit';
-   
-   // En edición básica todavía no hidratamos ejercicios, así que basta nombre.
-   const canSubmitRoutine = isEditing
-      ? name.trim().length > 0
-      : canCreateRoutine;
+   const isDuplicating = mode === 'duplicate';
+
+   // Modificamos el texto del botón de guardar según el estado.
+   const submitLabel = isEditing
+      ? isSavingRoutine
+         ? 'Guardando...'
+         : 'Guardar cambios'
+      : isDuplicating
+         ? isSavingRoutine
+            ? 'Duplicando...'
+            : 'Crear copia'
+         : isSavingRoutine
+            ? 'Creando...'
+            : 'Crear rutina';
 
    return (
       <KeyboardAvoidingView
@@ -104,20 +113,22 @@ const NewRoutineView = ({ mode = 'create' }: NewRoutineViewProps) => {
                <HelperText type="info" visible={!canSubmitRoutine} style={styles.createHint}>
                   {isEditing
                      ? 'Completa el nombre para editar la rutina.'
-                     : 'Completa el nombre y añade al menos un ejercicio para crear la rutina.'}
+                     : isDuplicating
+                        ? 'Completa el nombre y revisa los ejercicios para crear la copia.'
+                        : 'Completa el nombre y añade al menos un ejercicio para crear la rutina.'}
+
                </HelperText>
                <Button
                   mode="contained"
                   disabled={!canSubmitRoutine}
-                  loading={isCreatingRoutine}
-                  onPress={handleCreateRoutine}
+                  loading={isSavingRoutine}
+                  onPress={onSubmitRoutine}
                   contentStyle={styles.buttonContent}
                   labelStyle={styles.buttonLabel}
                   style={styles.button}
                >
-                  {isEditing ? 'Guardar cambios' : isCreatingRoutine ? 'Creando...' : 'Crear rutina'}
+                  {submitLabel}
                </Button>
-
             </View>
          </KeyboardAwareScrollView>
       </KeyboardAvoidingView>

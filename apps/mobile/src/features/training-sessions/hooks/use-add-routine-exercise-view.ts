@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { router } from 'expo-router';
 import { RoutineExerciseDraft, RoutineCatalogExercise } from "../types";
+import { toOptionalNumber } from "../utils/routine-form-utils";
 
 type useAddRoutineExerciseViewProps = {
    addExercise: (exercise: Omit<RoutineExerciseDraft, 'id' | 'order'>) => void;
@@ -65,17 +66,4 @@ export default function useAddRoutineExerciseView({addExercise, selectedRoutineE
       setNotes,
       handleAddExercise,
    };
-}
-
-// Función para convertir una cadena de texto en un número opcional.
-function toOptionalNumber(value: string) {
-   const normalizedValue = value.trim().replace(',', '.');
-
-   if (!normalizedValue) {
-      return null;
-   }
-
-   const parsedValue = Number(normalizedValue);
-
-   return Number.isFinite(parsedValue) ? parsedValue : null;
 }

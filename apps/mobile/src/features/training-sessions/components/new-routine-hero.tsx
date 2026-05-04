@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Divider, Surface, Text, useTheme } from 'react-native-paper';
+import { VIEW_COLORS } from '@/theme/colors';
 
 type NewRoutineHeroProps = {
    durationWeeks: string;
@@ -11,38 +12,41 @@ const NewRoutineHero = ({ durationWeeks }: NewRoutineHeroProps) => {
    const theme = useTheme();
 
    return (
-      <Surface style={styles.hero} elevation={0}>
+      <Surface style={[styles.hero, { backgroundColor: theme.colors.surface }]} elevation={0}>
          <View style={styles.heroHeader}>
-            <View style={styles.kicker}>
-               <Text style={[styles.kickerText, { color: theme.colors.primary }]}>
+            <View style={[styles.kicker, { backgroundColor: '#FFFFFF' }]}>
+               <Text style={[styles.kickerText, { color: theme.colors.onTertiary }]}>
                   Nueva rutina
                </Text>
             </View>
-            <Text variant="headlineMedium" style={styles.title}>
+            <Text variant="headlineMedium" style={[styles.title, { color: theme.colors.onSurface }]}>
                Diseña el bloque base
             </Text>
-            <Text variant="bodyMedium" style={styles.description}>
+            <Text
+               variant="bodyMedium"
+               style={[styles.description, { color: theme.colors.onSurfaceVariant }]}
+            >
                Completa la información principal para dejar la rutina preparada antes de
                añadir ejercicios.
             </Text>
          </View>
 
-         <View style={styles.heroStats}>
+         <View style={[styles.heroStats, { backgroundColor: theme.colors.surfaceVariant }]}>
             <View style={styles.stat}>
-               <Text style={styles.statValue}>0</Text>
-               <Text style={styles.statLabel}>ejercicios</Text>
+               <Text style={[styles.statValue, { color: theme.colors.onSurface }]}>0</Text>
+               <Text style={[styles.statLabel, { color: theme.colors.onSurfaceVariant }]}>ejercicios</Text>
             </View>
-            <Divider style={styles.statDivider} />
+            <Divider style={[styles.statDivider, { backgroundColor: theme.colors.outline }]} />
             <View style={styles.stat}>
-               <Text style={styles.statValue}>
+               <Text style={[styles.statValue, { color: theme.colors.onSurface }]}>
                   {durationWeeks === '' ? '0' : durationWeeks}
                </Text>
-               <Text style={styles.statLabel}>semanas</Text>
+               <Text style={[styles.statLabel, { color: theme.colors.onSurfaceVariant }]}>semanas</Text>
             </View>
-            <Divider style={styles.statDivider} />
+            <Divider style={[styles.statDivider, { backgroundColor: theme.colors.outline }]} />
             <View style={styles.stat}>
-               <Text style={styles.statValue}>3</Text>
-               <Text style={styles.statLabel}>días</Text>
+               <Text style={[styles.statValue, { color: theme.colors.onSurface }]}>3</Text>
+               <Text style={[styles.statLabel, { color: theme.colors.onSurfaceVariant }]}>días</Text>
             </View>
          </View>
       </Surface>
@@ -57,7 +61,6 @@ const styles = StyleSheet.create({
       borderRadius: 28,
       borderCurve: 'continuous',
       padding: 20,
-      backgroundColor: '#0f172a',
    },
    heroHeader: {
       gap: 10,
@@ -65,7 +68,6 @@ const styles = StyleSheet.create({
    kicker: {
       alignSelf: 'flex-start',
       borderRadius: 999,
-      backgroundColor: '#dbeafe',
       paddingHorizontal: 12,
       paddingVertical: 6,
    },
@@ -76,11 +78,9 @@ const styles = StyleSheet.create({
       letterSpacing: 0.6,
    },
    title: {
-      color: '#f8fafc',
       fontWeight: '800',
    },
    description: {
-      color: '#cbd5e1',
       lineHeight: 21,
    },
    heroStats: {
@@ -88,8 +88,9 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       borderRadius: 22,
       borderCurve: 'continuous',
-      backgroundColor: '#1e293b',
       padding: 14,
+      borderColor: VIEW_COLORS.borderColor,
+      borderWidth: 0.5,
    },
    stat: {
       flex: 1,
@@ -97,18 +98,15 @@ const styles = StyleSheet.create({
       gap: 2,
    },
    statValue: {
-      color: '#f8fafc',
       fontSize: 22,
       fontWeight: '800',
    },
    statLabel: {
-      color: '#94a3b8',
       fontSize: 12,
       fontWeight: '600',
    },
    statDivider: {
       width: 1,
       height: 34,
-      backgroundColor: '#334155',
    },
 });
