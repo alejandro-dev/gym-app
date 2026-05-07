@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma, UserRole } from '@prisma/client';
+import type { WorkoutSession } from '@gym-app/types';
 import { WorkoutSessionsService } from './workout-sessions.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { WorkoutProducer } from '../bullmq/workout/workout.producer';
@@ -113,6 +114,12 @@ describe('WorkoutSessionsService', () => {
       endedAt: new Date('2026-03-23T11:15:00.000Z'),
    };
 
+   const publicWorkoutSessionRecord: WorkoutSession = {
+      ...workoutSessionRecord,
+      startedAt: workoutSessionRecord.startedAt.toISOString(),
+      endedAt: workoutSessionRecord.endedAt!.toISOString(),
+   };
+
    beforeEach(async () => {
       jest.clearAllMocks();
 
@@ -167,7 +174,7 @@ describe('WorkoutSessionsService', () => {
             startedAt: true,
             endedAt: true,
          });
-         expect(result).toEqual(workoutSessionRecord);
+         expect(result).toEqual(publicWorkoutSessionRecord);
       });
 
       it('creates a workout session without plan', async () => {
@@ -206,7 +213,11 @@ describe('WorkoutSessionsService', () => {
             userId: true,
             workoutPlanId: true,
          });
-         expect(result).toEqual(workoutSessionWithoutPlanRecord);
+         expect(result).toEqual({
+            ...workoutSessionWithoutPlanRecord,
+            startedAt: workoutSessionWithoutPlanRecord.startedAt.toISOString(),
+            endedAt: null,
+         });
       });
 
       it('translates unexpected database errors into InternalServerErrorException', async () => {
@@ -243,7 +254,7 @@ describe('WorkoutSessionsService', () => {
             createdAt: 'desc',
          });
          expect(findManyArgs.where).toEqual({ userId: currentUser.sub });
-         expect(result).toEqual([workoutSessionRecord]);
+         expect(result).toEqual([publicWorkoutSessionRecord]);
       });
 
       it('allows privileged roles to filter by userId', async () => {
@@ -283,7 +294,7 @@ describe('WorkoutSessionsService', () => {
             startedAt: true,
             endedAt: true,
          });
-         expect(result).toEqual(workoutSessionRecord);
+         expect(result).toEqual(publicWorkoutSessionRecord);
       });
 
       it('throws NotFoundException when the workout session does not exist', async () => {
@@ -332,7 +343,11 @@ describe('WorkoutSessionsService', () => {
             userId: true,
             workoutPlanId: true,
          });
-         expect(result).toEqual(updatedRecord);
+         expect(result).toEqual({
+            ...updatedRecord,
+            startedAt: updatedRecord.startedAt.toISOString(),
+            endedAt: updatedRecord.endedAt!.toISOString(),
+         });
       });
 
       it('attaches a plan when workoutPlanId is provided', async () => {
@@ -472,7 +487,7 @@ describe('WorkoutSessionsService', () => {
             startedAt: true,
             endedAt: true,
          });
-         expect(result).toEqual(workoutSessionRecord);
+         expect(result).toEqual(publicWorkoutSessionRecord);
       });
 
       it('throws NotFoundException when removing a missing workout session', async () => {
@@ -536,7 +551,8 @@ describe('WorkoutSessionsService', () => {
             );
             expect(result).toEqual({
                ...workoutSessionRecord,
-               endedAt: completedAt,
+               startedAt: workoutSessionRecord.startedAt.toISOString(),
+               endedAt: completedAt.toISOString(),
             });
          } finally {
             global.Date = realDate;

@@ -46,6 +46,7 @@ export class WorkoutPlanExerciseService {
             category: true,
             equipment: true,
             isCompound: true,
+            imageUrl: true,
          },
       },
    } satisfies Prisma.WorkoutPlanExerciseSelect;

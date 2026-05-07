@@ -11,6 +11,17 @@ import { WorkoutProducer } from '../bullmq/workout/workout.producer';
 import { CreateWorkoutSessionDto } from './dto/create-workout-session.dto';
 import { UpdateWorkoutSessionDto } from './dto/update-workout-session.dto';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+import type { WorkoutSession } from '@gym-app/types';
+
+type SelectedWorkoutSessionRecord = {
+   id: string;
+   userId: string;
+   workoutPlanId: string | null;
+   name: string;
+   notes: string | null;
+   startedAt: Date;
+   endedAt: Date | null;
+};
 
 /**
  * Servicio base para operaciones del dominio de sesiones de entrenamiento.
@@ -51,7 +62,7 @@ export class WorkoutSessionsService {
     * @returns Listado de sesiones accesibles para el usuario autenticado
     */
    async findAll(user: AuthenticatedUser, userId?: string) {
-      return await this.prisma.workoutSession.findMany({
+      const workoutSessions = await this.prisma.workoutSession.findMany({
          select: this.workoutSessionSelect,
          where:
             user.role === UserRole.USER
@@ -63,6 +74,10 @@ export class WorkoutSessionsService {
             createdAt: 'desc',
          },
       });
+
+      return workoutSessions.map((workoutSession) =>
+         this.toPublicWorkoutSession(workoutSession),
+      );
    }
 
    /**
@@ -90,7 +105,7 @@ export class WorkoutSessionsService {
          throw new NotFoundException(
             `Workout session with id "${id}" not found`,
          );
-      return workoutSession;
+      return this.toPublicWorkoutSession(workoutSession);
    }
 
    /**
@@ -101,10 +116,12 @@ export class WorkoutSessionsService {
     */
    async create(createWorkoutSessionDto: CreateWorkoutSessionDto) {
       try {
-         return await this.prisma.workoutSession.create({
+         const workoutSession = await this.prisma.workoutSession.create({
             data: this.toCreateData(createWorkoutSessionDto),
             select: this.workoutSessionSelect,
          });
+
+         return this.toPublicWorkoutSession(workoutSession);
       } catch (error) {
          handlePrismaError(error, 'workout session');
       }
@@ -128,11 +145,13 @@ export class WorkoutSessionsService {
       await this.getWorkoutSessionForUser(user, id);
 
       try {
-         return await this.prisma.workoutSession.update({
+         const workoutSession = await this.prisma.workoutSession.update({
             where: { id },
             data: this.toUpdateData(updateWorkoutSessionDto),
             select: this.workoutSessionSelect,
          });
+
+         return this.toPublicWorkoutSession(workoutSession);
       } catch (error) {
          handlePrismaError(error, 'workout session');
       }
@@ -150,10 +169,12 @@ export class WorkoutSessionsService {
       // Verificamos si la sesion existe
       await this.getWorkoutSessionForUser(user, id);
 
-      return await this.prisma.workoutSession.delete({
+      const workoutSession = await this.prisma.workoutSession.delete({
          where: { id },
          select: this.workoutSessionSelect,
       });
+
+      return this.toPublicWorkoutSession(workoutSession);
    }
 
    /**
@@ -195,7 +216,7 @@ export class WorkoutSessionsService {
          );
       }
 
-      return session;
+      return this.toPublicWorkoutSession(session);
    }
 
    /**
@@ -261,6 +282,22 @@ export class WorkoutSessionsService {
                          id: updateWorkoutSessionDto.workoutPlanId,
                       },
                    },
+      };
+   }
+
+   /**
+    * Convierte un registro de Prisma al contrato publico serializable de la API.
+    *
+    * @param workoutSession - Registro de sesion obtenido de Prisma
+    * @returns Sesion de entrenamiento lista para respuesta JSON
+    */
+   private toPublicWorkoutSession(
+      workoutSession: SelectedWorkoutSessionRecord,
+   ): WorkoutSession {
+      return {
+         ...workoutSession,
+         startedAt: workoutSession.startedAt.toISOString(),
+         endedAt: workoutSession.endedAt?.toISOString() ?? null,
       };
    }
 

@@ -59,6 +59,7 @@ export class WorkoutPlanExerciseResponseDto {
          muscleGroup: 'Pecho',
          category: 'Fuerza',
          equipment: 'Barra',
+         imageUrl: null,
       },
    })
    /** Informacion basica del ejercicio asociado. */
@@ -68,5 +69,6 @@ export class WorkoutPlanExerciseResponseDto {
       muscleGroup: MuscleGroup;
       category: ExerciseCategory;
       equipment: string | null;
+      imageUrl: string | null;
    };
 }
