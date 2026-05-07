@@ -50,5 +50,5 @@ export class WorkoutSetResponseDto {
 
    @ApiProperty({ example: '2026-03-23T10:00:00.000Z' })
    /** Fecha de creacion de la serie en formato ISO. */
-   createdAt!: Date;
+   createdAt!: string;
 }

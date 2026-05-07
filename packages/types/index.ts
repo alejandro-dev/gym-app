@@ -197,6 +197,31 @@ export interface WorkoutPlansListResponse {
   limit: number;
 }
 
+export interface WorkoutSession {
+  id: string;
+  userId: string;
+  workoutPlanId: string | null;
+  name: string;
+  notes: string | null;
+  startedAt: string;
+  endedAt: string | null;
+}
+
+export interface WorkoutSet {
+  id: string;
+  workoutSessionId: string;
+  exerciseId: string;
+  setNumber: number;
+  reps: number | null;
+  weightKg: number | null;
+  durationSeconds: number | null;
+  distanceMeters: number | null;
+  rir: number | null;
+  isWarmup: boolean;
+  isCompleted: boolean;
+  createdAt: string;
+}
+
 export interface WorkoutPlanExercise {
   id: string;
   workoutPlanId: string;
@@ -217,5 +242,6 @@ export interface WorkoutPlanExercise {
     category: ExerciseCategory;
     equipment: string | null;
     isCompound?: boolean;
+    imageUrl?: string | null;
   };
 }

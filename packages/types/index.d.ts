@@ -27,12 +27,22 @@ export declare const WORKOUT_PLAN_GOAL_VALUES: readonly WorkoutPlanGoal[];
 export declare const WORKOUT_PLAN_LEVEL_VALUES: readonly WorkoutPlanLevel[];
 
 // Labels compartidos entre web y mobile.
-export declare const WORKOUT_PLAN_GOAL_LABELS_ES: Record<WorkoutPlanGoal, string>;
-export declare const WORKOUT_PLAN_LEVEL_LABELS_ES: Record<WorkoutPlanLevel, string>;
+export declare const WORKOUT_PLAN_GOAL_LABELS_ES: Record<
+  WorkoutPlanGoal,
+  string
+>;
+export declare const WORKOUT_PLAN_LEVEL_LABELS_ES: Record<
+  WorkoutPlanLevel,
+  string
+>;
 
 // Helpers de presentación para no duplicar mapas en cada app.
-export declare function getWorkoutPlanGoalLabelEs(goal: WorkoutPlanGoal): string;
-export declare function getWorkoutPlanLevelLabelEs(level: WorkoutPlanLevel): string;
+export declare function getWorkoutPlanGoalLabelEs(
+  goal: WorkoutPlanGoal,
+): string;
+export declare function getWorkoutPlanLevelLabelEs(
+  level: WorkoutPlanLevel,
+): string;
 
 export type WorkoutPlanType = "new" | "copy";
 
@@ -126,6 +136,31 @@ export interface WorkoutPlansListResponse {
   limit: number;
 }
 
+export interface WorkoutSession {
+  id: string;
+  userId: string;
+  workoutPlanId: string | null;
+  name: string;
+  notes: string | null;
+  startedAt: string;
+  endedAt: string | null;
+}
+
+export interface WorkoutSet {
+  id: string;
+  workoutSessionId: string;
+  exerciseId: string;
+  setNumber: number;
+  reps: number | null;
+  weightKg: number | null;
+  durationSeconds: number | null;
+  distanceMeters: number | null;
+  rir: number | null;
+  isWarmup: boolean;
+  isCompleted: boolean;
+  createdAt: string;
+}
+
 export interface WorkoutPlanExercise {
   id: string;
   workoutPlanId: string;
@@ -146,5 +181,6 @@ export interface WorkoutPlanExercise {
     category: ExerciseCategory;
     equipment: string | null;
     isCompound?: boolean;
+    imageUrl?: string | null;
   };
 }

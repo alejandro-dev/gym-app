@@ -32,12 +32,12 @@ export class WorkoutSessionResponseDto {
 
    @ApiProperty({ example: '2026-03-23T10:00:00.000Z' })
    /** Fecha de inicio de la sesion en formato ISO. */
-   startedAt!: Date;
+   startedAt!: string;
 
    @ApiPropertyOptional({
       example: '2026-03-23T11:15:00.000Z',
       nullable: true,
    })
    /** Fecha de finalizacion de la sesion en formato ISO. */
-   endedAt!: Date | null;
+   endedAt!: string | null;
 }

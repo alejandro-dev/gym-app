@@ -5,6 +5,22 @@ import { handlePrismaError } from '../prisma/prisma-error.util';
 import { CreateWorkoutSetDto } from './dto/create-workout-set.dto';
 import { UpdateWorkoutSetDto } from './dto/update-workout-set.dto';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+import type { WorkoutSet } from '@gym-app/types';
+
+type SelectedWorkoutSetRecord = {
+   id: string;
+   workoutSessionId: string;
+   exerciseId: string;
+   setNumber: number;
+   reps: number | null;
+   weightKg: number | null;
+   durationSeconds: number | null;
+   distanceMeters: number | null;
+   rir: number | null;
+   isWarmup: boolean;
+   isCompleted: boolean;
+   createdAt: Date;
+};
 
 /**
  * Servicio base para operaciones del dominio de series de entrenamiento.
@@ -44,7 +60,7 @@ export class WorkoutSetsService {
     * @returns Listado de series accesibles para el usuario autenticado
     */
    async findAll(user: AuthenticatedUser, userId?: string) {
-      return await this.prisma.workoutSet.findMany({
+      const workoutSets = await this.prisma.workoutSet.findMany({
          select: this.workoutSetSelect,
          where:
             user.role === UserRole.USER
@@ -58,6 +74,10 @@ export class WorkoutSetsService {
             { setNumber: 'asc' },
          ],
       });
+
+      return workoutSets.map((workoutSet) =>
+         this.toPublicWorkoutSet(workoutSet),
+      );
    }
 
    /**
@@ -83,7 +103,7 @@ export class WorkoutSetsService {
          throw new NotFoundException(`Workout set with id "${id}" not found`);
       }
 
-      return workoutSet;
+      return this.toPublicWorkoutSet(workoutSet);
    }
 
    /**
@@ -94,10 +114,12 @@ export class WorkoutSetsService {
     */
    async create(createWorkoutSetDto: CreateWorkoutSetDto) {
       try {
-         return await this.prisma.workoutSet.create({
+         const workoutSet = await this.prisma.workoutSet.create({
             data: this.toCreateData(createWorkoutSetDto),
             select: this.workoutSetSelect,
          });
+
+         return this.toPublicWorkoutSet(workoutSet);
       } catch (error) {
          handlePrismaError(error, 'workout set');
       }
@@ -120,11 +142,13 @@ export class WorkoutSetsService {
       await this.ensureWorkoutSetExists(user, id);
 
       try {
-         return await this.prisma.workoutSet.update({
+         const workoutSet = await this.prisma.workoutSet.update({
             where: { id },
             data: this.toUpdateData(updateWorkoutSetDto),
             select: this.workoutSetSelect,
          });
+
+         return this.toPublicWorkoutSet(workoutSet);
       } catch (error) {
          handlePrismaError(error, 'workout set');
       }
@@ -141,10 +165,12 @@ export class WorkoutSetsService {
    async remove(user: AuthenticatedUser, id: string) {
       await this.ensureWorkoutSetExists(user, id);
 
-      return await this.prisma.workoutSet.delete({
+      const workoutSet = await this.prisma.workoutSet.delete({
          where: { id },
          select: this.workoutSetSelect,
       });
+
+      return this.toPublicWorkoutSet(workoutSet);
    }
 
    /**
@@ -196,6 +222,21 @@ export class WorkoutSetsService {
          rir: updateWorkoutSetDto.rir,
          isWarmup: updateWorkoutSetDto.isWarmup,
          isCompleted: updateWorkoutSetDto.isCompleted,
+      };
+   }
+
+   /**
+    * Convierte un registro de Prisma al contrato publico serializable de la API.
+    *
+    * @param workoutSet - Registro de serie obtenido de Prisma
+    * @returns Serie de entrenamiento lista para respuesta JSON
+    */
+   private toPublicWorkoutSet(
+      workoutSet: SelectedWorkoutSetRecord,
+   ): WorkoutSet {
+      return {
+         ...workoutSet,
+         createdAt: workoutSet.createdAt.toISOString(),
       };
    }
 

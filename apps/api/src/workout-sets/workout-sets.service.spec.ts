@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma, UserRole } from '@prisma/client';
+import type { WorkoutSet } from '@gym-app/types';
 import { WorkoutSetsService } from './workout-sets.service';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -104,6 +105,11 @@ describe('WorkoutSetsService', () => {
       createdAt: new Date('2026-03-23T10:00:00.000Z'),
    };
 
+   const publicWorkoutSetRecord: WorkoutSet = {
+      ...workoutSetRecord,
+      createdAt: workoutSetRecord.createdAt.toISOString(),
+   };
+
    beforeEach(async () => {
       jest.clearAllMocks();
 
@@ -154,7 +160,7 @@ describe('WorkoutSetsService', () => {
             setNumber: true,
             createdAt: true,
          });
-         expect(result).toEqual(workoutSetRecord);
+         expect(result).toEqual(publicWorkoutSetRecord);
       });
 
       it('translates unexpected database errors into InternalServerErrorException', async () => {
@@ -190,7 +196,7 @@ describe('WorkoutSetsService', () => {
          expect(findManyArgs.where).toEqual({
             workoutSession: { userId: currentUser.sub },
          });
-         expect(result).toEqual([workoutSetRecord]);
+         expect(result).toEqual([publicWorkoutSetRecord]);
       });
 
       it('allows privileged roles to filter by userId', async () => {
@@ -222,7 +228,7 @@ describe('WorkoutSetsService', () => {
             workoutSessionId: true,
             exerciseId: true,
          });
-         expect(result).toEqual(workoutSetRecord);
+         expect(result).toEqual(publicWorkoutSetRecord);
       });
 
       it('throws NotFoundException when the workout set does not exist', async () => {
@@ -273,7 +279,7 @@ describe('WorkoutSetsService', () => {
          });
          expect(updateArgs.select).toBeDefined();
          expect(result).toEqual({
-            ...workoutSetRecord,
+            ...publicWorkoutSetRecord,
             ...updatedWorkoutSetDto,
          });
       });
@@ -312,7 +318,7 @@ describe('WorkoutSetsService', () => {
          });
          expect(deleteArgs.where).toEqual({ id: workoutSetRecord.id });
          expect(deleteArgs.select).toBeDefined();
-         expect(result).toEqual(workoutSetRecord);
+         expect(result).toEqual(publicWorkoutSetRecord);
       });
 
       it('throws NotFoundException when removing a missing workout set', async () => {

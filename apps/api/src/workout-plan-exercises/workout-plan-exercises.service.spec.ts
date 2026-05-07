@@ -1,5 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma, UserRole } from '@prisma/client';
+import {
+   ExerciseCategory,
+   MuscleGroup,
+   Prisma,
+   UserRole,
+} from '@prisma/client';
 import { WorkoutPlanExerciseService } from './workout-plan-exercises.service';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -37,6 +42,16 @@ type WorkoutPlanExerciseRecord = {
    targetWeightKg: number | null;
    restSeconds: number | null;
    notes: string | null;
+   exercise: {
+      id: string;
+      name: string;
+      slug: string;
+      muscleGroup: MuscleGroup;
+      category: ExerciseCategory;
+      equipment: string | null;
+      isCompound: boolean;
+      imageUrl: string | null;
+   };
 };
 
 describe('WorkoutPlanExerciseService', () => {
@@ -115,6 +130,16 @@ describe('WorkoutPlanExerciseService', () => {
       id: 'workoutPlanExercise_123',
       ...createWorkoutPlanExerciseDto,
       day: createWorkoutPlanExerciseDto.day ?? null,
+      exercise: {
+         id: createWorkoutPlanExerciseDto.exerciseId,
+         name: 'Press banca',
+         slug: 'press-banca',
+         muscleGroup: MuscleGroup.CHEST,
+         category: ExerciseCategory.STRENGTH,
+         equipment: 'Barra',
+         isCompound: true,
+         imageUrl: null,
+      },
    };
 
    const updatedWorkoutPlanExerciseRecord: WorkoutPlanExerciseRecord = {
@@ -187,6 +212,18 @@ describe('WorkoutPlanExerciseService', () => {
             targetWeightKg: true,
             restSeconds: true,
             notes: true,
+            exercise: {
+               select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  muscleGroup: true,
+                  category: true,
+                  equipment: true,
+                  isCompound: true,
+                  imageUrl: true,
+               },
+            },
          });
          expect(result).toEqual(workoutPlanExerciseRecord);
       });
@@ -269,6 +306,18 @@ describe('WorkoutPlanExerciseService', () => {
             targetWeightKg: true,
             restSeconds: true,
             notes: true,
+            exercise: {
+               select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  muscleGroup: true,
+                  category: true,
+                  equipment: true,
+                  isCompound: true,
+                  imageUrl: true,
+               },
+            },
          });
          expect(findManyArgs.orderBy).toEqual([
             { workoutPlanId: 'asc' },
@@ -324,6 +373,18 @@ describe('WorkoutPlanExerciseService', () => {
             targetWeightKg: true,
             restSeconds: true,
             notes: true,
+            exercise: {
+               select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  muscleGroup: true,
+                  category: true,
+                  equipment: true,
+                  isCompound: true,
+                  imageUrl: true,
+               },
+            },
          });
          expect(result).toEqual(workoutPlanExerciseRecord);
       });
@@ -409,6 +470,18 @@ describe('WorkoutPlanExerciseService', () => {
             targetWeightKg: true,
             restSeconds: true,
             notes: true,
+            exercise: {
+               select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  muscleGroup: true,
+                  category: true,
+                  equipment: true,
+                  isCompound: true,
+                  imageUrl: true,
+               },
+            },
          });
          expect(result).toEqual(updatedWorkoutPlanExerciseRecord);
       });
@@ -537,6 +610,18 @@ describe('WorkoutPlanExerciseService', () => {
             targetWeightKg: true,
             restSeconds: true,
             notes: true,
+            exercise: {
+               select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  muscleGroup: true,
+                  category: true,
+                  equipment: true,
+                  isCompound: true,
+                  imageUrl: true,
+               },
+            },
          });
          expect(result).toEqual(workoutPlanExerciseRecord);
       });
