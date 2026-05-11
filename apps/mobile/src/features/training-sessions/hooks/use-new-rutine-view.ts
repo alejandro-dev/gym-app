@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { ApiError } from '@/services/api/client';
 import { useProfileQuery } from '@/features/profile/queries/use-profile-query';
 
-import { useCreateRoutineMutation } from '../mutations/use-create-routine-mutation';
+import { useCreateRoutineMutation } from '../mutations/routine/use-create-routine-mutation';
 import { useNewRoutine } from '../context/new-routine-context';
 import { toOptionalNumber } from '../utils/routine-form-utils';
 

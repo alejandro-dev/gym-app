@@ -10,9 +10,9 @@ import {
    updateWorkoutPlanExercise,
 } from '@/services/api/workoutPlanExercisesService';
 
-import type { RoutineExerciseDraft } from '../types';
-import { workoutPlanQueryKeys } from '../queries/workout-plan-query-keys';
-import { buildRoutineExerciseChangeSet } from '../utils/routine-exercise-changes';
+import type { RoutineExerciseDraft } from '../../types';
+import { workoutPlanQueryKeys } from '../../queries/workout-plan/workout-plan-query-keys';
+import { buildRoutineExerciseChangeSet } from '../../utils/routine-exercise-changes';
 
 type UpdateRoutinePayload = {
    workoutPlanId: string;

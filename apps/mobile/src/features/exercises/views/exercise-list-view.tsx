@@ -17,7 +17,7 @@ import {
 import { resolveApiImageUrl } from '@/services/api/media';
 import { VIEW_COLORS } from '@/theme/colors';
 import useExerciseListView from '../hooks/use-exercise-list-view';
-import { RoutineCatalogExercise } from '../types';
+import { RoutineCatalogExercise } from '../../training-sessions/types';
 
 const ExerciseListView = () => {
    const theme = useTheme();
@@ -51,7 +51,7 @@ const ExerciseListView = () => {
                   style={[
                      styles.resultCount,
                      {
-                        backgroundColor: theme.colors.tertiary,
+                        backgroundColor: '#ffffff',
                         color: theme.colors.onTertiary,
                      },
                   ]}
@@ -72,7 +72,7 @@ const ExerciseListView = () => {
                         exercise={exercise}
                         cardColor={theme.colors.surfaceVariant}
                         foregroundColor={theme.colors.onSurface}
-                        indicatorColor={theme.colors.tertiary}
+                        indicatorColor={VIEW_COLORS.onDark}
                         mutedColor={theme.colors.onSurfaceVariant}
                         onPress={() => handleSelectExercise(exercise)}
                      />

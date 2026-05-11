@@ -8,6 +8,7 @@ import {
    MD3Colors,
    Text,
    TextInput,
+   Button,
 } from 'react-native-paper';
 
 import { usePersonalDataForm } from '../hooks/use-personal-data-form';
@@ -17,6 +18,7 @@ interface PersonalDataViewProps {
 }
 
 const PersonalDataView = ({ form }: PersonalDataViewProps) => {
+   // Si estamos cargando los datos del perfil, mostramos un indicador de carga.
    if (form.isLoading) {
       return (
          <View style={styles.loading}>
@@ -149,6 +151,18 @@ const PersonalDataView = ({ form }: PersonalDataViewProps) => {
                   {form.errors.heightCm?.message}
                </HelperText>
             </View>
+            <View>
+               <Button
+                  mode="contained"
+                  onPress={form.handleSave}
+                  disabled={form.isSaving}
+                  labelStyle={styles.buttonLabel}
+                  style={styles.button}
+                  contentStyle={styles.buttonContent}
+               >
+                  {form.isSaving ? 'Guardando...' : 'Guardar'}
+               </Button>
+            </View>
          </View>
       </View>
    );
@@ -169,7 +183,6 @@ const styles = StyleSheet.create({
       marginTop: 24,
    },
    avatar: {
-      marginTop: 24,
       alignItems: 'center',
    },
    loading: {
@@ -178,6 +191,16 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
       gap: 12,
       paddingTop: 48,
+   },
+   button: {
+      borderRadius: 18,
+      borderCurve: 'continuous',
+   },
+   buttonContent: {
+      minHeight: 54,
+   },
+   buttonLabel: {
+      fontSize: 16,
    },
 });
 

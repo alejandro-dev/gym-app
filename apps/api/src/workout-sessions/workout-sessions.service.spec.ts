@@ -76,6 +76,9 @@ describe('WorkoutSessionsService', () => {
             [Prisma.WorkoutSessionDeleteArgs]
          >(),
       },
+      workoutSet: {
+         count: jest.fn<Promise<number>, [Prisma.WorkoutSetCountArgs]>(),
+      },
    };
    const workoutProducerMock = {
       enqueueWorkoutCompleted: jest.fn(),
@@ -522,6 +525,7 @@ describe('WorkoutSessionsService', () => {
             ...workoutSessionRecord,
             endedAt: completedAt,
          });
+         prismaMock.workoutSet.count.mockResolvedValue(1);
 
          try {
             const result = await service.completeSession(
@@ -529,7 +533,12 @@ describe('WorkoutSessionsService', () => {
                workoutSessionRecord.id,
             );
             const [updateArgs] = prismaMock.workoutSession.update.mock.calls[0];
+            const [countArgs] = prismaMock.workoutSet.count.mock.calls[0];
 
+            expect(countArgs.where).toEqual({
+               workoutSessionId: workoutSessionRecord.id,
+               isCompleted: true,
+            });
             expect(updateArgs.where).toEqual({ id: workoutSessionRecord.id });
             expect(updateArgs.data).toEqual({
                endedAt: completedAt,
@@ -569,6 +578,29 @@ describe('WorkoutSessionsService', () => {
          await expect(
             service.completeSession(currentUser, workoutSessionRecord.id),
          ).rejects.toBeInstanceOf(ConflictException);
+         expect(prismaMock.workoutSession.update).not.toHaveBeenCalled();
+         expect(
+            workoutProducerMock.enqueueWorkoutCompleted,
+         ).not.toHaveBeenCalled();
+      });
+
+      it('throws ConflictException when the session has no completed sets', async () => {
+         prismaMock.workoutSession.findUnique.mockResolvedValue({
+            id: workoutSessionRecord.id,
+            userId: workoutSessionRecord.userId,
+            endedAt: null,
+         });
+         prismaMock.workoutSet.count.mockResolvedValue(0);
+
+         await expect(
+            service.completeSession(currentUser, workoutSessionRecord.id),
+         ).rejects.toBeInstanceOf(ConflictException);
+         expect(prismaMock.workoutSet.count).toHaveBeenCalledWith({
+            where: {
+               workoutSessionId: workoutSessionRecord.id,
+               isCompleted: true,
+            },
+         });
          expect(prismaMock.workoutSession.update).not.toHaveBeenCalled();
          expect(
             workoutProducerMock.enqueueWorkoutCompleted,

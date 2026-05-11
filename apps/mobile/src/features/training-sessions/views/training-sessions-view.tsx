@@ -9,10 +9,12 @@ import { WorkoutPlanCard } from '../components/workout-plan-card';
 import { useTrainingSessionsView } from '../hooks/use-training-sessions-view';
 
 interface TrainingSessionsViewProps {
+   onOpenWorkoutInfo: (workoutPlan: WorkoutPlan) => void;
    onOpenWorkoutOptions: (workoutPlan: WorkoutPlan) => void;
 }
 
 const TrainingSessionsView = ({
+   onOpenWorkoutInfo,
    onOpenWorkoutOptions,
 }: TrainingSessionsViewProps) => {
    const { expanded, isLoading, isError, workoutPlans, setExpanded } = useTrainingSessionsView();
@@ -56,6 +58,7 @@ const TrainingSessionsView = ({
                         <WorkoutPlanCard
                            key={workoutPlan.id}
                            workoutPlan={workoutPlan}
+                           onOpenInfo={onOpenWorkoutInfo}
                            onOpenOptions={onOpenWorkoutOptions}
                         />
                      ))}

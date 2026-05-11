@@ -9,10 +9,10 @@ import {
    WORKOUT_PLAN_LEVEL_VALUES,
 } from '@gym-app/types';
 
-import NewRoutineHero from '../components/new-routine-hero';
-import RoutineConfigCard from '../components/routine-config-card';
-import RoutineExercisesCard from '../components/routine-exercises-card';
-import RoutineGeneralInfoCard from '../components/routine-general-info-card';
+import NewRoutineHero from '../components/routine-form/new-routine-hero';
+import RoutineConfigCard from '../components/routine-form/routine-config-card';
+import RoutineExercisesCard from '../components/routine-form/routine-exercises-card';
+import RoutineGeneralInfoCard from '../components/routine-form/routine-general-info-card';
 import { useNewRoutine } from '../context/new-routine-context';
 
 const GOALS = WORKOUT_PLAN_GOAL_VALUES;

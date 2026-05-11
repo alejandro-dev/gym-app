@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useWorkoutPlansQuery } from '../queries/use-workout-plans-query';
+import { useWorkoutPlansQuery } from '../queries/workout-plan/use-workout-plans-query';
 
 export function useTrainingSessionsView() {
    const [expanded, setExpanded] = useState(true);

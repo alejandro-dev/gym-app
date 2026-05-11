@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { router } from 'expo-router';
-import { useNewRoutine } from '../context/new-routine-context';
-import { useExercisesQuery } from '../queries/use-exercises-query';
-import { RoutineCatalogExercise } from '../types';
+import { useNewRoutine } from '../../training-sessions/context/new-routine-context';
+import { useExercisesQuery } from '../../training-sessions/queries/exercises/use-exercises-query';
+import { RoutineCatalogExercise } from '../../training-sessions/types';
 
 
 export default function useExerciseListView() {
