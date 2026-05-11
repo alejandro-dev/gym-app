@@ -1,4 +1,5 @@
 import type {
+   Exercise,
    ExerciseCategory,
    ExercisesListResponse,
    MuscleGroup,
@@ -37,4 +38,9 @@ export function buildExercisesPath({
 // Consulta de ejercicios.
 export function getExercises(params?: SearchExercisesParams) {
    return apiFetch<ExercisesListResponse>(buildExercisesPath(params));
+}
+
+// Consulta de un ejercicio por id.
+export function getExercise(exerciseId: string) {
+   return apiFetch<Exercise>(`/api/exercises/${exerciseId}`);
 }

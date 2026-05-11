@@ -1,8 +1,8 @@
 import { useEffect, useMemo } from "react";
 import { useNewRoutine } from "../context/new-routine-context";
-import { useWorkoutPlanQuery } from "../queries/use-workout-plan-query";
-import { useWorkoutPlanExercisesQuery } from "../queries/use-workout-plan-exercises-query";
-import { useUpdateRoutineMutation } from '../mutations/use-update-routine-mutation';
+import { useWorkoutPlanQuery } from "../queries/workout-plan/use-workout-plan-query";
+import { useWorkoutPlanExercisesQuery } from "../queries/workout-plan/use-workout-plan-exercises-query";
+import { useUpdateRoutineMutation } from '../mutations/routine/use-update-routine-mutation';
 import { Alert } from "react-native";
 import { router } from "expo-router";
 import { ApiError } from "@/services/api/client";

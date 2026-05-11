@@ -186,14 +186,32 @@ export class WorkoutSessionsService {
     * @throws NotFoundException si no existe
     */
    async completeSession(user: AuthenticatedUser, id: string) {
+      // Obtenemos la sesion de entrenamiento.
       const existingSession = await this.getWorkoutSessionForUser(user, id);
 
+      // Si ya se ha completado, lanza un error.
       if (existingSession.endedAt) {
          throw new ConflictException(
             `Workout session with id "${id}" is already completed`,
          );
       }
 
+      // Consultamos si hay alguna serie completada.
+      const completedSetsCount = await this.prisma.workoutSet.count({
+         where: {
+            workoutSessionId: id,
+            isCompleted: true,
+         },
+      });
+
+      // Si no hay ninguna serie completada, lanza un error.
+      if (completedSetsCount === 0) {
+         throw new ConflictException(
+            `Workout session with id "${id}" has no completed sets`,
+         );
+      }
+
+      // Completamos la sesion de entrenamiento.
       const session = await this.prisma.workoutSession.update({
          where: { id },
          data: {

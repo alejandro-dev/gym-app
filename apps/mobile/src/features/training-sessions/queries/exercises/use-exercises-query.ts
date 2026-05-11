@@ -5,7 +5,7 @@ import {
    type SearchExercisesParams,
 } from '@/services/api/exercisesService';
 
-import { exerciseQueryKeys } from './exercise-query-keys';
+import { exerciseQueryKeys } from '../../../exercises/queries/exercise-query-keys';
 
 // Consulta de ejercicios.
 export function useExercisesQuery(params: SearchExercisesParams = {}) {

@@ -17,7 +17,7 @@ export default function HomeScreen() {
 	};
 
 	return (
-		<SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-950 mx-6 gap-6 my-6">
+		<SafeAreaView className="flex-1 mx-6 gap-6 my-6">
 			<AuthHero
 				title="Tu centro de control para entrenar mejor."
 				description="Accede a atletas, rutinas y progreso desde una experiencia pensada para moverse rapido en movil."

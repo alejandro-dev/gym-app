@@ -8,14 +8,18 @@ import { DeleteWorkoutDialog } from '@/features/training-sessions/components/del
 import type { WorkoutPlan } from '@gym-app/types';
 import { useRouter } from 'expo-router';
 import { ApiError } from '@/services/api/client';
-import { useDeleteRoutineMutation } from '@/features/training-sessions/mutations/use-delete-routine-mutation';
+import { useDeleteRoutineMutation } from '@/features/training-sessions/mutations/routine/use-delete-routine-mutation';
 
 
 export default function WorkoutsScreen() {
    const router = useRouter();
+
+   // Estado para mostrar el cuadro de diálogo de eliminación.
    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
    const [selectedWorkoutPlan, setSelectedWorkoutPlan] =
       useState<WorkoutPlan | null>(null);
+   
+   // Mutación para eliminar una rutina.
    const deleteRoutineMutation = useDeleteRoutineMutation();
 
    // Referencia para controlar el Bottom Sheet desde la vista de sesiones de entrenamiento.
@@ -25,6 +29,11 @@ export default function WorkoutsScreen() {
    const handleOpenWorkoutOptions = (workoutPlan: WorkoutPlan) => {
       setSelectedWorkoutPlan(workoutPlan);
       bottomSheetRef.current?.snapToIndex(0);
+   };
+
+   // Evento para abrir la pantalla maqueta con la informacion de la rutina.
+   const handleOpenWorkoutInfo = (workoutPlan: WorkoutPlan) => {
+      router.navigate(`/training-sessions/${workoutPlan.id}`);
    };
 
    // Evento para redireccionar al detalle de la rutina.
@@ -77,6 +86,7 @@ export default function WorkoutsScreen() {
       <>
          <ProtectedScreen style={styles.safeArea}>
             <TrainingSessionsView
+               onOpenWorkoutInfo={handleOpenWorkoutInfo}
                onOpenWorkoutOptions={handleOpenWorkoutOptions}
             />
          </ProtectedScreen>

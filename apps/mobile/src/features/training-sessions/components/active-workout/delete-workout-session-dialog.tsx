@@ -7,24 +7,24 @@ import {
    useTheme,
    type MD3Theme,
 } from 'react-native-paper';
-import type { WorkoutPlan } from '@gym-app/types';
+import type { WorkoutSession } from '@gym-app/types';
 
-interface DeleteWorkoutDialogProps {
+interface DeleteWorkoutSessionDialogProps {
    visible: boolean;
-   workoutPlan: WorkoutPlan | null;
+   workoutSession: WorkoutSession | null;
    isDeleting: boolean;
    close: () => void;
    onConfirm: () => void;
 }
 
 // Dialogo para confirmar la eliminación de una rutina.
-export const DeleteWorkoutDialog = function DeleteWorkoutDialog({
+export default function DeleteWorkoutSessionDialog({
    visible,
-   workoutPlan,
+   workoutSession,
    isDeleting,
    close,
    onConfirm,
-}: DeleteWorkoutDialogProps) {
+}: DeleteWorkoutSessionDialogProps) {
    const theme = useTheme();
    const styles = getStyles(theme);
 
@@ -37,13 +37,13 @@ export const DeleteWorkoutDialog = function DeleteWorkoutDialog({
             style={styles.dialog}
          >
             <Dialog.Title style={styles.title}>
-               ¿Eliminar rutina?
+               ¿Eliminar la sesión?
             </Dialog.Title>
 
             <Dialog.Content>
                <Text style={styles.description}>
-                  {workoutPlan
-                     ? `Se eliminará permanentemente "${workoutPlan.name}". Esta acción no se puede deshacer.`
+                  {workoutSession
+                     ? `Se eliminará permanentemente la sesión "${workoutSession.name}". Esta acción no se puede deshacer.`
                      : 'Esta acción no se puede deshacer.'}
                </Text>
             </Dialog.Content>
@@ -53,11 +53,11 @@ export const DeleteWorkoutDialog = function DeleteWorkoutDialog({
                   <Button
                      style={styles.buttonDelete}
                      labelStyle={styles.buttonLabelDelete}
-                     disabled={isDeleting || !workoutPlan}
+                     disabled={isDeleting || !workoutSession}
                      loading={isDeleting}
                      onPress={onConfirm}
                   >
-                     {isDeleting ? 'Eliminando...' : 'Borrar rutina'}
+                     {isDeleting ? 'Eliminando...' : 'Borrar sesión'}
                   </Button>
 
                   <Button

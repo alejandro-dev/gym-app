@@ -6,8 +6,8 @@ import {
 } from '@/services/api/workoutPlansService';
 import { createWorkoutPlanExercise } from '@/services/api/workoutPlanExercisesService';
 
-import type { RoutineExerciseDraft } from '../types';
-import { workoutPlanQueryKeys } from '../queries/workout-plan-query-keys';
+import type { RoutineExerciseDraft } from '../../types';
+import { workoutPlanQueryKeys } from '../../queries/workout-plan/workout-plan-query-keys';
 
 type CreateRoutinePayload = {
    plan: CreateWorkoutPlanParams;

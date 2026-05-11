@@ -6,9 +6,9 @@ import { ApiError } from '@/services/api/client';
 import { useProfileQuery } from '@/features/profile/queries/use-profile-query';
 
 import { useNewRoutine } from '../context/new-routine-context';
-import { useCreateRoutineMutation } from '../mutations/use-create-routine-mutation';
-import { useWorkoutPlanQuery } from '../queries/use-workout-plan-query';
-import { useWorkoutPlanExercisesQuery } from '../queries/use-workout-plan-exercises-query';
+import { useCreateRoutineMutation } from '../mutations/routine/use-create-routine-mutation';
+import { useWorkoutPlanQuery } from '../queries/workout-plan/use-workout-plan-query';
+import { useWorkoutPlanExercisesQuery } from '../queries/workout-plan/use-workout-plan-exercises-query';
 import {
    toOptionalNumber,
    toRoutineExerciseDraft,

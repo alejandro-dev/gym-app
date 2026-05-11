@@ -4,9 +4,8 @@ import {
    getMuscleGroupLabelEs,
 } from '@gym-app/types';
 import { Button, Card, Chip, IconButton, Text, useTheme } from 'react-native-paper';
-import { getChipColors } from '@/theme/colors';
-import { RoutineExerciseDraft } from '../types';
-import { VIEW_COLORS } from '@/theme/colors';
+import { getChipColors, VIEW_COLORS } from '@/theme/colors';
+import { RoutineExerciseDraft } from '../../types';
 
 interface RoutineExercisesCardProps {
    exercises: RoutineExerciseDraft[];
