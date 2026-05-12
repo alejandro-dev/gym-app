@@ -12,7 +12,7 @@ import ActiveWorkoutExerciseCard from '../components/active-workout/active-worko
 import ActiveWorkoutSummary from '../components/active-workout/active-workout-summary';
 import { UseQueryResult } from '@tanstack/react-query';
 import { User, WorkoutPlan, WorkoutPlanExercise, WorkoutSession } from '@gym-app/types';
-import { getTotalSets, getTotalVolume } from '../utils/active-workout-formatters';
+import { useState } from 'react';
 
 type ActiveWorkoutViewProps = {
    workoutPlanQuery: UseQueryResult<WorkoutPlan, Error>;
@@ -21,6 +21,7 @@ type ActiveWorkoutViewProps = {
    profileQuery: UseQueryResult<User, Error>;
    workoutSession: WorkoutSession | null;
    isFinishingWorkoutSession: boolean;
+   completedSetsCount: number;
    setIsDeleteDialogOpen: (isDeleteDialogOpen: boolean) => void;
    handleFinishWorkoutSession: () => void;
    onCompletedSetCreated: () => void;
@@ -28,15 +29,12 @@ type ActiveWorkoutViewProps = {
 }
 
 // Vista para activar una rutina.
-export default function ActiveWorkoutView({ workoutPlanQuery, exercisesQuery, exercises, profileQuery, workoutSession, isFinishingWorkoutSession, setIsDeleteDialogOpen, handleFinishWorkoutSession, onCompletedSetCreated, onCompletedSetDeleted }: ActiveWorkoutViewProps) {
+export default function ActiveWorkoutView({ workoutPlanQuery, exercisesQuery, exercises, profileQuery, workoutSession, isFinishingWorkoutSession, completedSetsCount, setIsDeleteDialogOpen, handleFinishWorkoutSession, onCompletedSetCreated, onCompletedSetDeleted }: ActiveWorkoutViewProps) {
    const theme = useTheme();
    const styles = getStyles(theme);
 
-    // Obtenemos el total de series de las rutinas.
-   const totalSets = getTotalSets(exercises);
-
    // Obtenemos el total de volumen de las rutinas.
-   const totalVolume = getTotalVolume(exercises);
+   const [totalVolume, setTotalVolume] = useState<number>(0);
 
    // Evento para eliminar una sesión de entrenamiento.
    const handleDeleteWorkoutSession = () => {
@@ -92,16 +90,16 @@ export default function ActiveWorkoutView({ workoutPlanQuery, exercisesQuery, ex
                   label="Volumen"
                   value={totalVolume > 0 ? `${totalVolume} kg` : '-'}
                />
-               <ActiveWorkoutSummary label="Series" value={String(totalSets)} />
+               <ActiveWorkoutSummary label="Series" value={String(completedSetsCount)} />
             </View>
 
             <View style={styles.exerciseList}>
                {exercises.map((exercise) => (
-                  <ActiveWorkoutExerciseCard key={exercise.id} exercise={exercise} workoutSessionId={workoutSession.id} onCompletedSetCreated={onCompletedSetCreated} onCompletedSetDeleted={onCompletedSetDeleted} />
+                  <ActiveWorkoutExerciseCard key={exercise.id} exercise={exercise} workoutSessionId={workoutSession.id} onCompletedSetCreated={onCompletedSetCreated} onCompletedSetDeleted={onCompletedSetDeleted} setTotalVolume={setTotalVolume} />
                ))}
             </View>
 
-            <Button
+            {/*<Button
                mode="contained"
                icon="plus"
                style={styles.addExerciseButton}
@@ -109,7 +107,7 @@ export default function ActiveWorkoutView({ workoutPlanQuery, exercisesQuery, ex
                contentStyle={styles.largeButtonContent}
             >
                Agregar ejercicio
-            </Button>
+            </Button>*/}
 
             <View style={styles.footerActions}>
                <Button
@@ -171,7 +169,7 @@ const getStyles = (theme: MD3Theme) => StyleSheet.create({
    },
    addExerciseButtonLabel: {
       color: theme.colors.onPrimary,
-      fontSize: 18,
+      fontSize: 15,
       fontWeight: '900',
    },
    footerActions: {

@@ -32,6 +32,7 @@ import { UserRole } from '@prisma/client';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { WRITE_ENDPOINT_RATE_LIMIT } from '../rate-limit/rate-limit.constants';
+import { WorkoutSessionFeedListResponse } from '@gym-app/types';
 
 /**
  * Controlador base para exponer endpoints del dominio de sesiones de entrenamiento.
@@ -77,6 +78,50 @@ export class WorkoutSessionsController {
       @Query('userId') userId?: string,
    ): Promise<WorkoutSessionResponseDto[]> {
       return this.workoutSessionsService.findAll(user, userId);
+   }
+
+   /**
+    * Obtiene una listado de sesiones de entrenamiento completadas accesibles para el usuario autenticado.
+    *
+    * @param user - Usuario autenticado
+    * @param page - Numero de pagina base cero
+    * @param limit - Cantidad maxima de sesiones por pagina
+    * @param userId - Identificador opcional del usuario por el que filtrar cuando el rol lo permite
+    * @returns Listado de sesiones de entrenamiento completadas accesibles para el usuario autenticado
+    */
+   @ApiOperation({ summary: 'Listar sesiones completadas con ejercicios' })
+   @ApiQuery({ name: 'page', required: false, example: 0 })
+   @ApiQuery({ name: 'limit', required: false, example: 10 })
+   @ApiQuery({
+      name: 'userId',
+      required: false,
+      type: String,
+      description:
+         'Filtra por identificador de usuario. Solo aplica para roles con acceso ampliado.',
+   })
+   @ApiOkResponse({
+      description: 'Listado de sesiones de entrenamiento completadas.',
+      type: WorkoutSessionResponseDto,
+      isArray: true,
+   })
+   @Get('completed')
+   findCompleted(
+      @CurrentUser() user: AuthenticatedUser,
+      @Query('page') page?: string,
+      @Query('limit') limit?: string,
+      @Query('userId') userId?: string,
+   ): Promise<WorkoutSessionFeedListResponse> {
+      const parsedPage = Number.parseInt(page ?? '0', 10);
+      const parsedLimit = Number.parseInt(limit ?? '10', 10);
+
+      return this.workoutSessionsService.findCompleted(
+         user,
+         Number.isNaN(parsedPage) ? 0 : Math.max(parsedPage, 0),
+         Number.isNaN(parsedLimit)
+            ? 10
+            : Math.min(Math.max(parsedLimit, 1), 100),
+         userId,
+      );
    }
 
    /**

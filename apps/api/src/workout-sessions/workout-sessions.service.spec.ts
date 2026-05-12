@@ -55,7 +55,7 @@ describe('WorkoutSessionsService', () => {
             [Prisma.WorkoutSessionCreateArgs]
          >(),
          findMany: jest.fn<
-            Promise<WorkoutSessionRecord[]>,
+            Promise<unknown[]>,
             [Prisma.WorkoutSessionFindManyArgs]
          >(),
          findUnique: jest.fn<
@@ -75,6 +75,7 @@ describe('WorkoutSessionsService', () => {
             Promise<WorkoutSessionRecord>,
             [Prisma.WorkoutSessionDeleteArgs]
          >(),
+         count: jest.fn<Promise<number>, [Prisma.WorkoutSessionCountArgs]>(),
       },
       workoutSet: {
          count: jest.fn<Promise<number>, [Prisma.WorkoutSetCountArgs]>(),
@@ -605,6 +606,118 @@ describe('WorkoutSessionsService', () => {
          expect(
             workoutProducerMock.enqueueWorkoutCompleted,
          ).not.toHaveBeenCalled();
+      });
+   });
+
+   describe('findCompleted', () => {
+      const completedFeedRecord = {
+         id: 'workoutSession_completed_123',
+         name: 'Upper body',
+         startedAt: new Date('2026-03-24T09:00:00.000Z'),
+         endedAt: new Date('2026-03-24T10:05:00.000Z'),
+         sets: [
+            {
+               reps: 8,
+               weightKg: 80,
+               exercise: {
+                  id: 'exercise_bench',
+                  name: 'Bench press',
+                  imageUrl: 'https://example.com/bench.png',
+               },
+            },
+            {
+               reps: 10,
+               weightKg: 60,
+               exercise: {
+                  id: 'exercise_row',
+                  name: 'Row',
+                  imageUrl: null,
+               },
+            },
+         ],
+      };
+
+      it('returns completed sessions for the authenticated user', async () => {
+         prismaMock.workoutSession.findMany.mockResolvedValue([
+            completedFeedRecord,
+         ]);
+         prismaMock.workoutSession.count.mockResolvedValue(1);
+
+         const result = await service.findCompleted(currentUser, 0, 10);
+         const [findManyArgs] =
+            prismaMock.workoutSession.findMany.mock.calls[0];
+         const [countArgs] = prismaMock.workoutSession.count.mock.calls[0];
+
+         expect(findManyArgs.where).toEqual({
+            userId: currentUser.sub,
+            endedAt: { not: null },
+         });
+         expect(findManyArgs.skip).toBe(0);
+         expect(findManyArgs.take).toBe(10);
+         expect(findManyArgs.orderBy).toEqual({ endedAt: 'desc' });
+         expect(countArgs).toEqual({ where: findManyArgs.where });
+         expect(result).toEqual({
+            items: [
+               {
+                  id: completedFeedRecord.id,
+                  name: completedFeedRecord.name,
+                  startedAt: completedFeedRecord.startedAt.toISOString(),
+                  endedAt: completedFeedRecord.endedAt.toISOString(),
+                  durationSeconds: 3900,
+                  volumeKg: 1240,
+                  exercises: [
+                     {
+                        id: 'exercise_bench',
+                        name: 'Bench press',
+                        sets: 1,
+                        imageUrl: 'https://example.com/bench.png',
+                     },
+                     {
+                        id: 'exercise_row',
+                        name: 'Row',
+                        sets: 1,
+                        imageUrl: null,
+                     },
+                  ],
+                  hiddenExercises: 0,
+               },
+            ],
+            total: 1,
+            page: 0,
+            limit: 10,
+         });
+      });
+
+      it('allows privileged roles to filter completed sessions by userId', async () => {
+         prismaMock.workoutSession.findMany.mockResolvedValue([]);
+         prismaMock.workoutSession.count.mockResolvedValue(0);
+
+         await service.findCompleted(adminUser, 2, 25, 'target_user');
+         const [findManyArgs] =
+            prismaMock.workoutSession.findMany.mock.calls[0];
+         const [countArgs] = prismaMock.workoutSession.count.mock.calls[0];
+
+         expect(findManyArgs.where).toEqual({
+            userId: 'target_user',
+            endedAt: { not: null },
+         });
+         expect(findManyArgs.skip).toBe(50);
+         expect(findManyArgs.take).toBe(25);
+         expect(countArgs).toEqual({ where: findManyArgs.where });
+      });
+
+      it('does not constrain privileged roles when userId is omitted', async () => {
+         prismaMock.workoutSession.findMany.mockResolvedValue([]);
+         prismaMock.workoutSession.count.mockResolvedValue(0);
+
+         await service.findCompleted(adminUser, 0, 10);
+         const [findManyArgs] =
+            prismaMock.workoutSession.findMany.mock.calls[0];
+
+         expect(findManyArgs.where).toEqual({
+            userId: undefined,
+            endedAt: { not: null },
+         });
       });
    });
 });
