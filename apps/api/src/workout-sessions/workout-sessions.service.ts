@@ -11,7 +11,14 @@ import { WorkoutProducer } from '../bullmq/workout/workout.producer';
 import { CreateWorkoutSessionDto } from './dto/create-workout-session.dto';
 import { UpdateWorkoutSessionDto } from './dto/update-workout-session.dto';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
-import type { WorkoutSession } from '@gym-app/types';
+import type {
+   WorkoutSession,
+   WorkoutSessionFeedListResponse,
+} from '@gym-app/types';
+import {
+   completedWorkoutSessionFeedSelect,
+   toWorkoutSessionFeedItem,
+} from './workout-session-feed.mapper';
 
 type SelectedWorkoutSessionRecord = {
    id: string;
@@ -235,6 +242,50 @@ export class WorkoutSessionsService {
       }
 
       return this.toPublicWorkoutSession(session);
+   }
+
+   /**
+    * Obtiene una listado de sesiones de entrenamiento completadas accesibles para el usuario autenticado.
+    *
+    * @param user - Usuario autenticado
+    * @param page - Numero de pagina base cero
+    * @param limit - Cantidad maxima de sesiones por pagina
+    * @param userId - Identificador opcional del usuario por el que filtrar cuando el rol lo permite
+    * @returns Listado de sesiones de entrenamiento completadas accesibles para el usuario autenticado
+    */
+   async findCompleted(
+      user: AuthenticatedUser,
+      page: number,
+      limit: number,
+      userId?: string,
+   ): Promise<WorkoutSessionFeedListResponse> {
+      const where: Prisma.WorkoutSessionWhereInput = {
+         userId:
+            user.role === UserRole.USER
+               ? user.sub
+               : userId
+                 ? userId
+                 : undefined,
+         endedAt: { not: null },
+      };
+
+      const [sessions, total] = await Promise.all([
+         this.prisma.workoutSession.findMany({
+            select: completedWorkoutSessionFeedSelect,
+            where,
+            skip: page * limit,
+            take: limit,
+            orderBy: { endedAt: 'desc' },
+         }),
+         this.prisma.workoutSession.count({ where }),
+      ]);
+
+      return {
+         items: sessions.map((session) => toWorkoutSessionFeedItem(session)),
+         total,
+         page,
+         limit,
+      };
    }
 
    /**

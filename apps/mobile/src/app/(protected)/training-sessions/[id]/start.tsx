@@ -17,6 +17,7 @@ export default function ActiveWorkoutScreen() {
       isDeleteDialogOpen,
       isDeletingWorkoutSession,
       isFinishingWorkoutSession,
+      completedSetsCount,
       setIsDeleteDialogOpen,
       handleConfirmDeleteWorkoutSession,
       handleFinishWorkoutSession,
@@ -52,6 +53,7 @@ export default function ActiveWorkoutScreen() {
                profileQuery={profileQuery}
                workoutSession={workoutSession}
                isFinishingWorkoutSession={isFinishingWorkoutSession}
+               completedSetsCount={completedSetsCount}
                onCompletedSetCreated={incrementCompletedSets}
                onCompletedSetDeleted={decrementCompletedSets}
             />

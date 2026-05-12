@@ -59,6 +59,7 @@ describe('WorkoutSessionsController', () => {
    const workoutSessionsServiceMock = {
       create: jest.fn(),
       findAll: jest.fn(),
+      findCompleted: jest.fn(),
       findOne: jest.fn(),
       update: jest.fn(),
       remove: jest.fn(),
@@ -154,6 +155,83 @@ describe('WorkoutSessionsController', () => {
             undefined,
          );
          expect(result).toEqual([workoutSessionRecord]);
+      });
+   });
+
+   describe('findCompleted', () => {
+      it('normalizes pagination params and delegates to workoutSessionsService.findCompleted', async () => {
+         const completedResponse = {
+            items: [
+               {
+                  id: 'workoutSession_completed_123',
+                  name: 'Upper body',
+                  startedAt: '2026-03-24T09:00:00.000Z',
+                  endedAt: '2026-03-24T10:05:00.000Z',
+                  durationSeconds: 3900,
+                  volumeKg: 1240,
+                  exercises: [],
+                  hiddenExercises: 0,
+               },
+            ],
+            total: 1,
+            page: 2,
+            limit: 25,
+         };
+
+         workoutSessionsServiceMock.findCompleted.mockResolvedValue(
+            completedResponse,
+         );
+
+         const result = await controller.findCompleted(
+            currentUser,
+            '2',
+            '25',
+            'target_user',
+         );
+
+         expect(workoutSessionsServiceMock.findCompleted).toHaveBeenCalledWith(
+            currentUser,
+            2,
+            25,
+            'target_user',
+         );
+         expect(result).toEqual(completedResponse);
+      });
+
+      it('uses safe defaults for invalid pagination params', async () => {
+         workoutSessionsServiceMock.findCompleted.mockResolvedValue({
+            items: [],
+            total: 0,
+            page: 0,
+            limit: 10,
+         });
+
+         await controller.findCompleted(currentUser, 'abc', '0');
+
+         expect(workoutSessionsServiceMock.findCompleted).toHaveBeenCalledWith(
+            currentUser,
+            0,
+            1,
+            undefined,
+         );
+      });
+
+      it('caps the requested limit at 100', async () => {
+         workoutSessionsServiceMock.findCompleted.mockResolvedValue({
+            items: [],
+            total: 0,
+            page: 0,
+            limit: 100,
+         });
+
+         await controller.findCompleted(currentUser, '-2', '500');
+
+         expect(workoutSessionsServiceMock.findCompleted).toHaveBeenCalledWith(
+            currentUser,
+            0,
+            100,
+            undefined,
+         );
       });
    });
 

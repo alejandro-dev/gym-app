@@ -21,8 +21,11 @@ export function useStartWorkoutScreen() {
    // Hay una creación de sesión en curso.
    const isCreatingSessionRef = useRef(false);
 
+   // Estado para mostrar el cuadro de diálogo de eliminación.
    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
    const [workoutSession, setWorkoutSession] = useState<WorkoutSession | null>(null);
+
+   // Mutaciones para crear y completar sesiones de entrenamiento.
    const deleteSessionMutation = useDeleteSessionMutation();
    const completeSessionMutation = useCompleteSessionMutation();
 
@@ -41,12 +44,13 @@ export function useStartWorkoutScreen() {
    // Comprobar si hay alguna serie completada.
    const [completedSetsCount, setCompletedSetsCount] = useState(0);
    const incrementCompletedSets = () => {
+      // Incrementamos el contador de series completadas.
       setCompletedSetsCount((current) => current + 1);
    };
    const decrementCompletedSets = () => {
+      // Decrementamos el contador de series completadas.
       setCompletedSetsCount((current) => Math.max(current - 1, 0));
    };
-
 
    // Si se ha pulsado el botón de atras, mostramos el cuadro de diálogo de eliminación.
    useEffect(() => { const unsubscribe = navigation.addListener('beforeRemove', (event) => {
@@ -163,6 +167,7 @@ export function useStartWorkoutScreen() {
       isDeleteDialogOpen,
       isDeletingWorkoutSession: deleteSessionMutation.isPending,
       isFinishingWorkoutSession: completeSessionMutation.isPending,
+      completedSetsCount,
       setIsDeleteDialogOpen,
       handleConfirmDeleteWorkoutSession,
       handleFinishWorkoutSession,

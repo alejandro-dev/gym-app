@@ -245,3 +245,28 @@ export interface WorkoutPlanExercise {
     imageUrl?: string | null;
   };
 }
+
+export interface WorkoutSessionFeedExercise {
+  id: string;
+  name: string;
+  sets: number;
+  imageUrl: string | null;
+}
+
+export interface WorkoutSessionFeedItem {
+  id: string;
+  name: string;
+  startedAt: string;
+  endedAt: string;
+  durationSeconds: number;
+  volumeKg: number;
+  hiddenExercises: number;
+  exercises: WorkoutSessionFeedExercise[];
+}
+
+export interface WorkoutSessionFeedListResponse {
+  items: WorkoutSessionFeedItem[];
+  total: number;
+  page: number;
+  limit: number;
+}

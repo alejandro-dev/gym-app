@@ -1,40 +1,45 @@
-import { ProtectedScreen } from '@/components/layout/ProtectedScreen';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { Card, Text } from 'react-native-paper';
+import { ProtectedScreen } from "@/components/layout/ProtectedScreen";
+import { OptionsWorkoutFeed } from "@/features/home/components/options-workout-feed";
+import HomeView from "@/features/home/views/home-view";
+import BottomSheet from "@gorhom/bottom-sheet";
+import { useRef } from "react";
+import { StyleSheet } from "react-native";
+import { useTheme } from "react-native-paper";
 
 export default function ProtectedHomeScreen() {
-   return (
-      <ProtectedScreen style={styles.safeArea}>
-         <ScrollView contentContainerStyle={styles.content}>
-            <Text variant="headlineMedium">Bienvenido</Text>
-            <Text variant="bodyMedium">
-               Resumen rápido de actividad, progreso y accesos directos.
-            </Text>
+  const theme = useTheme();
 
-            <Card mode="contained">
-               <Card.Content>
-                  <Text variant="titleMedium">Entrenamiento de hoy</Text>
-                  <Text variant="bodyMedium">Pierna y core - 5 ejercicios pendientes</Text>
-               </Card.Content>
-            </Card>
+  // Referencia para controlar el Bottom Sheet desde la vista de sesiones de entrenamiento.
+  const bottomSheetRef = useRef<BottomSheet>(null);
 
-            <Card mode="contained">
-               <Card.Content>
-                  <Text variant="titleMedium">Progreso semanal</Text>
-                  <Text variant="bodyMedium">Has completado 3 de 4 sesiones</Text>
-               </Card.Content>
-            </Card>
-         </ScrollView>
+  // Evento para abrir el bottom sheet de opciones de la rutina. Seleccionamos el plan de entrenamiento elegido.
+  const handleOpenWorkoutOptions = () => {
+    bottomSheetRef.current?.snapToIndex(0);
+  };
+
+  // Evento para abrir el dialogo cuando se quiere eliminar una rutina.
+  const handleOpenDeleteWorkoutDialog = () => {
+    // Abrimos el bottom sheet para mostrar el cuadro de diálogo.
+    bottomSheetRef.current?.close();
+  };
+
+  return (
+    <>
+      <ProtectedScreen
+        style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
+      >
+        <HomeView onOpenWorkoutOptions={handleOpenWorkoutOptions} />
       </ProtectedScreen>
-   );
+      <OptionsWorkoutFeed
+        bottomSheetRef={bottomSheetRef}
+        handleOpenDeleteWorkoutDialog={handleOpenDeleteWorkoutDialog}
+      />
+    </>
+  );
 }
 
 const styles = StyleSheet.create({
-   safeArea: {
-      flex: 1,
-      paddingTop: 12,
-   },
-   content: {
-      gap: 16,
-   },
+  safeArea: {
+    flex: 1,
+  },
 });

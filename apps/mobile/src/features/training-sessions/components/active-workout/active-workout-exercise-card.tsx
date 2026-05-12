@@ -1,7 +1,7 @@
 import { resolveApiImageUrl } from "@/services/api/media";
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { useTheme, MD3Theme, Text, Button } from "react-native-paper";
+import { useTheme, MD3Theme, Text } from "react-native-paper";
 import { Image } from 'expo-image';
 import { formatReps, formatWeight } from "../../utils/routine-detail-formatters";
 import MaterialDesignIcons from "@react-native-vector-icons/material-design-icons";
@@ -15,13 +15,17 @@ type ActiveWorkoutExerciseCardProps = {
    workoutSessionId: string;
    onCompletedSetCreated: () => void;
    onCompletedSetDeleted: () => void;
+   setTotalVolume: Dispatch<SetStateAction<number>>;
 }
 
-export default function ActiveWorkoutExerciseCard({ exercise, workoutSessionId, onCompletedSetCreated, onCompletedSetDeleted }: ActiveWorkoutExerciseCardProps) {
+export default function ActiveWorkoutExerciseCard({ exercise, workoutSessionId, onCompletedSetCreated, onCompletedSetDeleted, setTotalVolume }: ActiveWorkoutExerciseCardProps) {
    const theme = useTheme();
    const styles = getStyles(theme);
    const [completedSetIds, setCompletedSetIds] = useState<Record<number, string>>({});
    const [loadingSets, setLoadingSets] = useState<Set<number>>(() => new Set());
+   const completedSetVolume =
+      (exercise.targetRepsMax ?? exercise.targetRepsMin ?? 0) *
+      (exercise.targetWeightKg ?? 0);
 
    // Seleccionamos o deseleccionamos una serie y actualizamos el estado de la rutina.
    const toggleSet = async (setIndex: number) => {
@@ -47,6 +51,11 @@ export default function ActiveWorkoutExerciseCard({ exercise, workoutSessionId, 
                return nextSets;
             });
 
+            // Actualizamos el total de volumen.
+            setTotalVolume((currentVolume) => {
+               return currentVolume - completedSetVolume;
+            });
+
             // Marcamos la serie como no completada.
             onCompletedSetDeleted();
 
@@ -62,6 +71,11 @@ export default function ActiveWorkoutExerciseCard({ exercise, workoutSessionId, 
             weightKg: exercise.targetWeightKg ?? null,
             isWarmup: false,
             isCompleted: true,
+         });
+
+         // Actualizamos el total de volumen.
+         setTotalVolume((currentVolume) => {
+            return currentVolume + completedSetVolume;
          });
 
          // Actualizamos los ids de las series completadas.
@@ -202,16 +216,6 @@ export default function ActiveWorkoutExerciseCard({ exercise, workoutSessionId, 
                </View>
             );
          })}
-
-         <Button
-            mode="contained-tonal"
-            icon="plus"
-            style={styles.addSetButton}
-            labelStyle={styles.addSetButtonLabel}
-            contentStyle={styles.largeButtonContent}
-         >
-            Agregar serie
-         </Button>
       </View>
    );
 }
