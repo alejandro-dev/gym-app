@@ -144,6 +144,8 @@ export interface WorkoutSession {
   notes: string | null;
   startedAt: string;
   endedAt: string | null;
+  completedSetsCount: number;
+  volumeKg: number;
 }
 
 export interface WorkoutSet {
@@ -185,10 +187,17 @@ export interface WorkoutPlanExercise {
   };
 }
 
+export interface WorkoutSessionFeedSet {
+  setNumber: number;
+  reps: number | null;
+}
+
 export interface WorkoutSessionFeedExercise {
   id: string;
   name: string;
+  muscleGroup: MuscleGroup;
   sets: number;
+  completedSets: WorkoutSessionFeedSet[];
   imageUrl: string | null;
 }
 

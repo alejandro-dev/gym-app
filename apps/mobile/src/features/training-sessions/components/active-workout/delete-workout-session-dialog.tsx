@@ -9,9 +9,12 @@ import {
 } from 'react-native-paper';
 import type { WorkoutSession } from '@gym-app/types';
 
+// Solo se necesita el id y el nombre de la sesión de entrenamiento para poder eliminarla.
+type DeletableWorkoutSession = Pick<WorkoutSession, "id" | "name">;
+
 interface DeleteWorkoutSessionDialogProps {
    visible: boolean;
-   workoutSession: WorkoutSession | null;
+   workoutSession: DeletableWorkoutSession | null;
    isDeleting: boolean;
    close: () => void;
    onConfirm: () => void;

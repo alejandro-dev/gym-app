@@ -31,6 +31,10 @@ type WorkoutSessionRecord = {
    notes: string | null;
    startedAt: Date;
    endedAt: Date | null;
+   sets: Array<{
+      reps: number | null;
+      weightKg: number | null;
+   }>;
 };
 
 describe('WorkoutSessionsService', () => {
@@ -57,6 +61,10 @@ describe('WorkoutSessionsService', () => {
          findMany: jest.fn<
             Promise<unknown[]>,
             [Prisma.WorkoutSessionFindManyArgs]
+         >(),
+         findFirst: jest.fn<
+            Promise<unknown>,
+            [Prisma.WorkoutSessionFindFirstArgs]
          >(),
          findUnique: jest.fn<
             Promise<
@@ -116,12 +124,23 @@ describe('WorkoutSessionsService', () => {
       notes: 'Buenas sensaciones.',
       startedAt: new Date('2026-03-23T10:00:00.000Z'),
       endedAt: new Date('2026-03-23T11:15:00.000Z'),
+      sets: [
+         { reps: 8, weightKg: 100 },
+         { reps: 10, weightKg: 80 },
+         { reps: null, weightKg: 50 },
+      ],
    };
 
    const publicWorkoutSessionRecord: WorkoutSession = {
-      ...workoutSessionRecord,
+      id: workoutSessionRecord.id,
+      userId: workoutSessionRecord.userId,
+      workoutPlanId: workoutSessionRecord.workoutPlanId,
+      name: workoutSessionRecord.name,
+      notes: workoutSessionRecord.notes,
       startedAt: workoutSessionRecord.startedAt.toISOString(),
       endedAt: workoutSessionRecord.endedAt!.toISOString(),
+      completedSetsCount: 3,
+      volumeKg: 1600,
    };
 
    beforeEach(async () => {
@@ -177,6 +196,13 @@ describe('WorkoutSessionsService', () => {
             notes: true,
             startedAt: true,
             endedAt: true,
+            sets: {
+               where: { isCompleted: true },
+               select: {
+                  reps: true,
+                  weightKg: true,
+               },
+            },
          });
          expect(result).toEqual(publicWorkoutSessionRecord);
       });
@@ -190,6 +216,7 @@ describe('WorkoutSessionsService', () => {
             notes: null,
             startedAt: new Date('2026-03-23T18:00:00.000Z'),
             endedAt: null,
+            sets: [],
          };
 
          prismaMock.workoutSession.create.mockResolvedValue(
@@ -218,9 +245,15 @@ describe('WorkoutSessionsService', () => {
             workoutPlanId: true,
          });
          expect(result).toEqual({
-            ...workoutSessionWithoutPlanRecord,
+            id: workoutSessionWithoutPlanRecord.id,
+            userId: workoutSessionWithoutPlanRecord.userId,
+            workoutPlanId: workoutSessionWithoutPlanRecord.workoutPlanId,
+            name: workoutSessionWithoutPlanRecord.name,
+            notes: workoutSessionWithoutPlanRecord.notes,
             startedAt: workoutSessionWithoutPlanRecord.startedAt.toISOString(),
             endedAt: null,
+            completedSetsCount: 0,
+            volumeKg: 0,
          });
       });
 
@@ -253,6 +286,13 @@ describe('WorkoutSessionsService', () => {
             notes: true,
             startedAt: true,
             endedAt: true,
+            sets: {
+               where: { isCompleted: true },
+               select: {
+                  reps: true,
+                  weightKg: true,
+               },
+            },
          });
          expect(findManyArgs.orderBy).toEqual({
             createdAt: 'desc',
@@ -297,6 +337,13 @@ describe('WorkoutSessionsService', () => {
             notes: true,
             startedAt: true,
             endedAt: true,
+            sets: {
+               where: { isCompleted: true },
+               select: {
+                  reps: true,
+                  weightKg: true,
+               },
+            },
          });
          expect(result).toEqual(publicWorkoutSessionRecord);
       });
@@ -348,9 +395,15 @@ describe('WorkoutSessionsService', () => {
             workoutPlanId: true,
          });
          expect(result).toEqual({
-            ...updatedRecord,
+            id: updatedRecord.id,
+            userId: updatedRecord.userId,
+            workoutPlanId: updatedRecord.workoutPlanId,
+            name: updatedRecord.name,
+            notes: updatedRecord.notes,
             startedAt: updatedRecord.startedAt.toISOString(),
             endedAt: updatedRecord.endedAt!.toISOString(),
+            completedSetsCount: 3,
+            volumeKg: 1600,
          });
       });
 
@@ -490,6 +543,13 @@ describe('WorkoutSessionsService', () => {
             notes: true,
             startedAt: true,
             endedAt: true,
+            sets: {
+               where: { isCompleted: true },
+               select: {
+                  reps: true,
+                  weightKg: true,
+               },
+            },
          });
          expect(result).toEqual(publicWorkoutSessionRecord);
       });
@@ -543,6 +603,7 @@ describe('WorkoutSessionsService', () => {
             expect(updateArgs.where).toEqual({ id: workoutSessionRecord.id });
             expect(updateArgs.data).toEqual({
                endedAt: completedAt,
+               notes: null,
             });
             expect(updateArgs.select).toMatchObject({
                id: true,
@@ -552,6 +613,13 @@ describe('WorkoutSessionsService', () => {
                notes: true,
                startedAt: true,
                endedAt: true,
+               sets: {
+                  where: { isCompleted: true },
+                  select: {
+                     reps: true,
+                     weightKg: true,
+                  },
+               },
             });
             expect(
                workoutProducerMock.enqueueWorkoutCompleted,
@@ -560,13 +628,84 @@ describe('WorkoutSessionsService', () => {
                workoutSessionRecord.userId,
             );
             expect(result).toEqual({
-               ...workoutSessionRecord,
+               id: workoutSessionRecord.id,
+               userId: workoutSessionRecord.userId,
+               workoutPlanId: workoutSessionRecord.workoutPlanId,
+               name: workoutSessionRecord.name,
+               notes: workoutSessionRecord.notes,
                startedAt: workoutSessionRecord.startedAt.toISOString(),
                endedAt: completedAt.toISOString(),
+               completedSetsCount: 3,
+               volumeKg: 1600,
+            });
+            expect(result).not.toHaveProperty('sets');
+         } finally {
+            global.Date = realDate;
+         }
+      });
+
+      it('stores a trimmed completion note', async () => {
+         const completedAt = new Date('2026-03-24T10:00:00.000Z');
+         const realDate = global.Date;
+
+         global.Date = class extends Date {
+            constructor(value?: string | number | Date) {
+               super(value ?? completedAt);
+            }
+         } as DateConstructor;
+
+         prismaMock.workoutSession.findUnique.mockResolvedValue({
+            id: workoutSessionRecord.id,
+            userId: workoutSessionRecord.userId,
+            endedAt: null,
+         });
+         prismaMock.workoutSession.update.mockResolvedValue({
+            ...workoutSessionRecord,
+            notes: 'Subir peso',
+            endedAt: completedAt,
+         });
+         prismaMock.workoutSet.count.mockResolvedValue(1);
+
+         try {
+            await service.completeSession(
+               currentUser,
+               workoutSessionRecord.id,
+               {
+                  notes: '  Subir peso  ',
+               },
+            );
+            const [updateArgs] = prismaMock.workoutSession.update.mock.calls[0];
+
+            expect(updateArgs.data).toEqual({
+               endedAt: completedAt,
+               notes: 'Subir peso',
             });
          } finally {
             global.Date = realDate;
          }
+      });
+
+      it('normalizes an empty completion note to null', async () => {
+         prismaMock.workoutSession.findUnique.mockResolvedValue({
+            id: workoutSessionRecord.id,
+            userId: workoutSessionRecord.userId,
+            endedAt: null,
+         });
+         prismaMock.workoutSession.update.mockResolvedValue({
+            ...workoutSessionRecord,
+            notes: null,
+            endedAt: new Date('2026-03-24T10:00:00.000Z'),
+         });
+         prismaMock.workoutSet.count.mockResolvedValue(1);
+
+         await service.completeSession(currentUser, workoutSessionRecord.id, {
+            notes: '   ',
+         });
+         const [updateArgs] = prismaMock.workoutSession.update.mock.calls[0];
+
+         expect(updateArgs.data).toMatchObject({
+            notes: null,
+         });
       });
 
       it('throws ConflictException when the session is already completed', async () => {
@@ -617,20 +756,24 @@ describe('WorkoutSessionsService', () => {
          endedAt: new Date('2026-03-24T10:05:00.000Z'),
          sets: [
             {
+               setNumber: 1,
                reps: 8,
                weightKg: 80,
                exercise: {
                   id: 'exercise_bench',
                   name: 'Bench press',
+                  muscleGroup: 'CHEST',
                   imageUrl: 'https://example.com/bench.png',
                },
             },
             {
+               setNumber: 1,
                reps: 10,
                weightKg: 60,
                exercise: {
                   id: 'exercise_row',
                   name: 'Row',
+                  muscleGroup: 'BACK',
                   imageUrl: null,
                },
             },
@@ -669,13 +812,17 @@ describe('WorkoutSessionsService', () => {
                      {
                         id: 'exercise_bench',
                         name: 'Bench press',
+                        muscleGroup: 'CHEST',
                         sets: 1,
+                        completedSets: [{ setNumber: 1, reps: 8 }],
                         imageUrl: 'https://example.com/bench.png',
                      },
                      {
                         id: 'exercise_row',
                         name: 'Row',
+                        muscleGroup: 'BACK',
                         sets: 1,
+                        completedSets: [{ setNumber: 1, reps: 10 }],
                         imageUrl: null,
                      },
                   ],

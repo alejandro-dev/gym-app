@@ -307,6 +307,10 @@ describe('WorkoutSessionsController', () => {
 
    describe('completeSession', () => {
       it('delegates to workoutSessionsService.completeSession', async () => {
+         const completeWorkoutSessionDto = {
+            notes: 'Buen entreno',
+         };
+
          workoutSessionsServiceMock.completeSession.mockResolvedValue(
             workoutSessionRecord,
          );
@@ -314,11 +318,16 @@ describe('WorkoutSessionsController', () => {
          const result = await controller.completeSession(
             currentUser,
             workoutSessionRecord.id,
+            completeWorkoutSessionDto,
          );
 
          expect(
             workoutSessionsServiceMock.completeSession,
-         ).toHaveBeenCalledWith(currentUser, workoutSessionRecord.id);
+         ).toHaveBeenCalledWith(
+            currentUser,
+            workoutSessionRecord.id,
+            completeWorkoutSessionDto,
+         );
          expect(result).toEqual(workoutSessionRecord);
       });
    });
