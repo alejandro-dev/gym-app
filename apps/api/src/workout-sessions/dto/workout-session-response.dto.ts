@@ -40,4 +40,12 @@ export class WorkoutSessionResponseDto {
    })
    /** Fecha de finalizacion de la sesion en formato ISO. */
    endedAt!: string | null;
+
+   @ApiProperty({ example: 12 })
+   /** Numero de series completadas asociadas a la sesion. */
+   completedSetsCount!: number;
+
+   @ApiProperty({ example: 1240 })
+   /** Volumen total en kilogramos de las series completadas. */
+   volumeKg!: number;
 }

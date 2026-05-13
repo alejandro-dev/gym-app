@@ -52,6 +52,13 @@ export default function ProtectedLayout() {
 					}}
 				/>
 				<Stack.Screen
+					name="workout-sessions/[id]/index"
+					options={{
+						headerShown: true,
+						title: 'Detalle de entrenamiento',
+					}}
+				/>
+				<Stack.Screen
 					name="training-sessions/[id]/edit"
 					options={{ 
 						headerShown: true, 
@@ -63,6 +70,13 @@ export default function ProtectedLayout() {
 					options={{
 						headerShown: true,
 						title: 'Duplicar rutina',
+					}}
+				/>
+				<Stack.Screen
+					name="workout-sessions/[id]/finish"
+					options={{
+						headerShown: true,
+						title: 'Guardar',
 					}}
 				/>
 			</Stack>

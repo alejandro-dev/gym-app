@@ -134,8 +134,8 @@ export function useStartWorkoutScreen() {
       }
    }; 
 
-   // Completar sesión
-   const handleFinishWorkoutSession = async () => {
+   // Evento que lleva al detalle de la rutina para que se pueda terminar.
+   const handleGoDetailFinishScreen = async () => {
       if (!workoutSession) return;
 
       // Si no hay ninguna serie completada, mostramos un mensaje de error.
@@ -143,19 +143,11 @@ export function useStartWorkoutScreen() {
          Alert.alert('Entreno sin series', 'Completa al menos una serie antes de terminar el entreno.');
          return;
       }
-      try {
-         await completeSessionMutation.mutateAsync(workoutSession.id);
 
-         allowBackRef.current = true;
-         router.back();
-      } catch (error) {
-         const message =
-            error instanceof ApiError
-               ? error.message
-               : 'No se pudo terminar el entreno. Inténtalo de nuevo.';
-
-         Alert.alert('Error', message);
-      }
+      router.push({
+         pathname: '/(protected)/workout-sessions/[id]/finish',
+         params: { id: workoutSession.id },
+      });
    };
 
    return {
@@ -170,8 +162,8 @@ export function useStartWorkoutScreen() {
       completedSetsCount,
       setIsDeleteDialogOpen,
       handleConfirmDeleteWorkoutSession,
-      handleFinishWorkoutSession,
+      handleGoDetailFinishScreen,
       incrementCompletedSets,
-      decrementCompletedSets
+      decrementCompletedSets,
    }
 }

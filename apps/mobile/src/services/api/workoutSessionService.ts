@@ -1,4 +1,8 @@
-import { WorkoutSession, WorkoutSessionFeedListResponse } from "@gym-app/types";
+import {
+   WorkoutSession,
+   WorkoutSessionFeedItem,
+   WorkoutSessionFeedListResponse,
+} from "@gym-app/types";
 import { apiFetch } from "./client";
 
 export type CreateWorkoutSessionPayload = {
@@ -16,6 +20,13 @@ export type SearchWorkoutSessionsParams = {
    userId?: string;
 };
 
+// Obtenemos la sesión de entrenamiento de una rutina
+export function getWorkoutSession(id: string) {
+   return apiFetch<WorkoutSession>(`/api/workout-sessions/${id}`, {
+      method: 'GET',
+   });
+}
+
 // Crear una sesión de entrenamiento de una rutina
 export function createWorkoutSession(payload: CreateWorkoutSessionPayload) {
    return apiFetch<WorkoutSession>('/api/workout-sessions', {
@@ -32,9 +43,10 @@ export function deleteWorkoutSession(id: string) {
 }
 
 // Completar una sesión de entrenamiento de una rutina
-export function completeWorkoutSession(id: string) {
+export function completeWorkoutSession(id: string, notes: string | null = null) {
    return apiFetch<WorkoutSession>(`/api/workout-sessions/${id}/complete`, {
       method: 'POST',
+      body: JSON.stringify({ notes }),
    });
 }
 
@@ -61,5 +73,12 @@ export function getCompletedWorkoutSessions(
 ) {
    return apiFetch<WorkoutSessionFeedListResponse>(
       buildCompletedWorkoutSessionsPath(params),
+   );
+}
+
+// Obtenemos el detalle de una sesion completada.
+export function getCompletedWorkoutSession(id: string) {
+   return apiFetch<WorkoutSessionFeedItem>(
+      `/api/workout-sessions/completed/${id}`,
    );
 }

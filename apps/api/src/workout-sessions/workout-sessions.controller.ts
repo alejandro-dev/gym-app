@@ -32,7 +32,11 @@ import { UserRole } from '@prisma/client';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import { WRITE_ENDPOINT_RATE_LIMIT } from '../rate-limit/rate-limit.constants';
-import { WorkoutSessionFeedListResponse } from '@gym-app/types';
+import {
+   WorkoutSessionFeedItem,
+   WorkoutSessionFeedListResponse,
+} from '@gym-app/types';
+import { CompleteWorkoutSessionDto } from './dto/complete-workout-session.dto';
 
 /**
  * Controlador base para exponer endpoints del dominio de sesiones de entrenamiento.
@@ -122,6 +126,29 @@ export class WorkoutSessionsController {
             : Math.min(Math.max(parsedLimit, 1), 100),
          userId,
       );
+   }
+
+   /**
+    * Obtiene el detalle de una sesion completada accesible para el usuario autenticado.
+    *
+    * @param user - Usuario autenticado
+    * @param id - Identificador de la sesion completada
+    * @returns Detalle de sesion completada
+    */
+   @ApiOperation({ summary: 'Obtener detalle de sesion completada' })
+   @ApiOkResponse({
+      description: 'Detalle de sesion de entrenamiento completada.',
+      type: WorkoutSessionResponseDto,
+   })
+   @ApiNotFoundResponse({
+      description: 'Sesion completada no encontrada.',
+   })
+   @Get('completed/:id')
+   findCompletedOne(
+      @CurrentUser() user: AuthenticatedUser,
+      @Param('id') id: string,
+   ): Promise<WorkoutSessionFeedItem> {
+      return this.workoutSessionsService.findCompletedOne(user, id);
    }
 
    /**
@@ -269,7 +296,12 @@ export class WorkoutSessionsController {
    completeSession(
       @CurrentUser() user: AuthenticatedUser,
       @Param('id') id: string,
+      @Body() completeWorkoutSessionDto: CompleteWorkoutSessionDto,
    ): Promise<WorkoutSessionResponseDto> {
-      return this.workoutSessionsService.completeSession(user, id);
+      return this.workoutSessionsService.completeSession(
+         user,
+         id,
+         completeWorkoutSessionDto,
+      );
    }
 }

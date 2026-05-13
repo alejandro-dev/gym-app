@@ -13,12 +13,14 @@ import { UpdateWorkoutSessionDto } from './dto/update-workout-session.dto';
 import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
 import type {
    WorkoutSession,
+   WorkoutSessionFeedItem,
    WorkoutSessionFeedListResponse,
 } from '@gym-app/types';
 import {
    completedWorkoutSessionFeedSelect,
    toWorkoutSessionFeedItem,
 } from './workout-session-feed.mapper';
+import { CompleteWorkoutSessionDto } from './dto/complete-workout-session.dto';
 
 type SelectedWorkoutSessionRecord = {
    id: string;
@@ -28,6 +30,10 @@ type SelectedWorkoutSessionRecord = {
    notes: string | null;
    startedAt: Date;
    endedAt: Date | null;
+   sets: {
+      reps: number | null;
+      weightKg: number | null;
+   }[];
 };
 
 /**
@@ -58,6 +64,13 @@ export class WorkoutSessionsService {
       notes: true,
       startedAt: true,
       endedAt: true,
+      sets: {
+         where: { isCompleted: true },
+         select: {
+            reps: true,
+            weightKg: true,
+         },
+      },
    } satisfies Prisma.WorkoutSessionSelect;
 
    /**
@@ -192,7 +205,11 @@ export class WorkoutSessionsService {
     * @returns Sesion de entrenamiento completada
     * @throws NotFoundException si no existe
     */
-   async completeSession(user: AuthenticatedUser, id: string) {
+   async completeSession(
+      user: AuthenticatedUser,
+      id: string,
+      completeWorkoutSessionDto: CompleteWorkoutSessionDto = {},
+   ) {
       // Obtenemos la sesion de entrenamiento.
       const existingSession = await this.getWorkoutSessionForUser(user, id);
 
@@ -223,6 +240,7 @@ export class WorkoutSessionsService {
          where: { id },
          data: {
             endedAt: new Date(),
+            notes: completeWorkoutSessionDto.notes?.trim() || null,
          },
          select: this.workoutSessionSelect,
       });
@@ -286,6 +304,36 @@ export class WorkoutSessionsService {
          page,
          limit,
       };
+   }
+
+   /**
+    * Obtiene el detalle de una sesion completada accesible para el usuario autenticado.
+    *
+    * @param user - Usuario autenticado
+    * @param id - Identificador de la sesion completada
+    * @returns Detalle de sesion completada con todos sus ejercicios agrupados
+    */
+   async findCompletedOne(
+      user: AuthenticatedUser,
+      id: string,
+   ): Promise<WorkoutSessionFeedItem> {
+      // Obtenemos la sesion de entrenamiento. Si el rol es USER, filtramos también por el user id del usuario que realiza la consulta.
+      const session = await this.prisma.workoutSession.findFirst({
+         select: completedWorkoutSessionFeedSelect,
+         where: {
+            id,
+            userId: user.role === UserRole.USER ? user.sub : undefined,
+            endedAt: { not: null },
+         },
+      });
+
+      // Si no existe lanza NotFoundException
+      if (!session)
+         throw new NotFoundException(
+            `Completed workout session with id "${id}" not found`,
+         );
+
+      return toWorkoutSessionFeedItem(session, { exerciseLimit: Infinity });
    }
 
    /**
@@ -363,10 +411,25 @@ export class WorkoutSessionsService {
    private toPublicWorkoutSession(
       workoutSession: SelectedWorkoutSessionRecord,
    ): WorkoutSession {
+      // Obtenemos el número de series completadas.
+      const completedSetsCount = workoutSession.sets.length;
+
+      // Obtenemos el volumen total de las series completadas.
+      const volumeKg = workoutSession.sets.reduce((total, set) => {
+         if (set.reps === null || set.weightKg === null) return total;
+         return total + set.reps * set.weightKg;
+      }, 0);
+
       return {
-         ...workoutSession,
+         id: workoutSession.id,
+         userId: workoutSession.userId,
+         workoutPlanId: workoutSession.workoutPlanId,
+         name: workoutSession.name,
+         notes: workoutSession.notes,
          startedAt: workoutSession.startedAt.toISOString(),
          endedAt: workoutSession.endedAt?.toISOString() ?? null,
+         completedSetsCount,
+         volumeKg,
       };
    }
 

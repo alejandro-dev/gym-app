@@ -20,9 +20,9 @@ export default function ActiveWorkoutScreen() {
       completedSetsCount,
       setIsDeleteDialogOpen,
       handleConfirmDeleteWorkoutSession,
-      handleFinishWorkoutSession,
       incrementCompletedSets,
       decrementCompletedSets,
+      handleGoDetailFinishScreen,
    } = useStartWorkoutScreen();
    
    return (
@@ -35,7 +35,8 @@ export default function ActiveWorkoutScreen() {
                      compact
                      loading={isFinishingWorkoutSession}
                      disabled={!workoutSession || isFinishingWorkoutSession}
-                     onPress={handleFinishWorkoutSession}
+                     onPress={handleGoDetailFinishScreen}
+                     style={[{borderRadius: 12}]}
                   >
                      Terminar
                   </Button>
@@ -46,7 +47,7 @@ export default function ActiveWorkoutScreen() {
          <ProtectedScreen edges={['left', 'right']}>
             <ActiveWorkoutView 
                setIsDeleteDialogOpen={setIsDeleteDialogOpen} 
-               handleFinishWorkoutSession={handleFinishWorkoutSession}
+               handleGoDetailFinishScreen={handleGoDetailFinishScreen}
                workoutPlanQuery={workoutPlanQuery}
                exercisesQuery={exercisesQuery}
                exercises={exercises}

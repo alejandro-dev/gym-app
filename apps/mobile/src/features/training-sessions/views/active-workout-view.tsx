@@ -23,13 +23,13 @@ type ActiveWorkoutViewProps = {
    isFinishingWorkoutSession: boolean;
    completedSetsCount: number;
    setIsDeleteDialogOpen: (isDeleteDialogOpen: boolean) => void;
-   handleFinishWorkoutSession: () => void;
+   handleGoDetailFinishScreen: () => void;
    onCompletedSetCreated: () => void;
    onCompletedSetDeleted: () => void;
 }
 
 // Vista para activar una rutina.
-export default function ActiveWorkoutView({ workoutPlanQuery, exercisesQuery, exercises, profileQuery, workoutSession, isFinishingWorkoutSession, completedSetsCount, setIsDeleteDialogOpen, handleFinishWorkoutSession, onCompletedSetCreated, onCompletedSetDeleted }: ActiveWorkoutViewProps) {
+export default function ActiveWorkoutView({ workoutPlanQuery, exercisesQuery, exercises, profileQuery, workoutSession, isFinishingWorkoutSession, completedSetsCount, setIsDeleteDialogOpen, handleGoDetailFinishScreen, onCompletedSetCreated, onCompletedSetDeleted }: ActiveWorkoutViewProps) {
    const theme = useTheme();
    const styles = getStyles(theme);
 
@@ -117,7 +117,7 @@ export default function ActiveWorkoutView({ workoutPlanQuery, exercisesQuery, ex
                   contentStyle={styles.footerButtonContent}
                   loading={isFinishingWorkoutSession}
                   disabled={isFinishingWorkoutSession}
-                  onPress={handleFinishWorkoutSession}
+                  onPress={handleGoDetailFinishScreen}
                >
                   Terminar
                </Button>
