@@ -38,7 +38,7 @@ export const OptionsWorkoutFeed = memo(function OptionsWorkout({
           <Divider />
           <List.Item
             titleStyle={styles.titleDelete}
-            title="Eliminar sesión"
+            title="Eliminar entrenamiento"
             onPress={handleOpenDeleteWorkoutDialog}
             left={(props) => (
               <List.Icon {...props} icon="delete-outline" color="#E02020" />
