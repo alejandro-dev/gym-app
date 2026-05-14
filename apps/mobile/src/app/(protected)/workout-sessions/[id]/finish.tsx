@@ -16,6 +16,8 @@ export default function WorkoutDetailFinishScreen() {
       isDeletingWorkoutSession,
       isFinishingWorkoutSession,
       notes,
+      durationSeconds,
+      completedSetsCount,
       setIsDeleteDialogOpen,
       handleConfirmDeleteWorkoutSession,
       handleFinishWorkoutSession,
@@ -53,7 +55,14 @@ export default function WorkoutDetailFinishScreen() {
             edges={["left", "right"]}
             style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
          >
-            <WorkoutDetailFinishView workoutSession={workoutSession} setIsDeleteDialogOpen={setIsDeleteDialogOpen} notes={notes} onNotes={setNotes} />
+            <WorkoutDetailFinishView
+               workoutSession={workoutSession}
+               durationSeconds={durationSeconds}
+               notes={notes}
+               completedSetsCount={completedSetsCount}
+               setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+               onNotes={setNotes}
+            />
          </ProtectedScreen>
          
          <DeleteWorkoutSessionDialog 

@@ -18,6 +18,7 @@ export default function ActiveWorkoutScreen() {
       isDeletingWorkoutSession,
       isFinishingWorkoutSession,
       completedSetsCount,
+      elapsedSeconds,
       setIsDeleteDialogOpen,
       handleConfirmDeleteWorkoutSession,
       incrementCompletedSets,
@@ -46,8 +47,6 @@ export default function ActiveWorkoutScreen() {
 
          <ProtectedScreen edges={['left', 'right']}>
             <ActiveWorkoutView 
-               setIsDeleteDialogOpen={setIsDeleteDialogOpen} 
-               handleGoDetailFinishScreen={handleGoDetailFinishScreen}
                workoutPlanQuery={workoutPlanQuery}
                exercisesQuery={exercisesQuery}
                exercises={exercises}
@@ -55,6 +54,9 @@ export default function ActiveWorkoutScreen() {
                workoutSession={workoutSession}
                isFinishingWorkoutSession={isFinishingWorkoutSession}
                completedSetsCount={completedSetsCount}
+               elapsedSeconds={elapsedSeconds}
+               setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+               handleGoDetailFinishScreen={handleGoDetailFinishScreen}
                onCompletedSetCreated={incrementCompletedSets}
                onCompletedSetDeleted={decrementCompletedSets}
             />
