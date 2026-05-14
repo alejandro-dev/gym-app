@@ -3,9 +3,10 @@ import { View, StyleSheet, ScrollView } from "react-native";
 import { Text } from "react-native-paper";
 import WorkoutFeedCard from "../components/workout-feed-card";
 import { useCompletedWorkoutSessionsQuery } from "../queries/use-workout-session-query";
+import type { WorkoutSessionFeedItem } from "@gym-app/types";
 
 type HomeViewProps = {
-	onOpenWorkoutOptions: () => void;
+	onOpenWorkoutOptions: (workoutSession: WorkoutSessionFeedItem) => void;
 };
 
 export default function HomeView({ onOpenWorkoutOptions }: HomeViewProps) {

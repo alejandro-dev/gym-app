@@ -14,7 +14,7 @@ import { useProfileQuery } from "@/features/profile/queries/use-profile-query";
 type WorkoutFeedCardProps = {
 	item: WorkoutSessionFeedItem;
 	showSeparator: boolean;
-	onOpenOptions: () => void;
+	onOpenOptions: (workoutSession: WorkoutSessionFeedItem) => void;
 };
 
 export default function WorkoutFeedCard({
@@ -50,7 +50,7 @@ export default function WorkoutFeedCard({
 				<Tooltip title="Opciones">
 					<Appbar.Action
 						icon="dots-horizontal"
-						onPress={() => onOpenOptions()}
+						onPress={() => onOpenOptions(item)}
 					/>
 				</Tooltip>
 			</View>
