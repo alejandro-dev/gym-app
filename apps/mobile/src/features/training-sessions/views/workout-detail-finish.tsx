@@ -1,5 +1,5 @@
 import { StatBlock } from "@/components/ui/StatBlock";
-import { formatDuration, formatVolume } from "@/features/home/utils/utils";
+import { formatStopwatch, formatVolume } from "@/features/home/utils/utils";
 import { WorkoutSession } from "@gym-app/types";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { MD3Theme, useTheme, Text, Divider, TextInput, Button } from "react-native-paper";
@@ -7,11 +7,13 @@ import { MD3Theme, useTheme, Text, Divider, TextInput, Button } from "react-nati
 type WorkoutDetailFinishViewProps = {
    workoutSession: WorkoutSession;
    notes: string;
+   durationSeconds: number;
+   completedSetsCount: number;
    setIsDeleteDialogOpen: (isDeleteDialogOpen: boolean) => void;
    onNotes: (notes: string) => void;
 }
 
-export default function WorkoutDetailFinishView({ workoutSession, notes, setIsDeleteDialogOpen, onNotes }: WorkoutDetailFinishViewProps) {
+export default function WorkoutDetailFinishView({ workoutSession, notes, durationSeconds, completedSetsCount, setIsDeleteDialogOpen, onNotes }: WorkoutDetailFinishViewProps) {
    const theme = useTheme();
    const styles = getStyles(theme);
 
@@ -19,9 +21,6 @@ export default function WorkoutDetailFinishView({ workoutSession, notes, setIsDe
    const handleDeleteWorkoutSession = () => {
       setIsDeleteDialogOpen(true);
    }
-
-   // Calculamos la duración de la sesión de entrenamiento.
-   const durationSeconds = Math.max(0, Math.round((Date.now() - new Date(workoutSession.startedAt).getTime()) / 1000));
 
    // Obtenemos la fecha de inicio de la sesión de entrenamiento.
    const startedAtLabel = new Intl.DateTimeFormat("es-ES", {
@@ -42,9 +41,9 @@ export default function WorkoutDetailFinishView({ workoutSession, notes, setIsDe
 			</Text>
          
          <View style={styles.statsRow}>
-            <StatBlock label="Tiempo" value={formatDuration(durationSeconds)} />
+            <StatBlock label="Tiempo" value={formatStopwatch(durationSeconds)} />
             <StatBlock label="Volumen" value={formatVolume(workoutSession.volumeKg)} />
-            <StatBlock label="Series" value={String(workoutSession.completedSetsCount)} />
+            <StatBlock label="Series" value={String(completedSetsCount)} />
          </View>
 
          <Divider />

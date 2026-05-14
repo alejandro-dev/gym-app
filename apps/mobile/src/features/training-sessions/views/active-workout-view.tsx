@@ -13,6 +13,7 @@ import ActiveWorkoutSummary from '../components/active-workout/active-workout-su
 import { UseQueryResult } from '@tanstack/react-query';
 import { User, WorkoutPlan, WorkoutPlanExercise, WorkoutSession } from '@gym-app/types';
 import { useState } from 'react';
+import { formatStopwatch } from '@/features/home/utils/utils';
 
 type ActiveWorkoutViewProps = {
    workoutPlanQuery: UseQueryResult<WorkoutPlan, Error>;
@@ -22,6 +23,7 @@ type ActiveWorkoutViewProps = {
    workoutSession: WorkoutSession | null;
    isFinishingWorkoutSession: boolean;
    completedSetsCount: number;
+   elapsedSeconds: number;
    setIsDeleteDialogOpen: (isDeleteDialogOpen: boolean) => void;
    handleGoDetailFinishScreen: () => void;
    onCompletedSetCreated: () => void;
@@ -29,7 +31,7 @@ type ActiveWorkoutViewProps = {
 }
 
 // Vista para activar una rutina.
-export default function ActiveWorkoutView({ workoutPlanQuery, exercisesQuery, exercises, profileQuery, workoutSession, isFinishingWorkoutSession, completedSetsCount, setIsDeleteDialogOpen, handleGoDetailFinishScreen, onCompletedSetCreated, onCompletedSetDeleted }: ActiveWorkoutViewProps) {
+export default function ActiveWorkoutView({ workoutPlanQuery, exercisesQuery, exercises, profileQuery, workoutSession, isFinishingWorkoutSession, completedSetsCount, elapsedSeconds, setIsDeleteDialogOpen, handleGoDetailFinishScreen, onCompletedSetCreated, onCompletedSetDeleted }: ActiveWorkoutViewProps) {
    const theme = useTheme();
    const styles = getStyles(theme);
 
@@ -85,7 +87,12 @@ export default function ActiveWorkoutView({ workoutPlanQuery, exercisesQuery, ex
             contentContainerStyle={styles.content}
          >
             <View style={styles.summary}>
-               <ActiveWorkoutSummary label="Duracion" value="00:42" highlighted />
+               <ActiveWorkoutSummary
+                  label="Duración"
+                  value={formatStopwatch(elapsedSeconds)}
+                  highlighted
+               />
+
                <ActiveWorkoutSummary
                   label="Volumen"
                   value={totalVolume > 0 ? `${totalVolume} kg` : '-'}
@@ -136,7 +143,6 @@ export default function ActiveWorkoutView({ workoutPlanQuery, exercisesQuery, ex
       </View>
    );
 }
-   
 
 const getStyles = (theme: MD3Theme) => StyleSheet.create({
    screen: {

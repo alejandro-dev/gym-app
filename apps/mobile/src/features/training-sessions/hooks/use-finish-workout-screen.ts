@@ -16,9 +16,30 @@ export default function useFinishWorkoutScreen() {
    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
    const [notes, setNotes] = useState('');
 
+   // Obtenemos el id de la rutina y el tiempo transcurrido desde la última vez que se actualizó el cronómetro antes de ir a la pantalla de terminar la sesión y el número de series completadas.
+   const params = useLocalSearchParams<{
+      id?: string;
+      durationSeconds?: string;
+      completedSetsCount?: string;
+   }>();
+
    // Obtenemos el id de la rutina.
-   const params = useLocalSearchParams<{ id?: string }>();
    const workoutSessionId = typeof params.id === 'string' ? params.id : '';
+
+   // Obtenemos el tiempo transcurrido desde la última vez que se actualizó el cronómetro antes de ir a la pantalla de terminar la sesión.
+   const durationSecondsParam = typeof params.durationSeconds === 'string' ? params.durationSeconds : '';
+   const durationSeconds = Number.parseInt(durationSecondsParam, 10);
+   const stoppedDurationSeconds = Number.isFinite(durationSeconds)
+      ? Math.max(0, durationSeconds)
+      : 0;
+
+   // Obtenemos el número de series completadas.
+   const completedSetsCountParam = typeof params.completedSetsCount === 'string' ? params.completedSetsCount : '';
+   const parsedCompletedSetsCount = Number.parseInt(completedSetsCountParam, 10);
+   const stoppedCompletedSetsCount = Number.isFinite(parsedCompletedSetsCount)
+      ? Math.max(0, parsedCompletedSetsCount)
+      : 0;
+
 
    // Obtenemos la rutina.
    const workoutSessionQuery = useWorkoutSessionQuery(workoutSessionId);
@@ -94,6 +115,8 @@ export default function useFinishWorkoutScreen() {
       isDeletingWorkoutSession: deleteSessionMutation.isPending,
       isFinishingWorkoutSession: completeSessionMutation.isPending,
       notes,
+      durationSeconds: stoppedDurationSeconds,
+      completedSetsCount: stoppedCompletedSetsCount,
       setIsDeleteDialogOpen,
       handleConfirmDeleteWorkoutSession,
       handleFinishWorkoutSession,
