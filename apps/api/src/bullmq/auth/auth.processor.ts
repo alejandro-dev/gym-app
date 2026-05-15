@@ -4,7 +4,10 @@ import { ConfigService } from '@nestjs/config';
 import { Job } from 'bullmq';
 import { EmailsService } from '../../notifications/emails/emails.service';
 import { AUTH_JOBS, AUTH_QUEUE } from './auth-queue.constants';
-import { UserRegisteredJobData } from './auth.producer';
+import {
+   UserRegisteredJobData,
+   PasswordResetRequestedJobData,
+} from './auth.producer';
 
 /**
  * Procesador de BullMQ para el envio de mensajes de verificación de email.
@@ -25,16 +28,24 @@ export class AuthProcessor extends WorkerHost {
       super();
    }
 
-   async process(job: Job<UserRegisteredJobData>): Promise<void> {
+   async process(
+      job: Job<UserRegisteredJobData | PasswordResetRequestedJobData>,
+   ): Promise<void> {
       switch (job.name) {
          case AUTH_JOBS.USER_REGISTERED:
-            await this.handleUserRegistered(job);
+            await this.handleUserRegistered(job as Job<UserRegisteredJobData>);
+            break;
+         case AUTH_JOBS.PASSWORD_RESET_REQUESTED:
+            await this.handlePasswordResetRequested(
+               job as Job<PasswordResetRequestedJobData>,
+            );
             break;
          default:
             this.logger.warn(`Job no manejado: ${job.name}`);
       }
    }
 
+   // Evento del envío de un correo de bienvenida
    private async handleUserRegistered(job: Job<UserRegisteredJobData>) {
       const { email, firstName, emailVerificationToken, temporaryPassword } =
          job.data;
@@ -65,5 +76,26 @@ export class AuthProcessor extends WorkerHost {
       });
 
       this.logger.log(`Correo de verificacion enviado a ${email}`);
+   }
+
+   // Evento del envío de un correo de restablecimiento de contraseña
+   private async handlePasswordResetRequested(
+      job: Job<PasswordResetRequestedJobData>,
+   ) {
+      const { email, firstName, passwordResetToken } = job.data;
+      const frontUrl = this.configService.get<string>(
+         'FRONT_URL',
+         'http://localhost:3001',
+      );
+
+      const resetUrl = `${frontUrl}/auth/reset-password?token=${passwordResetToken}`;
+
+      await this.emailsService.sendPasswordResetEmail({
+         email,
+         firstName,
+         resetUrl,
+      });
+
+      this.logger.log(`Correo de reset de contrasena enviado a ${email}`);
    }
 }

@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthProducer } from '../bullmq/auth/auth.producer';
 import { hashValue } from './utils/hash-value.utils';
-import { generateEmailVerificationToken } from './utils/generate-email-verification-token.util';
+import { generateSecureToken } from './utils/generate-secure-token.util';
 import { AuthTokenPayload } from './interfaces/auth-token-payload.interface';
 import type { AuthResult, AuthResultUser } from './types/auth-result.type';
 
@@ -20,6 +20,19 @@ type WelcomeEmailData = {
    firstName: string | null;
    emailVerificationToken?: string;
    temporaryPassword?: string;
+};
+
+type PasswordResetArtifacts = {
+   passwordResetToken: string;
+   passwordResetTokenHash: string;
+   passwordResetExpiresAt: Date;
+};
+
+type PasswordResetEmailData = {
+   userId: string;
+   email: string;
+   firstName: string | null;
+   passwordResetToken: string;
 };
 
 /**
@@ -52,7 +65,7 @@ export class AccountOnboardingService {
     * @returns Artefactos necesarios para persistir y enviar el token
     */
    async createEmailVerificationArtifacts(): Promise<EmailVerificationArtifacts> {
-      const emailVerificationToken = generateEmailVerificationToken();
+      const emailVerificationToken = generateSecureToken();
       const emailVerificationTokenHash = await hashValue(
          emailVerificationToken,
       );
@@ -123,6 +136,44 @@ export class AccountOnboardingService {
       } catch (error) {
          this.logger.error(
             `Error encolando onboarding para ${data.email}`,
+            error instanceof Error ? error.stack : undefined,
+         );
+      }
+   }
+
+   /**
+    * Genera el token de restablecimiento de contraseña junto con su hash y expiración.
+    *
+    * @returns Artefactos necesarios para persistir y enviar el token
+    */
+   async createPasswordResetArtifacts(): Promise<PasswordResetArtifacts> {
+      const passwordResetToken = generateSecureToken();
+      const passwordResetTokenHash = await hashValue(passwordResetToken);
+      const ttlSeconds = this.configService.get<number>(
+         'PASSWORD_RESET_TTL_SECONDS',
+         60 * 60,
+      );
+
+      return {
+         passwordResetToken,
+         passwordResetTokenHash,
+         passwordResetExpiresAt: new Date(Date.now() + ttlSeconds * 1000),
+      };
+   }
+
+   /**
+    * Encola el correo con el enlace de restablecimiento de contraseña.
+    *
+    * @param data - Datos necesarios para construir el correo de restablecimiento
+    */
+   async enqueuePasswordResetEmail(
+      data: PasswordResetEmailData,
+   ): Promise<void> {
+      try {
+         await this.authProducer.enqueuePasswordResetRequested(data);
+      } catch (error) {
+         this.logger.error(
+            `Error encolando reset password para ${data.email}`,
             error instanceof Error ? error.stack : undefined,
          );
       }

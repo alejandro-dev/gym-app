@@ -39,6 +39,16 @@ export interface RegisterResponse {
    accessToken: string;
 }
 
+// Tipo que representa los datos necesarios para restablecer la contraseña
+export interface ForgotPasswordPayload {
+   email: string;
+}
+
+// Tipo que representa la respuesta de la API de restablecimiento de contraseña
+export interface AuthMessageResponse {
+   message: string;
+}
+
 // Función que realiza la solicitud de inicio de sesión a la API
 export function login(payload: LoginPayload) {
    return apiFetch<LoginResponse>('/api/auth/login', {
@@ -50,6 +60,14 @@ export function login(payload: LoginPayload) {
 // Función que registra un nuevo usuario en la API
 export function register(payload: RegisterPayload) {
    return apiFetch<RegisterResponse>('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+   });
+}
+
+// Función que realiza la solicitud de restablecimiento de contraseña a la API
+export function forgotPassword(payload: ForgotPasswordPayload) {
+   return apiFetch<AuthMessageResponse>('/api/auth/forgot-password', {
       method: 'POST',
       body: JSON.stringify(payload),
    });

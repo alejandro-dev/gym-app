@@ -20,6 +20,8 @@ import { AuthTokenPayload } from './interfaces/auth-token-payload.interface';
 import { hashValue } from './utils/hash-value.utils';
 import { AccountOnboardingService } from './account-onboarding.service';
 import type { AuthResult } from './types/auth-result.type';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password-dto';
 
 // Convertimos scrypt de la librería crypto de Node desde formato callback a formato async/await.
 const scrypt = promisify(scryptCallback);
@@ -37,7 +39,7 @@ export class AuthService {
     * @param prisma - Cliente de Prisma compartido por la aplicación
     * @param jwtService - Servicio de generación de tokens JWT
     * @param configService - Servicio de configuración
-    * @param authProducer - Producer de BullMQ para el envio de mensajes de verificación de email
+    * @param accountOnboardingService - Servicio compartido para onboarding de cuentas
     */
    constructor(
       private readonly configService: ConfigService,
@@ -222,7 +224,7 @@ export class AuthService {
     * @throws UnauthorizedException si el usuario no existe
     */
    async updateProfile(userId: string, updateProfileDto: UpdateProfileDto) {
-      await this.ensureProfileExists(userId);
+      await this.ensureProfileExistsByUserId(userId);
 
       const user = await this.prisma.user.update({
          where: { id: userId },
@@ -377,21 +379,6 @@ export class AuthService {
    }
 
    /**
-    * Comprueba que el perfil autenticado existe.
-    *
-    * @param userId - Identificador del usuario autenticado
-    * @throws UnauthorizedException si el usuario no existe
-    */
-   private async ensureProfileExists(userId: string) {
-      const user = await this.prisma.user.findUnique({
-         where: { id: userId },
-         select: { id: true },
-      });
-
-      if (!user) throw new UnauthorizedException('User not found');
-   }
-
-   /**
     * Verifica el token de verificación de email.
     *
     * @param token - Token de verificación de email
@@ -448,6 +435,131 @@ export class AuthService {
 
       // Si no coincide, lanza una excepción
       throw new UnauthorizedException('Invalid or expired verification token');
+   }
+
+   /**
+    * Restablece la contraseña de un usuario
+    * @param forgotPasswordDto - Datos de la solicitud de restablecimiento de contraseña
+    * @returns Mensaje de correo enviado si la cuenta existe
+    */
+   async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+      const message =
+         'Si el usuario existe, se ha enviado un correo con instrucciones para restablecer la contraseña';
+
+      // Normalizamos el email
+      const email = forgotPasswordDto.email.trim().toLowerCase();
+
+      const user = await this.prisma.user.findUnique({
+         where: { email },
+         select: { id: true, email: true, firstName: true, isActive: true },
+      });
+
+      // No revelamos si el email existe o si la cuenta está inactiva.
+      if (!user || !user.isActive) {
+         return { message };
+      }
+
+      // Generamos el token de restablecimiento de contraseña y el hash
+      const {
+         passwordResetToken,
+         passwordResetTokenHash,
+         passwordResetExpiresAt,
+      } = await this.accountOnboardingService.createPasswordResetArtifacts();
+
+      // Actualizamos el registro
+      await this.prisma.user.update({
+         where: { id: user.id },
+         data: {
+            passwordResetTokenHash,
+            passwordResetExpiresAt,
+         },
+      });
+
+      // Enviamos un correo de restablecimiento de contraseña
+      await this.accountOnboardingService.enqueuePasswordResetEmail({
+         userId: user.id,
+         email: user.email,
+         firstName: user.firstName,
+         passwordResetToken,
+      });
+
+      return { message };
+   }
+
+   /**
+    * Restablece la contraseña de un usuario
+    * @param resetPasswordDto - Datos de la solicitud de restablecimiento de contraseña
+    * @returns Mensaje de confirmación de restablecimiento de contraseña
+    */
+   async resetPassword(resetPasswordDto: ResetPasswordDto) {
+      // Consultamos el usuario
+      const users = await this.prisma.user.findMany({
+         where: {
+            passwordResetTokenHash: { not: null },
+            passwordResetExpiresAt: { gt: new Date() },
+         },
+         select: {
+            id: true,
+            passwordHash: true,
+            passwordResetTokenHash: true,
+         },
+      });
+
+      // Recorremos los usuarios
+      for (const user of users) {
+         if (!user.passwordResetTokenHash) continue;
+
+         const isMatch = await this.verifyValue(
+            resetPasswordDto.token,
+            user.passwordResetTokenHash,
+         );
+
+         // Si no coincide, continuamos
+         if (!isMatch) continue;
+
+         const isSamePassword = await this.verifyValue(
+            resetPasswordDto.newPassword,
+            user.passwordHash,
+         );
+
+         if (isSamePassword) {
+            throw new BadRequestException(
+               'New password must be different from current password',
+            );
+         }
+
+         // Actualizamos el registro
+         await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+               passwordHash: await hashValue(resetPasswordDto.newPassword),
+               passwordResetTokenHash: null,
+               passwordResetExpiresAt: null,
+               hashedRefreshToken: null,
+            },
+         });
+
+         return { message: 'Password reset successfully' };
+      }
+
+      throw new UnauthorizedException(
+         'Invalid or expired password reset token',
+      );
+   }
+
+   /**
+    * Comprueba que el perfil autenticado existe buscando por su id.
+    *
+    * @param userId - Identificador del usuario autenticado
+    * @throws UnauthorizedException si el usuario no existe
+    */
+   private async ensureProfileExistsByUserId(userId: string) {
+      const user = await this.prisma.user.findUnique({
+         where: { id: userId },
+         select: { id: true },
+      });
+
+      if (!user) throw new UnauthorizedException('User not found');
    }
 
    /**

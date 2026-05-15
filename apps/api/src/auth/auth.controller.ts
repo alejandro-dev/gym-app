@@ -33,6 +33,8 @@ import { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 import { AuthService } from './auth.service';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { AUTH_PUBLIC_RATE_LIMITS } from '../rate-limit/rate-limit.constants';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password-dto';
 
 /**
  * Endpoints de autenticacion con JWT.
@@ -242,6 +244,47 @@ export class AuthController {
    @Post('verify-email')
    verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
       return this.authService.verifyEmail(verifyEmailDto.token);
+   }
+
+   /**
+    * Envia un correo con un enlace para restablecer la contraseña.
+    *
+    * @param forgotPasswordDto - Datos de la solicitud de restablecimiento de contraseña
+    * @returns Mensaje de correo enviado si la cuenta existe
+    */
+   @ApiOperation({ summary: 'Solicitar restablecimiento de contrasena' })
+   @ApiBody({ type: ForgotPasswordDto })
+   @ApiOkResponse({
+      description: 'Instrucciones enviadas si la cuenta existe.',
+   })
+   @ApiBadRequestResponse({
+      description: 'Email invalido.',
+   })
+   @Throttle(AUTH_PUBLIC_RATE_LIMITS.forgotPassword)
+   @Post('forgot-password')
+   forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+      return this.authService.forgotPassword(forgotPasswordDto);
+   }
+
+   /**
+    * Restablece la contraseña de un usuario.
+    *
+    * @param resetPasswordDto - Datos de la solicitud de restablecimiento de contraseña
+    * @returns Mensaje de confirmación de restablecimiento de contraseña
+    */
+   @ApiOperation({ summary: 'Restablecer contrasena con token' })
+   @ApiBody({ type: ResetPasswordDto })
+   @ApiOkResponse({ description: 'Contrasena restablecida correctamente.' })
+   @ApiBadRequestResponse({
+      description: 'Token o contrasena invalida.',
+   })
+   @ApiUnauthorizedResponse({
+      description: 'Invalid or expired password reset token.',
+   })
+   @Throttle(AUTH_PUBLIC_RATE_LIMITS.resetPassword)
+   @Post('reset-password')
+   resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+      return this.authService.resetPassword(resetPasswordDto);
    }
 
    /**

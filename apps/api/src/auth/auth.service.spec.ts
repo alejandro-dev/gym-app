@@ -24,6 +24,8 @@ describe('AuthService', () => {
 
    const accountOnboardingServiceMock = {
       createEmailVerificationArtifacts: jest.fn(),
+      createPasswordResetArtifacts: jest.fn(),
+      enqueuePasswordResetEmail: jest.fn(),
       enqueueWelcomeEmail: jest.fn(),
       issueTokens: jest.fn(),
    };
@@ -457,6 +459,164 @@ describe('AuthService', () => {
             newPassword: 'supersecreto123',
          }),
       ).rejects.toBeInstanceOf(BadRequestException);
+
+      expect(prismaServiceMock.user.update).not.toHaveBeenCalled();
+   });
+
+   it('requests a password reset without revealing when the email is missing', async () => {
+      prismaServiceMock.user.findUnique.mockResolvedValueOnce(null);
+
+      await expect(
+         service.forgotPassword({ email: 'missing@example.com' }),
+      ).resolves.toEqual({
+         message:
+            'Si el usuario existe, se ha enviado un correo con instrucciones para restablecer la contraseña',
+      });
+
+      expect(prismaServiceMock.user.update).not.toHaveBeenCalled();
+      expect(
+         accountOnboardingServiceMock.enqueuePasswordResetEmail,
+      ).not.toHaveBeenCalled();
+   });
+
+   it('requests a password reset without revealing when the user is inactive', async () => {
+      prismaServiceMock.user.findUnique.mockResolvedValueOnce({
+         id: 'user-1',
+         email: 'alex@example.com',
+         firstName: 'Alex',
+         isActive: false,
+      });
+
+      await expect(
+         service.forgotPassword({ email: 'alex@example.com' }),
+      ).resolves.toEqual({
+         message:
+            'Si el usuario existe, se ha enviado un correo con instrucciones para restablecer la contraseña',
+      });
+
+      expect(prismaServiceMock.user.update).not.toHaveBeenCalled();
+      expect(
+         accountOnboardingServiceMock.enqueuePasswordResetEmail,
+      ).not.toHaveBeenCalled();
+   });
+
+   it('stores password reset artifacts and enqueues the email for an active user', async () => {
+      prismaServiceMock.user.findUnique.mockResolvedValueOnce({
+         id: 'user-1',
+         email: 'alex@example.com',
+         firstName: 'Alex',
+         isActive: true,
+      });
+      accountOnboardingServiceMock.createPasswordResetArtifacts.mockResolvedValueOnce(
+         {
+            passwordResetToken: 'plain-reset-token',
+            passwordResetTokenHash: 'stored-reset-hash',
+            passwordResetExpiresAt: new Date('2026-05-15T12:00:00.000Z'),
+         },
+      );
+      prismaServiceMock.user.update.mockResolvedValueOnce(undefined);
+
+      await expect(
+         service.forgotPassword({ email: ' Alex@Example.com ' }),
+      ).resolves.toEqual({
+         message:
+            'Si el usuario existe, se ha enviado un correo con instrucciones para restablecer la contraseña',
+      });
+
+      expect(prismaServiceMock.user.findUnique).toHaveBeenCalledWith({
+         where: { email: 'alex@example.com' },
+         select: { id: true, email: true, firstName: true, isActive: true },
+      });
+      expect(prismaServiceMock.user.update).toHaveBeenCalledWith({
+         where: { id: 'user-1' },
+         data: {
+            passwordResetTokenHash: 'stored-reset-hash',
+            passwordResetExpiresAt: new Date('2026-05-15T12:00:00.000Z'),
+         },
+      });
+      expect(
+         accountOnboardingServiceMock.enqueuePasswordResetEmail,
+      ).toHaveBeenCalledWith({
+         userId: 'user-1',
+         email: 'alex@example.com',
+         firstName: 'Alex',
+         passwordResetToken: 'plain-reset-token',
+      });
+   });
+
+   it('resets the password and clears reset and refresh tokens when the reset token matches', async () => {
+      prismaServiceMock.user.findMany.mockResolvedValueOnce([
+         {
+            id: 'user-1',
+            passwordHash: 'old-password-hash',
+            passwordResetTokenHash: 'stored-reset-hash',
+         },
+      ]);
+      prismaServiceMock.user.update.mockResolvedValueOnce(undefined);
+      jest
+         .spyOn(service as never, 'verifyValue')
+         .mockResolvedValueOnce(true as never)
+         .mockResolvedValueOnce(false as never);
+
+      await expect(
+         service.resetPassword({
+            token: 'plain-reset-token',
+            newPassword: 'nuevasegura123',
+         }),
+      ).resolves.toEqual({ message: 'Password reset successfully' });
+
+      expect(prismaServiceMock.user.update).toHaveBeenCalledWith({
+         where: { id: 'user-1' },
+         data: {
+            passwordHash: expect.stringContaining(':') as string,
+            passwordResetTokenHash: null,
+            passwordResetExpiresAt: null,
+            hashedRefreshToken: null,
+         },
+      });
+   });
+
+   it('throws BadRequestException when resetting to the current password', async () => {
+      prismaServiceMock.user.findMany.mockResolvedValueOnce([
+         {
+            id: 'user-1',
+            passwordHash: 'old-password-hash',
+            passwordResetTokenHash: 'stored-reset-hash',
+         },
+      ]);
+      jest
+         .spyOn(service as never, 'verifyValue')
+         .mockResolvedValueOnce(true as never)
+         .mockResolvedValueOnce(true as never);
+
+      await expect(
+         service.resetPassword({
+            token: 'plain-reset-token',
+            newPassword: 'samepassword123',
+         }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      expect(prismaServiceMock.user.update).not.toHaveBeenCalled();
+   });
+
+   it('throws UnauthorizedException when the reset token does not match any active reset request', async () => {
+      prismaServiceMock.user.findMany.mockResolvedValueOnce([
+         {
+            id: 'user-1',
+            passwordHash: 'old-password-hash',
+            passwordResetTokenHash: 'stored-reset-hash',
+         },
+      ]);
+      jest
+         .spyOn(service as never, 'verifyValue')
+         .mockResolvedValueOnce(false as never);
+
+      await expect(
+         service.resetPassword({
+            token: 'invalid-reset-token',
+            newPassword: 'nuevasegura123',
+         }),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
 
       expect(prismaServiceMock.user.update).not.toHaveBeenCalled();
    });
