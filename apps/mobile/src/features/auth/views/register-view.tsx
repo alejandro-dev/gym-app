@@ -36,20 +36,63 @@ const RegisterView = () => {
          />
 
          <AuthSurfaceCard>
+             <View style={styles.fieldRow}>
+               <View style={styles.fieldColumn}>
+                  <Controller
+                     control={control}
+                     name="firstName"
+                     render={({ field: { onChange, value } }) => (
+                        <AuthFormField
+                           label="Nombre"
+                           icon="account-outline"
+                           value={value}
+                           onChangeText={onChange}
+                           placeholder="Nombre"
+                           autoCapitalize="words"
+                           autoComplete="given-name"
+                           textContentType="givenName"
+                           errorText={errors.firstName?.message}
+                        />
+                     )}
+                  />
+               </View>
+
+               <View style={styles.fieldColumn}>
+                  <Controller
+                     control={control}
+                     name="lastName"
+                     render={({ field: { onChange, value } }) => (
+                        <AuthFormField
+                           label="Apellidos"
+                           icon="account-outline"
+                           value={value}
+                           onChangeText={onChange}
+                           placeholder="Apellidos"
+                           autoCapitalize="words"
+                           autoComplete="name-family"
+                           textContentType="familyName"
+                           errorText={errors.lastName?.message}
+                        />
+                     )}
+                  />
+               </View>
+            </View>
+
             <Controller
                control={control}
-               name="name"
+               name="username"
                render={({ field: { onChange, value } }) => (
                   <AuthFormField
-                     label="Nombre"
-                     icon="account-outline"
+                     label="Username"
+                     icon="at"
                      value={value}
                      onChangeText={onChange}
-                     placeholder="Nombre"
-                     autoCapitalize="words"
-                     autoComplete="name"
-                     textContentType="name"
-                     errorText={errors.name?.message}
+                     placeholder="Username"
+                     autoCapitalize="none"
+                     autoCorrect={false}
+                     autoComplete="username"
+                     textContentType="username"
+                     errorText={errors.username?.message}
                   />
                )}
             />
@@ -60,7 +103,7 @@ const RegisterView = () => {
                render={({ field: { onChange, value } }) => (
                   <AuthFormField
                      label="Email"
-                     icon="at"
+                     icon="email-outline"
                      value={value}
                      onChangeText={onChange}
                      placeholder="Email"

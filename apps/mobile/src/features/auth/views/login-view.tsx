@@ -100,7 +100,7 @@ const LoginView = () => {
                   </Pressable>
 
                   <Pressable onPress={() => router.navigate('/forgot-password')}>
-                     <Text style={styles.forgotPasswordText}>Olvide mi contrasena</Text>
+                     <Text style={styles.forgotPasswordText}>¿Has olvidado tu contrasena?</Text>
                   </Pressable>
                </View>
 

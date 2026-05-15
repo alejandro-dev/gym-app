@@ -10,11 +10,22 @@ const emailSchema = z
 
 export const registerSchema = z
    .object({
-      name: z
+      firstName: z
          .string()
          .trim()
          .min(1, 'El nombre es obligatorio')
          .min(2, 'Minimo 2 caracteres'),
+      lastName: z
+         .string()
+         .trim()
+         .min(1, 'Los apellidos son obligatorios')
+         .min(2, 'Minimo 2 caracteres'),
+      username: z
+         .string()
+         .trim()
+         .min(3, 'Minimo 3 caracteres')
+         .max(30, 'Maximo 30 caracteres')
+         .regex(/^[a-zA-Z0-9._-]+$/, 'Usa solo letras, numeros, puntos, guiones y guion bajo'),
       email: emailSchema,
       password: z.string().min(8, 'Minimo 8 caracteres'),
       confirmPassword: z.string().min(8, 'Confirma tu contrasena'),

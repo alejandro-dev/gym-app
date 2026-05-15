@@ -11,23 +11,17 @@ import {
 } from '@/features/auth/schemas/register.schema';
 
 const DEFAULT_VALUES: RegisterFormValues = {
-   name: '',
-   email: '',
-   password: '',
-   confirmPassword: '',
-   birthDate: '',
+   email: 'usuario4@gym.local',
+   password: 'Demo1234!',
+   confirmPassword: 'Demo1234!',
+   username: 'usuario4_gym',
+   firstName: 'Carla',
+   lastName: 'Atleta',
    weightKg: '',
    heightCm: '',
+   birthDate: '1995-06-30',
    acceptedTerms: false,
 };
-
-function splitFullName(name: string) {
-   const parts = name.trim().split(/\s+/);
-   const firstName = parts.shift() ?? name.trim();
-   const lastName = parts.length > 0 ? parts.join(' ') : undefined;
-
-   return { firstName, lastName };
-}
 
 export default function useRegisterView() {
    const form = useForm<RegisterFormValues, undefined, RegisterSubmitValues>({
@@ -37,14 +31,13 @@ export default function useRegisterView() {
    });
 
    const handleRegister = form.handleSubmit(async (values) => {
-      const { firstName, lastName } = splitFullName(values.name);
-
       try {
          await signUp({
             email: values.email,
             password: values.password,
-            firstName,
-            lastName,
+            username: values.username,
+            firstName: values.firstName,
+            lastName: values.lastName,
             birthDate: new Date(`${values.birthDate}T00:00:00.000Z`).toISOString(),
             weightKg: values.weightKg,
             heightCm: values.heightCm,

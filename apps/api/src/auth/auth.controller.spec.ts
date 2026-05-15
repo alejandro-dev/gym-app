@@ -12,6 +12,8 @@ describe('AuthController', () => {
    let controller: AuthController;
    const authServiceMock = {
       changePassword: jest.fn(),
+      forgotPassword: jest.fn(),
+      resetPassword: jest.fn(),
       verifyEmail: jest.fn(),
    };
 
@@ -73,5 +75,41 @@ describe('AuthController', () => {
          newPassword: 'nuevasegura123',
       });
       expect(result).toEqual({ message: 'Password updated successfully' });
+   });
+
+   it('requests a password reset email', async () => {
+      authServiceMock.forgotPassword.mockResolvedValue({
+         message:
+            'Si el usuario existe, se ha enviado un correo con instrucciones para restablecer la contraseña',
+      });
+
+      const result = await controller.forgotPassword({
+         email: 'alex@example.com',
+      });
+
+      expect(authServiceMock.forgotPassword).toHaveBeenCalledWith({
+         email: 'alex@example.com',
+      });
+      expect(result).toEqual({
+         message:
+            'Si el usuario existe, se ha enviado un correo con instrucciones para restablecer la contraseña',
+      });
+   });
+
+   it('resets a password with a token', async () => {
+      authServiceMock.resetPassword.mockResolvedValue({
+         message: 'Password reset successfully',
+      });
+
+      const result = await controller.resetPassword({
+         token: 'valid-reset-token',
+         newPassword: 'nuevasegura123',
+      });
+
+      expect(authServiceMock.resetPassword).toHaveBeenCalledWith({
+         token: 'valid-reset-token',
+         newPassword: 'nuevasegura123',
+      });
+      expect(result).toEqual({ message: 'Password reset successfully' });
    });
 });

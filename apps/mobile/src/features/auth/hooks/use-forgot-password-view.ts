@@ -2,6 +2,7 @@ import { Alert } from 'react-native';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
+import { forgotPassword } from '@/features/auth/api/auth-api';
 import {
    forgotPasswordSchema,
    type ForgotPasswordFormValues,
@@ -20,11 +21,22 @@ export default function useForgotPasswordView() {
    });
 
    const handleForgotPassword = form.handleSubmit(async (values) => {
-      Alert.alert(
-         'Revisa tu email',
-         `Si existe una cuenta para ${values.email}, recibiras instrucciones para restablecer tu contrasena.`,
-      );
-      form.reset(DEFAULT_VALUES);
+      try {
+         await forgotPassword({ email: values.email });
+
+         Alert.alert(
+            'Revisa tu email',
+            `Si existe una cuenta para ${values.email}, recibiras instrucciones para restablecer tu contrasena.`,
+         );
+         form.reset(DEFAULT_VALUES);
+      } catch (error) {
+         const message =
+            error instanceof Error
+               ? error.message
+               : 'No se pudo procesar la solicitud de recuperacion';
+
+         Alert.alert('No se pudo enviar el enlace', message);
+      }
    });
 
    return {
