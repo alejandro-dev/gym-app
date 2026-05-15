@@ -2,13 +2,12 @@ import { Alert } from 'react-native';
 import { router } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { setAccessToken } from '@/services/storage/secure-storage';
 import {
    loginSchema,
    type LoginFormValues,
    type LoginSubmitValues,
 } from '@/features/auth/schemas/login.schema';
-import { signIn } from '@/services/api/sessionService';
+import { signIn } from '@/features/auth/api/session-api';
 
 // Valores por defecto para el formulario de inicio de sesión
 const DEFAULT_VALUES: LoginFormValues = {

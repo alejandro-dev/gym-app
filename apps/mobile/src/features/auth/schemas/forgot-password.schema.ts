@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const loginSchema = z.object({
+export const forgotPasswordSchema = z.object({
    email: z
       .string()
       .trim()
@@ -8,8 +8,7 @@ export const loginSchema = z.object({
       .refine((value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value), {
          message: 'Añade un correo electrónico válido',
       }),
-   password: z.string().min(8, 'Minimo 8 caracteres'),
 });
 
-export type LoginFormValues = z.input<typeof loginSchema>;
-export type LoginSubmitValues = z.output<typeof loginSchema>;
+export type ForgotPasswordFormValues = z.input<typeof forgotPasswordSchema>;
+export type ForgotPasswordSubmitValues = z.output<typeof forgotPasswordSchema>;

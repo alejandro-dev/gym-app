@@ -1,58 +1,57 @@
-import { useForm } from 'react-hook-form';
+import { Alert } from 'react-native';
 import { router } from 'expo-router';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+
+import { signUp } from '@/features/auth/api/session-api';
 import {
    registerSchema,
    type RegisterFormValues,
    type RegisterSubmitValues,
 } from '@/features/auth/schemas/register.schema';
-import { register } from '@/services/api/authService';
-import { Alert } from 'react-native';
 
 const DEFAULT_VALUES: RegisterFormValues = {
-   email: 'usuario4@gym.local',
-   password: 'Demo1234!',
-   confirmPassword: 'Demo1234!',
-   username: 'usuario4_gym',
-   firstName: 'Carla',
-   lastName: 'Atleta',
+   name: '',
+   email: '',
+   password: '',
+   confirmPassword: '',
+   birthDate: '',
    weightKg: '',
    heightCm: '',
-   birthDate: '1995-06-30',
+   acceptedTerms: false,
 };
+
+function splitFullName(name: string) {
+   const parts = name.trim().split(/\s+/);
+   const firstName = parts.shift() ?? name.trim();
+   const lastName = parts.length > 0 ? parts.join(' ') : undefined;
+
+   return { firstName, lastName };
+}
+
 export default function useRegisterView() {
-   // Formulario de registro
    const form = useForm<RegisterFormValues, undefined, RegisterSubmitValues>({
       resolver: zodResolver(registerSchema),
       defaultValues: DEFAULT_VALUES,
       mode: 'onSubmit',
    });
 
-
-   // Evento de envío del formulario y validación
    const handleRegister = form.handleSubmit(async (values) => {
-      // Extraemos los datos del formulario
-      const payload = {
-         email: values.email,
-         password: values.password,
-         username: values.username,
-         firstName: values.firstName,
-         lastName: values.lastName,
-         weightKg: values.weightKg,
-         heightCm: values.heightCm,
-         birthDate: new Date(`${values.birthDate}T00:00:00.000Z`).toISOString(),
-      };
+      const { firstName, lastName } = splitFullName(values.name);
 
       try {
-         await register(payload);
-
-         Alert.alert(
-            'Cuenta creada',
-            'Tu cuenta se ha creado correctamente. Ya puedes iniciar sesion.',
-         );
+         await signUp({
+            email: values.email,
+            password: values.password,
+            firstName,
+            lastName,
+            birthDate: new Date(`${values.birthDate}T00:00:00.000Z`).toISOString(),
+            weightKg: values.weightKg,
+            heightCm: values.heightCm,
+         });
 
          form.reset(DEFAULT_VALUES);
-         router.replace('/login');
+         router.replace('/(protected)/(tabs)');
       } catch (error) {
          const message =
             error instanceof Error ? error.message : 'No se pudo crear la cuenta';

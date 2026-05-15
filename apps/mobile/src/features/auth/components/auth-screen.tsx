@@ -3,6 +3,8 @@ import { KeyboardAvoidingView, Platform, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AUTH_COLORS } from '@/theme/colors';
+
 interface AuthScreenProps {
 	children: React.ReactNode;
 	footer?: React.ReactNode;
@@ -13,7 +15,7 @@ export function AuthScreen({ children, footer, scrollRef }: AuthScreenProps) {
 	const insets = useSafeAreaInsets();
 
 	return (
-		<View className="flex-1 bg-black">
+		<View className="flex-1" style={{ backgroundColor: AUTH_COLORS.background }}>
 			<KeyboardAvoidingView
 				className="flex-1"
 				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -28,17 +30,16 @@ export function AuthScreen({ children, footer, scrollRef }: AuthScreenProps) {
 					contentInsetAdjustmentBehavior="automatic"
 					contentContainerStyle={{
 						flexGrow: 1,
-						paddingHorizontal: 24,
-						paddingTop: 24,
-						paddingBottom: 24,
+						paddingHorizontal: 20,
+						paddingBottom: 20,
 					}}
 					keyboardShouldPersistTaps="handled"
 					keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
 					showsVerticalScrollIndicator={false}
 				>
-					<View className="flex-1 gap-8" style={{ paddingBottom: insets.bottom + 12, paddingTop: insets.top }}>
-						<View className="gap-8">{children}</View>
-						{footer ? <View className="mt-auto items-center gap-2 pb-2">{footer}</View> : null}
+					<View className="flex-1 gap-4" style={{ paddingBottom: insets.bottom, paddingTop: insets.top }}>
+						<View className="gap-4">{children}</View>
+						{footer ? <View className="mt-auto items-center pb-2">{footer}</View> : null}
 					</View>
 				</KeyboardAwareScrollView>
 			</KeyboardAvoidingView>

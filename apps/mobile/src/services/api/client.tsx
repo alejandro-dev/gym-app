@@ -1,6 +1,7 @@
 import Constants from 'expo-constants';
+import { router } from 'expo-router';
 
-import { getAccessToken } from '@/services/storage/secure-storage';
+import { getAccessToken, removeAccessToken } from '@/services/storage/secure-storage';
 
 // Tipo que representa un error de la API
 type ApiErrorPayload = {
@@ -59,6 +60,19 @@ function getErrorMessage(payload: ApiErrorPayload | null, fallback: string) {
    return fallback;
 }
 
+function isAuthEndpoint(path: string) {
+   return path.includes('/api/auth/login') || path.includes('/api/auth/register');
+}
+
+async function handleAuthorizationError(path: string, status: number) {
+   if ((status !== 401 && status !== 403) || isAuthEndpoint(path)) {
+      return;
+   }
+
+   await removeAccessToken();
+   router.replace('/login');
+}
+
 // Envía una petición a la API y devuelve el resultado
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
    const accessToken = await getAccessToken();
@@ -75,6 +89,8 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
    const payload = await response.json().catch(() => null);
 
    if (!response.ok) {
+      await handleAuthorizationError(path, response.status);
+
       throw new ApiError(
          getErrorMessage(payload, 'Unexpected error'),
          response.status,

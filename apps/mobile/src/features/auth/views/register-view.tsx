@@ -1,322 +1,238 @@
-import React, { memo, useRef, useState } from 'react';
+import { memo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { Controller } from 'react-hook-form';
-import { Button, HelperText, TextInput } from 'react-native-paper';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { Button, TextInput } from 'react-native-paper';
 
-import { AuthCard } from '@/features/auth/components/AuthCard';
-import { AuthFooterPrompt } from '@/features/auth/components/AuthFooterPrompt';
-import { AuthScreen } from '@/features/auth/components/AuthScreen';
-import { AUTH_INPUT_BACKGROUND, AUTH_INPUT_PROPS } from '@/features/auth/constants/auth-input';
+import { AuthAppBar } from '@/features/auth/components/auth-app-bar';
+import { AuthBrandIntro } from '@/features/auth/components/auth-brand-intro';
+import { AuthFooterPrompt } from '@/features/auth/components/auth-footer-prompt';
+import { AuthFormField } from '@/features/auth/components/auth-form-field';
+import { AuthScreen } from '@/features/auth/components/auth-screen';
+import { AuthSurfaceCard } from '@/features/auth/components/auth-surface-card';
+import { AuthTermsCheckbox } from '@/features/auth/components/auth-terms-checkbox';
 import useRegisterView from '@/features/auth/hooks/use-register-view';
+import { AUTH_COLORS } from '@/theme/colors';
 
 const RegisterView = () => {
    const { control, errors, isSubmitting, handleRegister } = useRegisterView();
    const [showPassword, setShowPassword] = useState(false);
-   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-   const scrollRef = useRef<KeyboardAwareScrollView>(null);
 
    return (
       <AuthScreen
-         scrollRef={scrollRef}
          footer={
             <AuthFooterPrompt
                prompt="Ya tienes cuenta?"
-               actionLabel="Iniciar sesion"
+               actionLabel="Inicia sesion"
                onPress={() => router.navigate('/login')}
             />
          }
       >
-         <AuthCard
-            title="Crea tu cuenta"
-            description="Completa tus datos para empezar a planificar y seguir tu progreso desde el movil."
-         >
-            <View>
-               <View>
-                  <Controller
-                     control={control}
-                     name="email"
-                     render={({ field: { onChange, value } }) => (
-                        <TextInput
-                           {...AUTH_INPUT_PROPS}
-                           mode="outlined"
-                           label="Email"
-                           value={value}
-                           onChangeText={onChange}
-                           autoCapitalize="none"
-                           autoComplete="email"
-                           keyboardType="email-address"
-                           textContentType="emailAddress"
-                           error={Boolean(errors.email)}
-                           style={styles.input}
-                           contentStyle={styles.inputContent}
-                           outlineStyle={styles.inputOutline}
-                           left={<TextInput.Icon icon="email-outline" />}
-                        />
-                     )}
-                  />
-                  <HelperText type="error" visible={Boolean(errors.email)}>
-                     {errors.email?.message}
-                  </HelperText>
-               </View>
+         <AuthAppBar title="Registro" />
 
-               <View>
-                  <Controller
-                     control={control}
-                     name="username"
-                     render={({ field: { onChange, value } }) => (
-                        <TextInput
-                           {...AUTH_INPUT_PROPS}
-                           mode="outlined"
-                           label="Username"
-                           value={value}
-                           onChangeText={onChange}
-                           autoCapitalize="none"
-                           autoComplete="username"
-                           error={Boolean(errors.username)}
-                           style={styles.input}
-                           contentStyle={styles.inputContent}
-                           outlineStyle={styles.inputOutline}
-                           left={<TextInput.Icon icon="account-outline" />}
-                        />
-                     )}
-                  />
-                  <HelperText type="error" visible={Boolean(errors.username)}>
-                     {errors.username?.message}
-                  </HelperText>
-               </View>
+         <AuthBrandIntro
+            headline="Prepara tu perfil GymFit en menos de un minuto."
+            subhead="Datos clave para ajustar rutinas, objetivos y progreso desde el primer entrenamiento."
+         />
 
-               <View>
-                  <Controller
-                     control={control}
-                     name="birthDate"
-                     render={({ field: { onChange, value } }) => (
-                        <TextInput
-                           {...AUTH_INPUT_PROPS}
-                           mode="outlined"
-                           label="Fecha de nacimiento"
-                           value={value}
-                           onChangeText={onChange}
-                           placeholder="1995-06-30"
-                           autoCapitalize="none"
-                           error={Boolean(errors.birthDate)}
-                           style={styles.input}
-                           contentStyle={styles.inputContent}
-                           outlineStyle={styles.inputOutline}
-                           left={<TextInput.Icon icon="calendar-month-outline" />}
-                        />
-                     )}
+         <AuthSurfaceCard>
+            <Controller
+               control={control}
+               name="name"
+               render={({ field: { onChange, value } }) => (
+                  <AuthFormField
+                     label="Nombre"
+                     icon="account-outline"
+                     value={value}
+                     onChangeText={onChange}
+                     placeholder="Nombre"
+                     autoCapitalize="words"
+                     autoComplete="name"
+                     textContentType="name"
+                     errorText={errors.name?.message}
                   />
-                  <HelperText type="error" visible={Boolean(errors.birthDate)}>
-                     {errors.birthDate?.message}
-                  </HelperText>
-               </View>
+               )}
+            />
 
-               <View>
-                  <Controller
-                     control={control}
-                     name="password"
-                     render={({ field: { onChange, value } }) => (
-                        <TextInput
-                           {...AUTH_INPUT_PROPS}
-                           mode="outlined"
-                           label="Contrasena"
-                           value={value}
-                           onChangeText={onChange}
-                           secureTextEntry={!showPassword}
-                           autoComplete="password"
-                           textContentType="password"
-                           error={Boolean(errors.password)}
-                           style={styles.input}
-                           contentStyle={styles.inputContent}
-                           outlineStyle={styles.inputOutline}
-                           left={<TextInput.Icon icon="lock-outline" />}
-                           right={
-                              <TextInput.Icon
-                                 icon={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                                 onPress={() => setShowPassword((current) => !current)}
-                              />
-                           }
-                        />
-                     )}
+            <Controller
+               control={control}
+               name="email"
+               render={({ field: { onChange, value } }) => (
+                  <AuthFormField
+                     label="Email"
+                     icon="at"
+                     value={value}
+                     onChangeText={onChange}
+                     placeholder="Email"
+                     autoCapitalize="none"
+                     autoComplete="email"
+                     keyboardType="email-address"
+                     textContentType="emailAddress"
+                     errorText={errors.email?.message}
                   />
-                  <HelperText type="error" visible={Boolean(errors.password)}>
-                     {errors.password?.message}
-                  </HelperText>
-               </View>
+               )}
+            />
 
-               <View>
-                  <Controller
-                     control={control}
-                     name="confirmPassword"
-                     render={({ field: { onChange, value } }) => (
-                        <TextInput
-                           {...AUTH_INPUT_PROPS}
-                           mode="outlined"
-                           label="Confirmar contrasena"
-                           value={value}
-                           onChangeText={onChange}
-                           secureTextEntry={!showConfirmPassword}
-                           autoComplete="password"
-                           textContentType="password"
-                           error={Boolean(errors.confirmPassword)}
-                           style={styles.input}
-                           contentStyle={styles.inputContent}
-                           outlineStyle={styles.inputOutline}
-                           left={<TextInput.Icon icon="shield-check-outline" />}
-                           right={
-                              <TextInput.Icon
-                                 icon={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
-                                 onPress={() => setShowConfirmPassword((current) => !current)}
-                              />
-                           }
+            <Controller
+               control={control}
+               name="password"
+               render={({ field: { onChange, value } }) => (
+                  <AuthFormField
+                     label="Contrasena"
+                     icon="lock-outline"
+                     value={value}
+                     onChangeText={onChange}
+                     placeholder="Contrasena"
+                     secureTextEntry={!showPassword}
+                     autoComplete="password-new"
+                     textContentType="newPassword"
+                     errorText={errors.password?.message}
+                     right={
+                        <TextInput.Icon
+                           icon={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                           color={AUTH_COLORS.muted}
+                           onPress={() => setShowPassword((current) => !current)}
                         />
-                     )}
+                     }
                   />
-                  <HelperText type="error" visible={Boolean(errors.confirmPassword)}>
-                     {errors.confirmPassword?.message}
-                  </HelperText>
-               </View>
+               )}
+            />
 
-               <View>
-                  <Controller
-                     control={control}
-                     name="firstName"
-                     render={({ field: { onChange, value } }) => (
-                        <TextInput
-                           {...AUTH_INPUT_PROPS}
-                           mode="outlined"
-                           label="Nombre"
-                           value={value}
-                           onChangeText={onChange}
-                           autoCapitalize="words"
-                           error={Boolean(errors.firstName)}
-                           style={styles.input}
-                           contentStyle={[styles.inputContent, styles.inputWithoutIconContent]}
-                           outlineStyle={styles.inputOutline}
-                        />
-                     )}
+            <Controller
+               control={control}
+               name="confirmPassword"
+               render={({ field: { onChange, value } }) => (
+                  <AuthFormField
+                     label="Confirmar"
+                     icon="lock-reset"
+                     value={value}
+                     onChangeText={onChange}
+                     placeholder="Confirmar"
+                     secureTextEntry={!showPassword}
+                     autoComplete="password-new"
+                     textContentType="newPassword"
+                     errorText={errors.confirmPassword?.message}
                   />
-                  <HelperText type="error" visible={Boolean(errors.firstName)}>
-                     {errors.firstName?.message}
-                  </HelperText>
+               )}
+            />
 
-                  <Controller
-                     control={control}
-                     name="lastName"
-                     render={({ field: { onChange, value } }) => (
-                        <TextInput
-                           {...AUTH_INPUT_PROPS}
-                           mode="outlined"
-                           label="Apellidos"
-                           value={value}
-                           onChangeText={onChange}
-                           autoCapitalize="words"
-                           error={Boolean(errors.lastName)}
-                           style={styles.input}
-                           contentStyle={[styles.inputContent, styles.inputWithoutIconContent]}
-                           outlineStyle={styles.inputOutline}
-                        />
-                     )}
+            <Controller
+               control={control}
+               name="birthDate"
+               render={({ field: { onChange, value } }) => (
+                  <AuthFormField
+                     label="Fecha de nacimiento"
+                     icon="calendar-month-outline"
+                     value={value}
+                     onChangeText={onChange}
+                     placeholder="YYYY-MM-DD"
+                     autoCapitalize="none"
+                     keyboardType="numbers-and-punctuation"
+                     errorText={errors.birthDate?.message}
                   />
-                  <HelperText type="error" visible={Boolean(errors.lastName)}>
-                     {errors.lastName?.message}
-                  </HelperText>
-               </View>
+               )}
+            />
 
-               <View>
+            <View style={styles.fieldRow}>
+               <View style={styles.fieldColumn}>
                   <Controller
                      control={control}
                      name="weightKg"
                      render={({ field: { onChange, value } }) => (
-                        <TextInput
-                           {...AUTH_INPUT_PROPS}
-                           mode="outlined"
-                           label="Peso actual (kg)"
+                        <AuthFormField
+                           label="Peso"
+                           icon="scale-bathroom"
                            value={value}
                            onChangeText={onChange}
+                           placeholder="Peso"
                            keyboardType="decimal-pad"
-                           error={Boolean(errors.weightKg)}
-                           style={styles.input}
-                           contentStyle={styles.inputContent}
-                           outlineStyle={styles.inputOutline}
-                           left={<TextInput.Icon icon="scale-bathroom" />}
+                           errorText={errors.weightKg?.message}
+                           right={<TextInput.Affix text="kg" textStyle={styles.affix} />}
                         />
                      )}
                   />
-                  <HelperText type="error" visible={Boolean(errors.weightKg)}>
-                     {errors.weightKg?.message}
-                  </HelperText>
+               </View>
 
-                  <View>
-                     <Controller
-                        control={control}
-                        name="heightCm"
-                        render={({ field: { onChange, value } }) => (
-                           <TextInput
-                              {...AUTH_INPUT_PROPS}
-                              mode="outlined"
-                              label="Altura (cm)"
-                              value={value}
-                              onChangeText={onChange}
-                              keyboardType="number-pad"
-                              error={Boolean(errors.heightCm)}
-                              style={styles.input}
-                              contentStyle={styles.inputContent}
-                              outlineStyle={styles.inputOutline}
-                              left={<TextInput.Icon icon="human-male-height" />}
-                           />
-                        )}
-                     />
-                     <HelperText type="error" visible={Boolean(errors.heightCm)}>
-                        {errors.heightCm?.message}
-                     </HelperText>
-                  </View>
+               <View style={styles.fieldColumn}>
+                  <Controller
+                     control={control}
+                     name="heightCm"
+                     render={({ field: { onChange, value } }) => (
+                        <AuthFormField
+                           label="Altura"
+                           icon="human-male-height"
+                           value={value}
+                           onChangeText={onChange}
+                           placeholder="Altura"
+                           keyboardType="number-pad"
+                           errorText={errors.heightCm?.message}
+                           right={<TextInput.Affix text="cm" textStyle={styles.affix} />}
+                        />
+                     )}
+                  />
                </View>
             </View>
 
-            <View className="gap-3">
+            <Controller
+               control={control}
+               name="acceptedTerms"
+               render={({ field: { onChange, value } }) => (
+                  <AuthTermsCheckbox
+                     checked={value}
+                     onChange={onChange}
+                     errorText={errors.acceptedTerms?.message}
+                  />
+               )}
+            />
+
+            <View style={styles.actions}>
                <Button
                   mode="contained"
+                  icon="arrow-right"
                   onPress={handleRegister}
+                  loading={isSubmitting}
                   disabled={isSubmitting}
+                  buttonColor={AUTH_COLORS.primary}
+                  textColor={AUTH_COLORS.primaryForeground}
                   contentStyle={styles.buttonContent}
                   labelStyle={styles.buttonLabel}
                   style={styles.button}
                >
-                  {isSubmitting ? 'Creando cuenta...' : 'Registrarme'}
+                  Crear cuenta
                </Button>
             </View>
-         </AuthCard>
+         </AuthSurfaceCard>
       </AuthScreen>
    );
 };
 
 const styles = StyleSheet.create({
+   affix: {
+      color: AUTH_COLORS.primary,
+      fontSize: 12,
+      fontWeight: '700',
+   },
+   actions: {
+      gap: 12,
+   },
    button: {
-      borderRadius: 18,
-      borderCurve: 'continuous',
+      borderRadius: 26,
    },
    buttonContent: {
-      minHeight: 54,
+      flexDirection: 'row-reverse',
+      minHeight: 50,
    },
    buttonLabel: {
-      fontSize: 16,
-      fontWeight: '600',
+      fontSize: 15,
+      fontWeight: '700',
    },
-   inputOutline: {
-      borderRadius: 18,
-      borderCurve: 'continuous',
+   fieldColumn: {
+      flex: 1,
+      minWidth: 0,
    },
-   input: {
-      backgroundColor: AUTH_INPUT_BACKGROUND,
-   },
-   inputContent: {
-      paddingHorizontal: 4,
-   },
-   inputWithoutIconContent: {
-      paddingLeft: 16,
+   fieldRow: {
+      flexDirection: 'row',
+      gap: 8,
    },
 });
 
