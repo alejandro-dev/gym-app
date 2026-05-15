@@ -5,20 +5,16 @@ import { Card, Text, TextInput } from 'react-native-paper';
 interface RoutineGeneralInfoCardProps {
    name: string;
    description: string;
-   durationWeeks: string;
    onNameChange: (name: string) => void;
    onDescriptionChange: (description: string) => void;
-   onDurationWeeksChange: (durationWeeks: string) => void;
 }
 
 // Componente para mostrar, añadir o actualizar los datos generales de la rutina.
 const RoutineGeneralInfoCard = ({
    name,
    description,
-   durationWeeks,
    onNameChange,
    onDescriptionChange,
-   onDurationWeeksChange,
 }: RoutineGeneralInfoCardProps) => (
    <Card mode="contained" style={styles.card}>
       <Card.Content style={styles.cardContent}>
@@ -37,18 +33,6 @@ const RoutineGeneralInfoCard = ({
             outlineStyle={styles.inputOutline}
             contentStyle={styles.inputContent}
             left={<TextInput.Icon icon="dumbbell" />}
-         />
-
-         <TextInput
-            mode="outlined"
-            label="Duración"
-            value={durationWeeks}
-            onChangeText={onDurationWeeksChange}
-            placeholder="8"
-            keyboardType="number-pad"
-            outlineStyle={styles.inputOutline}
-            contentStyle={styles.inputWithoutIconContent}
-            right={<TextInput.Affix text="semanas" />}
          />
 
          <TextInput

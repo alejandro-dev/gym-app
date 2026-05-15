@@ -1,11 +1,9 @@
+import { AppBottomTabBar } from '@/components/navigation/AppBottomTabBar';
 import { getAppBackground } from '@/theme/colors';
-import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
 import { Tabs } from 'expo-router';
 import { useColorScheme } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ProtectedTabsLayout() {
-   const insets = useSafeAreaInsets();
    const colorScheme = useColorScheme();
    const isDark = colorScheme === 'dark';
 
@@ -14,43 +12,28 @@ export default function ProtectedTabsLayout() {
          screenOptions={{
             headerShown: false,
             headerTitle: 'Gym App',
-            tabBarActiveTintColor: isDark ? '#FFFFFF' : '#0A0A0A',
-            tabBarInactiveTintColor: '#737373',
-            tabBarStyle: {
-               height: 56 + insets.bottom,
-               paddingTop: 6,
-               paddingBottom: Math.max(insets.bottom, 8),
-            },
             sceneStyle: {
                backgroundColor: getAppBackground(isDark),
             },
          }}
+         tabBar={(props) => <AppBottomTabBar {...props} />}
       >
          <Tabs.Screen
             name="index"
             options={{
                title: 'Inicio',
-               tabBarIcon: ({ color, size }) => (
-                  <MaterialDesignIcons name="home-outline" color={color} size={size} />
-               ),
             }}
          />
          <Tabs.Screen
             name="training-sessions/index"
             options={{
-               title: 'Entrenamientos',
-               tabBarIcon: ({ color, size }) => (
-                  <MaterialDesignIcons name="dumbbell" color={color} size={size} />
-               ),
+               title: 'Rutinas',
             }}
          />
          <Tabs.Screen
             name="profile/index"
             options={{
                title: 'Perfil',
-               tabBarIcon: ({ color, size }) => (
-                  <MaterialDesignIcons name="account-outline" color={color} size={size} />
-               ),
             }}
          />
       </Tabs>

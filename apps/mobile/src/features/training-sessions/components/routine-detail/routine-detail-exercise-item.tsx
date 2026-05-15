@@ -1,26 +1,24 @@
-import { Pressable, View, StyleSheet } from "react-native";
-import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import type { WorkoutPlanExercise } from '@gym-app/types';
 import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
-import { MD3Theme, useTheme, Text } from "react-native-paper";
-import { VIEW_COLORS } from "@/theme/colors";
-import { formatWeight, formatMetric, formatReps } from "../../utils/routine-detail-formatters";
-import { WorkoutPlanExercise } from "@gym-app/types";
-import { resolveApiImageUrl } from '@/services/api/media';
+import { router } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
 
 type RoutineDetailExerciseItemProps = {
    exercise: WorkoutPlanExercise;
 };
 
-// Componente para mostrar un ejercicio en la vista de detalle de rutina.
-export default function RoutineDetailExerciseItem({ exercise }: RoutineDetailExerciseItemProps) {
-   const theme = useTheme();
-   const styles = getStyles(theme);
-   
-   let imageUri = null;
-   // Obtenemos la URL de la imagen de ejercicio.
-   if (exercise.exercise.imageUrl) imageUri = resolveApiImageUrl(exercise.exercise.imageUrl);
-   
+export default function RoutineDetailExerciseItem({
+   exercise,
+}: RoutineDetailExerciseItemProps) {
+   const metaParts = [
+      exercise.targetSets ? `${exercise.targetSets} series` : null,
+      formatReps(exercise),
+      exercise.restSeconds ? `${exercise.restSeconds}s` : null,
+      exercise.targetWeightKg ? `${Math.round(exercise.targetWeightKg)} kg` : null,
+   ].filter(Boolean);
+
+   const isPrimary = exercise.order === 1;
 
    const handlePress = () => {
       router.push({
@@ -32,150 +30,93 @@ export default function RoutineDetailExerciseItem({ exercise }: RoutineDetailExe
    };
 
    return (
-      <Pressable
-         onPress={handlePress}
-         style={styles.exerciseItem}
-      >
-         <View style={styles.exerciseHeader}>
-            <View style={styles.thumbnail}>
-               {imageUri ? (
-                  <Image
-                     source={{ uri: imageUri }}
-                     style={styles.thumbnailImage}
-                     contentFit="cover"
-                  />
-               ) : (
-                  <Text style={styles.thumbnailText}>
-                     {exercise.exercise.name.slice(0, 2).toUpperCase()}
-                  </Text>
-               )}
-            </View>
-
-            <View style={styles.exerciseInfo}>
-               <View style={styles.exerciseTitleRow}>
-                  <Text variant="titleMedium" style={styles.exerciseName}>
-                     {exercise.exercise.name}
-                  </Text>
-                  <Text variant="labelSmall" style={styles.dayPill}>
-                     Dia {exercise.day ?? 1}
-                  </Text>
-                  <MaterialDesignIcons
-                     name="chevron-right"
-                     color={VIEW_COLORS.muted}
-                     size={22}
-                  />
-               </View>
-            </View>
+      <Pressable onPress={handlePress} style={[styles.item, isPrimary ? styles.itemPrimary : styles.itemSecondary]}>
+         <View style={[styles.orderBadge, isPrimary ? styles.orderBadgePrimary : styles.orderBadgeSecondary]}>
+            <Text style={[styles.orderText, isPrimary ? styles.orderTextPrimary : styles.orderTextSecondary]}>
+               {exercise.order}
+            </Text>
          </View>
 
-         <View style={styles.exerciseTable}>
-            <View style={styles.tableRow}>
-               <Text style={styles.tableHeader}>SERIES</Text>
-               <Text style={[styles.tableHeader, styles.tableCenter]}>KG</Text>
-               <Text style={[styles.tableHeader, styles.tableRight]}>REPS</Text>
-            </View>
-            <View style={styles.tableRow}>
-               <Text style={styles.tableValue}>{formatMetric(exercise.targetSets)}</Text>
-               <Text style={[styles.tableMutedValue, styles.tableCenter]}>
-                  {formatWeight(exercise.targetWeightKg)}
-               </Text>
-               <Text style={[styles.tableMutedValue, styles.tableRight]}>
-                  {formatReps(exercise)}
-               </Text>
-            </View>
+         <View style={styles.copy}>
+            <Text style={styles.name}>{exercise.exercise.name}</Text>
+            <Text style={styles.meta}>
+               {metaParts.length > 0 ? metaParts.join(' · ') : 'Sin configuración'}
+            </Text>
          </View>
+
+         {isPrimary ? (
+            <MaterialDesignIcons color="#9EA3AD" name="chevron-right" size={22} />
+         ) : null}
       </Pressable>
    );
-};
+}
 
-const getStyles = (theme: MD3Theme) => StyleSheet.create({
-   exerciseItem: {
-      gap: 12,
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-      borderRadius: 22,
-      borderColor: VIEW_COLORS.softBorder,
-      borderWidth: 0.5,
-   },
-   exerciseHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-   },
-   thumbnail: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      overflow: 'hidden',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: VIEW_COLORS.mediaPlaceholder,
-   },
-   thumbnailImage: {
-      width: '100%',
-      height: '100%',
-   },
-   thumbnailText: {
-      color: '#171717',
-      fontWeight: '900',
-   },
-   exerciseInfo: {
+function formatReps(exercise: WorkoutPlanExercise) {
+   if (exercise.targetRepsMin && exercise.targetRepsMax) {
+      return `${exercise.targetRepsMin}-${exercise.targetRepsMax} reps`;
+   }
+
+   if (exercise.targetRepsMin || exercise.targetRepsMax) {
+      return `${exercise.targetRepsMin ?? exercise.targetRepsMax} reps`;
+   }
+
+   return null;
+}
+
+const styles = StyleSheet.create({
+   copy: {
       flex: 1,
-      gap: 8,
+      gap: 2,
    },
-   exerciseTitleRow: {
-      flexDirection: 'row',
+   item: {
       alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 8,
-      minHeight: 48,
-   },
-   exerciseName: {
-      flex: 1,
-      color: theme.colors.primary,
-      fontSize: 16,
-      fontWeight: '900',
-   },
-   dayPill: {
-      borderRadius: 999,
-      overflow: 'hidden',
-      backgroundColor: theme.colors.primary,
-      color: theme.colors.onPrimary,
-      paddingHorizontal: 7,
-      paddingVertical: 3,
-      fontWeight: '800',
-   },
-   exerciseTable: {
+      borderRadius: 16,
+      flexDirection: 'row',
       gap: 10,
+      padding: 12,
    },
-   tableRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+   itemPrimary: {
+      backgroundColor: '#1D1B20',
+      borderColor: '#34303A',
+      borderWidth: 1,
    },
-   tableHeader: {
-      flex: 1,
-      color: VIEW_COLORS.muted,
-      fontSize: 12,
-      fontWeight: '500',
-      letterSpacing: 0,
+   itemSecondary: {
+      backgroundColor: '#181A20',
+      borderColor: '#2A2E36',
+      borderWidth: 1,
    },
-   tableValue: {
-      flex: 1,
+   meta: {
+      color: '#9EA3AD',
+      fontSize: 11,
+      lineHeight: 16,
+   },
+   name: {
       color: '#FFFFFF',
-      fontSize: 18,
+      fontSize: 14,
       fontWeight: '800',
    },
-   tableMutedValue: {
-      flex: 1,
-      color: VIEW_COLORS.muted,
-      fontSize: 18,
-      fontWeight: '700',
+   orderBadge: {
+      alignItems: 'center',
+      borderRadius: 10,
+      height: 34,
+      justifyContent: 'center',
+      width: 34,
    },
-   tableCenter: {
-      textAlign: 'center',
+   orderBadgePrimary: {
+      backgroundColor: '#FF8400',
    },
-   tableRight: {
-      textAlign: 'right',
+   orderBadgeSecondary: {
+      backgroundColor: '#211F26',
+   },
+   orderText: {
+      fontFamily: 'monospace',
+      fontSize: 14,
+      fontWeight: '900',
+   },
+   orderTextPrimary: {
+      color: '#111111',
+   },
+   orderTextSecondary: {
+      color: '#FFFFFF',
    },
 });

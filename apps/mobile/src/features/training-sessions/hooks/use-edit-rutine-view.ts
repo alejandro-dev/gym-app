@@ -6,7 +6,7 @@ import { useUpdateRoutineMutation } from '../mutations/routine/use-update-routin
 import { Alert } from "react-native";
 import { router } from "expo-router";
 import { ApiError } from "@/services/api/client";
-import { toOptionalNumber, toRoutineExerciseDraft } from "../utils/routine-form-utils";
+import { normalizeRoutineExerciseDrafts, toRoutineExerciseDraft } from "../utils/routine-form-utils";
 
 export default function useEditRutineView(id: string) {
    // Contexto para la vista de nueva rutina.
@@ -51,7 +51,7 @@ export default function useEditRutineView(id: string) {
                description: routine.description.trim() || null,
                goal: routine.selectedGoal,
                level: routine.selectedLevel,
-               durationWeeks: toOptionalNumber(routine.durationWeeks),
+               durationWeeks: null,
                isActive: routine.status === 'active',
             },
             exercises: routine.exercises,
@@ -86,11 +86,13 @@ export default function useEditRutineView(id: string) {
       hydrateRoutineForEdit({
          name: data.name,
          description: data.description ?? "",
-         durationWeeks: data.durationWeeks ? String(data.durationWeeks) : "",
+         durationWeeks: "",
          selectedGoal: data.goal ?? "HYPERTROPHY",
          selectedLevel: data.level ?? "INTERMEDIATE",
          status: data.isActive ? "active" : "draft",
-         exercises: exercises.map((exercise) => toRoutineExerciseDraft(exercise)),
+         exercises: normalizeRoutineExerciseDrafts(
+            exercises.map((exercise) => toRoutineExerciseDraft(exercise)),
+         ),
       });
    }, [data, exercises, hydrateRoutineForEdit]);
 

@@ -29,7 +29,7 @@ export function useCreateRoutineMutation() {
                createWorkoutPlanExercise({
                   workoutPlanId: createdPlan.id,
                   exerciseId: exercise.exerciseId,
-                  day: exercise.day,
+                  day: null,
                   order: exercise.order,
                   targetSets: exercise.targetSets,
                   targetRepsMin: exercise.targetRepsMin,

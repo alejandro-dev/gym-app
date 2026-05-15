@@ -1,46 +1,46 @@
-import { WorkoutPlanExercise } from "@gym-app/types";
-import { View, StyleSheet } from "react-native";
-import { Text, useTheme, type MD3Theme } from 'react-native-paper';
-import RoutineDetailExerciseItem from "./routine-detail-exercise-item";
+import type { WorkoutPlanExercise } from '@gym-app/types';
+import { StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
+
+import RoutineDetailExerciseItem from './routine-detail-exercise-item';
 
 type RoutineDetailExercisesProps = {
    exercises: WorkoutPlanExercise[];
 };
 
-// Componente para mostrar los ejercicios de la rutina en la vista de detalle de rutina.
-export default function RoutineDetailExercises({ exercises }: RoutineDetailExercisesProps) {
-   const theme = useTheme();
-   const styles = getStyles(theme);
-
+export default function RoutineDetailExercises({
+   exercises,
+}: RoutineDetailExercisesProps) {
    return (
-      <>
+      <View style={styles.section}>
          <View style={styles.sectionHeader}>
-            <Text variant="titleLarge" style={styles.sectionTitle}>
-               Ejercicios
-            </Text>
+            <Text style={styles.sectionTitle}>Ejercicios</Text>
          </View>
 
          <View style={styles.exerciseList}>
             {exercises.map((item) => (
-               <RoutineDetailExerciseItem
-                  key={item.id}
-                  exercise={item}
-               />
+               <RoutineDetailExerciseItem key={item.id} exercise={item} />
             ))}
          </View>
-      </>
+      </View>
    );
 }
 
-const getStyles = (theme: MD3Theme) => StyleSheet.create({
+const styles = StyleSheet.create({
+   exerciseList: {
+      gap: 10,
+   },
+   section: {
+      gap: 10,
+   },
    sectionHeader: {
-      marginTop: 6,
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
    },
    sectionTitle: {
       color: '#FFFFFF',
-      fontWeight: '900',
+      fontSize: 18,
+      fontWeight: '800',
    },
-   exerciseList: {
-      gap: 22,
-   },
-});   
+});

@@ -1,134 +1,139 @@
-import { getChipColors, VIEW_COLORS } from "@/theme/colors";
-import { WorkoutPlan } from "@gym-app/types";
-import { router } from "expo-router";
-import { View, StyleSheet } from "react-native";
-import { Button, Chip, Text, useTheme, type MD3Theme } from 'react-native-paper';
-import { formatGoal, formatLevel } from "../../utils/routine-detail-formatters";
+import type { WorkoutPlan, WorkoutPlanExercise } from '@gym-app/types';
+import { getWorkoutPlanGoalLabelEs, getWorkoutPlanLevelLabelEs } from '@gym-app/types';
+import { StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
+
+import { AUTH_COLORS, VIEW_COLORS } from '@/theme/colors';
 
 type RoutineDetailHeroProps = {
    workoutPlan: WorkoutPlan;
+   exercises: WorkoutPlanExercise[];
 };
 
-// Componente para mostrar el hero de la vista de detalle de rutina.
-export default function RoutineDetailHero({ workoutPlan }: RoutineDetailHeroProps) {
-   const theme = useTheme();
-   const styles = getStyles(theme);
-   const chipColors = getChipColors(theme.dark);
+export default function RoutineDetailHero({
+   workoutPlan,
+   exercises,
+}: RoutineDetailHeroProps) {
+   const badgeParts = [
+      workoutPlan.goal ? getWorkoutPlanGoalLabelEs(workoutPlan.goal).toUpperCase() : null,
+      workoutPlan.level ? getWorkoutPlanLevelLabelEs(workoutPlan.level).toUpperCase() : null,
+   ].filter(Boolean);
 
-   const handleStartRoutine = () => {
-      router.push({
-         pathname: '/(protected)/training-sessions/[id]/start',
-         params: {
-            id: workoutPlan.id,
-         },
-      });
-   };
-   
+   const stats = [
+      {
+         label: 'ejercicios',
+         value: String(exercises.length),
+      },
+      {
+         label: 'orden',
+         value: 'AUTO',
+      },
+      {
+         accent: workoutPlan.isActive,
+         label: workoutPlan.isActive ? 'activa' : 'pausada',
+         value: workoutPlan.isActive ? 'ACT' : 'OFF',
+      },
+   ];
+
    return (
       <View style={styles.hero}>
-         <Text variant="labelLarge" style={styles.eyebrow}>
-            Vista de rutina
-         </Text>
-         <Text variant="headlineSmall" style={styles.title}>
-            {workoutPlan.name}
-         </Text>
-         <Text variant="bodyMedium" style={styles.description}>
+         <View style={styles.titleBlock}>
+            <View style={styles.badge}>
+               <Text style={styles.badgeText}>
+                  {badgeParts.length > 0 ? badgeParts.join(' · ') : 'RUTINA'}
+               </Text>
+            </View>
+
+            <Text style={styles.title}>{workoutPlan.name}</Text>
+         </View>
+
+         <Text style={styles.description}>
             {workoutPlan.description?.trim() ||
-               'Resumen breve de la rutina, indicaciones principales y foco del bloque de entrenamiento.'}
+               'Plan sin descripción. Revisa abajo sus ejercicios y configuración.'}
          </Text>
 
-         <View style={styles.chipRow}>
-            <Chip
-               compact
-               style={[
-                  styles.chip,
-                  {
-                     backgroundColor: chipColors.background,
-                     borderColor: chipColors.border,
-                  },
-               ]}
-               textStyle={[styles.chipText, { color: chipColors.foreground }]}
-            >
-               {formatGoal(workoutPlan)}
-            </Chip>
-            <Chip
-               compact
-               style={[
-                  styles.chip,
-                  {
-                     backgroundColor: chipColors.background,
-                     borderColor: chipColors.border,
-                  },
-               ]}
-               textStyle={[styles.chipText, { color: chipColors.foreground }]}
-            >
-               {formatLevel(workoutPlan)}
-            </Chip>
-            <Chip
-               compact
-               style={[styles.activeChip, { backgroundColor: chipColors.activeBackground }]}
-               textStyle={[styles.chipText, { color: chipColors.activeForeground }]}
-            >
-               {workoutPlan.durationWeeks
-                  ? `${workoutPlan.durationWeeks} semanas`
-                  : 'Duracion'}
-            </Chip>
-         </View>
-         <View>
-            <Button
-               mode="contained"
-               onPress={handleStartRoutine}
-               labelStyle={styles.buttonLabel}
-               style={styles.button}
-               contentStyle={styles.buttonContent}
-            >
-               Empezar rutina
-            </Button>
+         <View style={styles.statsRow}>
+            {stats.map((stat) => (
+               <View
+                  key={stat.label}
+                  style={[styles.statCard, stat.accent && styles.statCardAccent]}
+               >
+                  <Text style={[styles.statValue, stat.accent && styles.statValueAccent]}>
+                     {stat.value}
+                  </Text>
+                  <Text style={[styles.statLabel, stat.accent && styles.statLabelAccent]}>
+                     {stat.label}
+                  </Text>
+               </View>
+            ))}
          </View>
       </View>
-   )
+   );
 }
 
-const getStyles = (theme: MD3Theme) => StyleSheet.create({
-   hero: {
-      gap: 14,
+const styles = StyleSheet.create({
+   badge: {
+      alignSelf: 'flex-start',
+      backgroundColor: AUTH_COLORS.helpSurface,
+      borderRadius: 999,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
    },
-   eyebrow: {
-      color: VIEW_COLORS.muted,
+   badgeText: {
+      color: AUTH_COLORS.primary,
+      fontFamily: 'monospace',
+      fontSize: 10,
       fontWeight: '800',
-      textTransform: 'uppercase',
-   },
-   title: {
-      color: theme.colors.onBackground,
-      fontWeight: '900',
    },
    description: {
-      color: VIEW_COLORS.muted,
-      lineHeight: 20,
+      color: '#B8BCC6',
+      fontSize: 13,
+      lineHeight: 18,
    },
-   chipRow: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 8,
-   },
-   chip: {
+   hero: {
+      backgroundColor: AUTH_COLORS.elevatedSurface,
+      borderColor: AUTH_COLORS.elevatedOutline,
+      borderRadius: 20,
       borderWidth: 1,
+      gap: 12,
+      padding: 16,
    },
-   activeChip: {
-      borderWidth: 0,
+   statCard: {
+      backgroundColor: '#211F26',
+      borderRadius: 12,
+      flex: 1,
+      gap: 2,
+      padding: 10,
    },
-   chipText: {
+   statCardAccent: {
+      backgroundColor: AUTH_COLORS.helpSurface,
+   },
+   statLabel: {
+      color: '#9EA3AD',
+      fontSize: 10,
+   },
+   statLabelAccent: {
+      color: '#B8BCC6',
+   },
+   statValue: {
+      color: VIEW_COLORS.onDark,
+      fontFamily: 'monospace',
+      fontSize: 20,
       fontWeight: '800',
    },
-   button: {
-      marginTop: 20,
-      borderRadius: 12,
-      borderCurve: 'continuous',
+   statValueAccent: {
+      color: AUTH_COLORS.primary,
    },
-   buttonContent: {
-      minHeight: 34,
+   statsRow: {
+      flexDirection: 'row',
+      gap: 8,
    },
-   buttonLabel: {
-      fontSize: 16,
+   title: {
+      color: VIEW_COLORS.onDark,
+      fontSize: 28,
+      fontWeight: '900',
+   },
+   titleBlock: {
+      gap: 4,
    },
 });

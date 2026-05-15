@@ -6,7 +6,6 @@ import { useProfileQuery } from '@/features/profile/queries/use-profile-query';
 
 import { useCreateRoutineMutation } from '../mutations/routine/use-create-routine-mutation';
 import { useNewRoutine } from '../context/new-routine-context';
-import { toOptionalNumber } from '../utils/routine-form-utils';
 
 export default function useNewRutineView() {
    const routine = useNewRoutine();
@@ -36,7 +35,7 @@ export default function useNewRutineView() {
                description: routine.description.trim() || null,
                goal: routine.selectedGoal,
                level: routine.selectedLevel,
-               durationWeeks: toOptionalNumber(routine.durationWeeks),
+               durationWeeks: null,
                isActive: routine.status === 'active',
             },
             exercises: routine.exercises,

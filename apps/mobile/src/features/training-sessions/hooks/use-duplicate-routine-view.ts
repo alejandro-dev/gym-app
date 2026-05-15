@@ -10,7 +10,7 @@ import { useCreateRoutineMutation } from '../mutations/routine/use-create-routin
 import { useWorkoutPlanQuery } from '../queries/workout-plan/use-workout-plan-query';
 import { useWorkoutPlanExercisesQuery } from '../queries/workout-plan/use-workout-plan-exercises-query';
 import {
-   toOptionalNumber,
+   normalizeRoutineExerciseDrafts,
    toRoutineExerciseDraft,
 } from '../utils/routine-form-utils';
 
@@ -49,7 +49,7 @@ export default function useDuplicateRoutineView(id: string) {
                description: routine.description.trim() || null,
                goal: routine.selectedGoal,
                level: routine.selectedLevel,
-               durationWeeks: toOptionalNumber(routine.durationWeeks),
+               durationWeeks: null,
                isActive: routine.status === 'active',
             },
             exercises: routine.exercises,
@@ -79,12 +79,14 @@ export default function useDuplicateRoutineView(id: string) {
       hydrateRoutineForEdit({
          name: `${data.name} (copia)`,
          description: data.description ?? '',
-         durationWeeks: data.durationWeeks ? String(data.durationWeeks) : '',
+         durationWeeks: '',
          selectedGoal: data.goal ?? 'HYPERTROPHY',
          selectedLevel: data.level ?? 'INTERMEDIATE',
          status: data.isActive ? 'active' : 'draft',
-         exercises: exercises.map((exercise) =>
-            toRoutineExerciseDraft(exercise, 'duplicate'),
+         exercises: normalizeRoutineExerciseDrafts(
+            exercises.map((exercise) =>
+               toRoutineExerciseDraft(exercise, 'duplicate'),
+            ),
          ),
          originalExercises: [],
       });

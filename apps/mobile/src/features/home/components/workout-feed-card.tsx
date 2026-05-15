@@ -1,29 +1,38 @@
-import { Pressable, View, StyleSheet } from "react-native";
-import { Appbar, Avatar, Text, Tooltip } from "react-native-paper";
-import { router } from "expo-router";
-import WorkoutExerciseRow from "./workout-exercise-row";
-import { VIEW_COLORS } from "@/theme/colors";
-import type { WorkoutSessionFeedItem } from "@gym-app/types";
+import type { WorkoutSessionFeedItem } from '@gym-app/types';
+import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
+import { router } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
+
+import { useProfileQuery } from '@/features/profile/queries/use-profile-query';
+import { AUTH_COLORS, VIEW_COLORS } from '@/theme/colors';
+
 import {
+	formatCompactVolume,
 	formatDuration,
 	formatSessionTimeAgo,
-	formatVolume,
-} from "../utils/utils";
-import { useProfileQuery } from "@/features/profile/queries/use-profile-query";
+} from '../utils/utils';
 
 type WorkoutFeedCardProps = {
 	item: WorkoutSessionFeedItem;
-	showSeparator: boolean;
 	onOpenOptions: (workoutSession: WorkoutSessionFeedItem) => void;
+	isCompact?: boolean;
 };
 
 export default function WorkoutFeedCard({
 	item,
-	showSeparator,
 	onOpenOptions,
+	isCompact = false,
 }: WorkoutFeedCardProps) {
 	// Consultamos el perfil del usuario para mostrar su nombre en la tarjeta
 	const { data: profile } = useProfileQuery();
+	const completedSets = item.exercises.reduce(
+		(accumulator, exercise) => accumulator + exercise.completedSets.length,
+		0,
+	);
+	const exerciseNames = item.exercises.slice(0, 2).map((exercise) => exercise.name);
+	const remainingExercises = Math.max(0, item.exercises.length - exerciseNames.length);
+	const avatarLetter = profile?.username?.at(0)?.toUpperCase() ?? 'A';
 
 	// Evento que se lanza cuando se pulsa sobre la tarjeta de la sesion de entrenamiento completada.
 	const handleOpenDetail = () => {
@@ -33,144 +42,186 @@ export default function WorkoutFeedCard({
 		});
 	};
 
+	if (isCompact) {
+		return (
+			<Pressable onPress={handleOpenDetail} style={styles.compactCard}>
+				<Text style={styles.compactTitle}>{item.name}</Text>
+				<Text style={styles.compactMeta}>
+					{`${formatSessionTimeAgo(item.endedAt)} · ${formatDuration(item.durationSeconds)} · ${formatCompactVolume(item.volumeKg)} kg · ${completedSets} series`}
+				</Text>
+			</Pressable>
+		);
+	}
+
 	return (
 		<View style={styles.feedItem}>
 			<View style={styles.authorRow}>
-				<Avatar.Text
-					size={48}
-					label={profile?.username?.at(0)?.toUpperCase() ?? ""}
-					labelStyle={styles.avatarLabel}
-				/>
+				<View style={styles.avatar}>
+					<Text style={styles.avatarLabel}>{avatarLetter}</Text>
+				</View>
 				<View style={styles.authorCopy}>
 					<Text style={styles.author}>{profile?.username ?? ""}</Text>
-					<Text variant="bodyMedium" style={styles.timeAgo}>
+					<Text style={styles.timeAgo}>
 						{formatSessionTimeAgo(item.endedAt)}
 					</Text>
 				</View>
-				<Tooltip title="Opciones">
-					<Appbar.Action
-						icon="dots-horizontal"
-						onPress={() => onOpenOptions(item)}
-					/>
-				</Tooltip>
+				<Pressable
+					accessibilityLabel="Opciones"
+					hitSlop={8}
+					onPress={() => onOpenOptions(item)}
+					style={styles.moreButton}
+				>
+					<MaterialDesignIcons color="#9EA3AD" name="dots-horizontal" size={22} />
+				</Pressable>
 			</View>
 
 			<Pressable onPress={handleOpenDetail}>
-				<Text variant="titleLarge" style={styles.workoutTitle}>
+				<Text style={styles.workoutTitle}>
 					{item.name}
 				</Text>
 
 				<View style={styles.statsRow}>
 					<View style={styles.stat}>
-						<Text variant="bodyMedium" style={styles.statLabel}>
+						<Text style={styles.statLabel}>
 							Tiempo
 						</Text>
-						<Text variant="titleLarge" style={styles.statValue}>
+						<Text style={styles.statValue}>
 							{formatDuration(item.durationSeconds)}
 						</Text>
 					</View>
 					<View style={styles.stat}>
-						<Text variant="bodyMedium" style={styles.statLabel}>
+						<Text style={styles.statLabel}>
 							Volumen
 						</Text>
-						<Text variant="titleLarge" style={styles.statValue}>
-							{formatVolume(item.volumeKg)}
+						<Text style={styles.statValue}>
+							{formatCompactVolume(item.volumeKg)} kg
 						</Text>
 					</View>
 				</View>
 
-				<View style={styles.exerciseList}>
-					{item.exercises.map((exercise) => (
-						<WorkoutExerciseRow key={exercise.id} exercise={exercise} />
+				<View style={styles.exerciseChips}>
+					{exerciseNames.map((exerciseName) => (
+						<View key={exerciseName} style={styles.exerciseChip}>
+							<Text style={styles.exerciseChipText}>{exerciseName}</Text>
+						</View>
 					))}
+					{remainingExercises > 0 ? (
+						<View style={styles.exerciseChip}>
+							<Text style={styles.exerciseChipText}>{`+${remainingExercises}`}</Text>
+						</View>
+					) : null}
 				</View>
 			</Pressable>
-
-			{showSeparator ? <View style={styles.separator} /> : null}
 		</View>
 	);
 }
 
 const styles = StyleSheet.create({
-	workoutTitle: {
-		color: VIEW_COLORS.onDark,
-		fontSize: 20,
-		fontWeight: "800",
-		letterSpacing: 0,
-		lineHeight: 30,
-		marginTop: 22,
-	},
-	statsRow: {
-		flexDirection: "row",
-		gap: 38,
-		marginTop: 18,
-	},
-	feedItem: {
-		paddingTop: 22,
-	},
-	authorRow: {
-		alignItems: "center",
-		flexDirection: "row",
-		gap: 12,
-	},
-	avatarLabel: {
-		color: "#171717",
-		fontSize: 28,
-		fontWeight: "500",
-	},
-	authorCopy: {
-		flex: 1,
-		gap: 2,
-	},
 	author: {
 		color: VIEW_COLORS.onDark,
 		fontSize: 15,
-		fontWeight: "500",
-		lineHeight: 25,
-	},
-	timeAgo: {
-		color: VIEW_COLORS.subtle,
-		fontSize: 12,
+		fontWeight: '500',
 		lineHeight: 20,
 	},
+	authorCopy: {
+		flex: 1,
+		gap: 1,
+	},
+	authorRow: {
+		alignItems: 'center',
+		flexDirection: 'row',
+		gap: 10,
+	},
+	avatar: {
+		alignItems: 'center',
+		backgroundColor: '#FFFFFF',
+		borderRadius: 19,
+		height: 38,
+		justifyContent: 'center',
+		width: 38,
+	},
+	avatarLabel: {
+		color: AUTH_COLORS.primaryForeground,
+		fontSize: 16,
+		fontWeight: '700',
+	},
+	compactCard: {
+		backgroundColor: '#181A20',
+		borderColor: '#2A2E36',
+		borderRadius: 18,
+		borderWidth: 1,
+		gap: 8,
+		padding: 14,
+	},
+	compactMeta: {
+		color: '#9EA3AD',
+		fontSize: 12,
+		lineHeight: 18,
+	},
+	compactTitle: {
+		color: VIEW_COLORS.onDark,
+		fontSize: 16,
+		fontWeight: '800',
+	},
+	exerciseChip: {
+		backgroundColor: '#211F26',
+		borderRadius: 999,
+		paddingHorizontal: 8,
+		paddingVertical: 5,
+	},
+	exerciseChipText: {
+		color: VIEW_COLORS.onDark,
+		fontSize: 12,
+		fontWeight: '600',
+	},
+	exerciseChips: {
+		flexDirection: 'row',
+		flexWrap: 'wrap',
+		gap: 6,
+		marginTop: 10,
+	},
+	feedItem: {
+		backgroundColor: AUTH_COLORS.elevatedSurface,
+		borderColor: AUTH_COLORS.elevatedOutline,
+		borderRadius: 18,
+		borderWidth: 1,
+		gap: 10,
+		padding: 14,
+	},
 	moreButton: {
-		margin: 0,
+		alignItems: 'center',
+		height: 22,
+		justifyContent: 'center',
+		width: 22,
 	},
 	stat: {
-		gap: 4,
+		flex: 1,
+		gap: 2,
 	},
 	statLabel: {
-		color: VIEW_COLORS.subtle,
-		fontSize: 12,
-		lineHeight: 19,
+		color: '#9EA3AD',
+		fontSize: 11,
 	},
 	statValue: {
 		color: VIEW_COLORS.onDark,
+		fontFamily: 'monospace',
 		fontSize: 18,
-		fontWeight: "400",
-		lineHeight: 26,
+		fontWeight: '800',
 	},
-	exerciseList: {
-		gap: 14,
-		marginTop: 28,
+	statsRow: {
+		flexDirection: 'row',
+		gap: 10,
+		marginTop: 10,
 	},
-	moreExercisesButton: {
-		alignSelf: "center",
-		borderRadius: 18,
-		marginTop: 14,
-		overflow: "hidden",
-		paddingHorizontal: 14,
-		paddingVertical: 6,
+	timeAgo: {
+		color: '#9EA3AD',
+		fontSize: 12,
+		lineHeight: 18,
 	},
-	moreExercisesText: {
-		color: VIEW_COLORS.subtle,
-		fontSize: 16,
-		fontWeight: "600",
-		lineHeight: 22,
-	},
-	separator: {
-		backgroundColor: "#1F1F1F",
-		height: StyleSheet.hairlineWidth,
-		marginTop: 14,
+	workoutTitle: {
+		color: VIEW_COLORS.onDark,
+		fontSize: 18,
+		fontWeight: '800',
+		marginTop: 10,
 	},
 });

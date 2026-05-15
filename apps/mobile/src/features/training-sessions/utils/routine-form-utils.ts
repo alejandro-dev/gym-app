@@ -34,3 +34,13 @@ export function toRoutineExerciseDraft(item: WorkoutPlanExercise, idPrefix?: str
       notes: item.notes,
    };
 }
+
+export function normalizeRoutineExerciseDrafts(
+   exercises: RoutineExerciseDraft[],
+): RoutineExerciseDraft[] {
+   return exercises.map((exercise, index) => ({
+      ...exercise,
+      day: null,
+      order: index + 1,
+   }));
+}

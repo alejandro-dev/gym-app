@@ -30,14 +30,12 @@ const NewRoutineView = ({ mode = 'create', canSubmitRoutine, isSavingRoutine, on
    const {
       name,
       description,
-      durationWeeks,
       selectedGoal,
       selectedLevel,
       status,
       exercises,
       setName,
       setDescription,
-      setDurationWeeks,
       setSelectedGoal,
       setSelectedLevel,
       setStatus,
@@ -81,17 +79,13 @@ const NewRoutineView = ({ mode = 'create', canSubmitRoutine, isSavingRoutine, on
                { paddingBottom: insets.bottom + 28 },
             ]}
          >
-            <NewRoutineHero 
-               durationWeeks={durationWeeks}
-            />
+            <NewRoutineHero exerciseCount={exercises.length} />
 
             <RoutineGeneralInfoCard
                name={name}
                description={description}
-               durationWeeks={durationWeeks}
                onNameChange={setName}
                onDescriptionChange={setDescription}
-               onDurationWeeksChange={setDurationWeeks}
             />
             <RoutineConfigCard
                goals={GOALS}

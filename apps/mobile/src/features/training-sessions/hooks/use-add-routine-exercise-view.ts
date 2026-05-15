@@ -10,7 +10,6 @@ type useAddRoutineExerciseViewProps = {
 }
 
 export default function useAddRoutineExerciseView({addExercise, selectedRoutineExercise, setSelectedRoutineExercise}: useAddRoutineExerciseViewProps) {
-   const [day, setDay] = useState('1');
    const [targetSets, setTargetSets] = useState('');
    const [targetRepsMin, setTargetRepsMin] = useState('');
    const [targetRepsMax, setTargetRepsMax] = useState('');
@@ -34,7 +33,7 @@ export default function useAddRoutineExerciseView({addExercise, selectedRoutineE
          category: selectedRoutineExercise.category,
          equipment: selectedRoutineExercise.equipment,
          isCompound: selectedRoutineExercise.isCompound,
-         day: toOptionalNumber(day) ?? 1,
+         day: null,
          targetSets: toOptionalNumber(targetSets),
          targetRepsMin: toOptionalNumber(targetRepsMin),
          targetRepsMax: toOptionalNumber(targetRepsMax),
@@ -50,8 +49,6 @@ export default function useAddRoutineExerciseView({addExercise, selectedRoutineE
 
    return {
       canAddExercise,
-      day,
-      setDay,
       targetSets,
       setTargetSets,
       targetRepsMin,

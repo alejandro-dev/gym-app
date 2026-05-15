@@ -57,9 +57,6 @@ export default function RoutineExercisesCard ({
                            <Text variant="titleSmall" style={styles.exerciseName}>
                               {exercise.exerciseName}
                            </Text>
-                           <Text variant="bodySmall" style={styles.sectionHint}>
-                              Día {exercise.day ?? 1} · Orden {exercise.order}
-                           </Text>
                            <View style={styles.chipRow}>
                               <Chip
                                  textStyle={[styles.chipText, { color: chipColors.foreground }]}

@@ -61,7 +61,7 @@ export function buildRoutineExerciseChangeSet(
 function toWorkoutPlanExercisePayload(exercise: RoutineExerciseDraft) {
    return {
       exerciseId: exercise.exerciseId,
-      day: exercise.day,
+      day: null,
       order: exercise.order,
       targetSets: exercise.targetSets,
       targetRepsMin: exercise.targetRepsMin,

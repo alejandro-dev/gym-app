@@ -29,7 +29,7 @@ import { RoutineCatalogExercise } from '../types';
 const AddRoutineExerciseView = () => {
    const insets = useSafeAreaInsets();
    const { addExercise, selectedRoutineExercise, setSelectedRoutineExercise } = useNewRoutine();
-   const { canAddExercise, day, setDay, targetSets, setTargetSets, targetRepsMin, setTargetRepsMin, targetRepsMax, setTargetRepsMax, targetWeightKg, setTargetWeightKg, restSeconds, setRestSeconds, notes, setNotes, handleAddExercise } = useAddRoutineExerciseView({addExercise, selectedRoutineExercise, setSelectedRoutineExercise});
+   const { canAddExercise, targetSets, setTargetSets, targetRepsMin, setTargetRepsMin, targetRepsMax, setTargetRepsMax, targetWeightKg, setTargetWeightKg, restSeconds, setRestSeconds, notes, setNotes, handleAddExercise } = useAddRoutineExerciseView({addExercise, selectedRoutineExercise, setSelectedRoutineExercise});
    
    return (
       <KeyboardAvoidingView
@@ -103,28 +103,15 @@ const AddRoutineExerciseView = () => {
                      Prescripción
                   </Text>
 
-                  <View style={styles.inputGrid}>
-                     <TextInput
-                        style={styles.gridInput}
-                        mode="outlined"
-                        label="Día"
-                        value={day}
-                        onChangeText={setDay}
-                        keyboardType="number-pad"
-                        outlineStyle={styles.inputOutline}
-                        contentStyle={styles.inputContent}
-                     />
-                     <TextInput
-                        style={styles.gridInput}
-                        mode="outlined"
-                        label="Series"
-                        value={targetSets}
-                        onChangeText={setTargetSets}
-                        keyboardType="number-pad"
-                        outlineStyle={styles.inputOutline}
-                        contentStyle={styles.inputContent}
-                     />
-                  </View>
+                  <TextInput
+                     mode="outlined"
+                     label="Series"
+                     value={targetSets}
+                     onChangeText={setTargetSets}
+                     keyboardType="number-pad"
+                     outlineStyle={styles.inputOutline}
+                     contentStyle={styles.inputContent}
+                  />
 
                   <View style={styles.inputGrid}>
                      <TextInput

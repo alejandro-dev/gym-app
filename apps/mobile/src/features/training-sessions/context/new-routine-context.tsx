@@ -87,14 +87,9 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
          // Añadimos un ejercicio a la rutina y calculamos el orden.
          addExercise: (exercise) => {
             setExercises((currentExercises) => {
-               // Obtenemos los ejercicios del mismo día.
-               const exercisesInSameDay = currentExercises.filter(
-                  (currentExercise) => currentExercise.day === exercise.day,
-               );
-
-               // Calculamos el siguiente orden.
+               // La rutina ahora es una lista unica: el siguiente ejercicio va al final.
                const nextOrder =
-                  Math.max(0, ...exercisesInSameDay.map((currentExercise) => currentExercise.order)) + 1;
+                  Math.max(0, ...currentExercises.map((currentExercise) => currentExercise.order)) + 1;
 
                // Añadimos el ejercicio y calculamos el orden.
                return [
@@ -102,6 +97,7 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
                   {
                      ...exercise,
                      id: `exercise-${Date.now()}`,
+                     day: null,
                      order: nextOrder,
                   },
                ];
@@ -132,6 +128,7 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
          exercises,
          hydrateRoutineForEdit,
          name,
+         originalExercises,
          selectedGoal,
          selectedLevel,
          selectedRoutineExercise,

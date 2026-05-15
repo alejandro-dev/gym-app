@@ -1,32 +1,40 @@
-import { useLocalSearchParams } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import type { WorkoutPlanExercise } from '@gym-app/types';
+import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
+import { router, useLocalSearchParams } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Text, useTheme, type MD3Theme } from 'react-native-paper';
 
-import { VIEW_COLORS } from '@/theme/colors';
+import { AUTH_COLORS, VIEW_COLORS } from '@/theme/colors';
+
+import RoutineDetailExercises from '../components/routine-detail/routine-detail-exercises';
+import RoutineDetailHero from '../components/routine-detail/routine-detail-hero';
 import { useWorkoutPlanExercisesQuery } from '../queries/workout-plan/use-workout-plan-exercises-query';
 import { useWorkoutPlanQuery } from '../queries/workout-plan/use-workout-plan-query';
-import RoutineDetailHero from '../components/routine-detail/routine-detail-hero';
-import RoutineDetailExercises from '../components/routine-detail/routine-detail-exercises';
-import { WorkoutPlanExercise } from '@gym-app/types';
 
-// Pantalla maqueta para consultar la informacion completa de una rutina.
 export default function RoutineDetailView() {
    const theme = useTheme();
    const styles = getStyles(theme);
 
-   // Obtenemos el id de la rutina desde la URL.
    const params = useLocalSearchParams<{ id?: string }>();
    const workoutPlanId = typeof params.id === 'string' ? params.id : '';
-   
-   // Cargamos la rutina desde la API.
+
    const workoutPlanQuery = useWorkoutPlanQuery(workoutPlanId);
    const workoutPlan = workoutPlanQuery.data ?? null;
 
-   // Cargamos los ejercicios de la rutina desde la API.
    const exercisesQuery = useWorkoutPlanExercisesQuery(workoutPlanId);
-   const exercises = exercisesQuery.data as WorkoutPlanExercise[];
+   const exercises = (exercisesQuery.data ?? []) as WorkoutPlanExercise[];
 
-   // Si estamos cargando la rutina, mostramos un indicador de carga.
+   const handleStartRoutine = () => {
+      if (!workoutPlan) return;
+
+      router.push({
+         pathname: '/(protected)/training-sessions/[id]/start',
+         params: {
+            id: workoutPlan.id,
+         },
+      });
+   };
+
    if (workoutPlanQuery.isLoading) {
       return (
          <View style={styles.centerState}>
@@ -36,7 +44,6 @@ export default function RoutineDetailView() {
       );
    }
 
-   // Si se ha producido un error al cargar la rutina, mostramos un mensaje de error.
    if (workoutPlanQuery.isError || !workoutPlan) {
       return (
          <View style={styles.centerState}>
@@ -53,36 +60,91 @@ export default function RoutineDetailView() {
          showsVerticalScrollIndicator={false}
          contentContainerStyle={styles.content}
       >
-         <RoutineDetailHero workoutPlan={workoutPlan} />
-         <RoutineDetailExercises exercises={exercises ?? []} />
+         <View style={styles.header}>
+            <Pressable onPress={() => router.back()} style={styles.iconButton}>
+               <MaterialDesignIcons color={VIEW_COLORS.onDark} name="arrow-left" size={22} />
+            </Pressable>
+
+            <Text numberOfLines={1} style={styles.headerTitle}>
+               Detalle rutina
+            </Text>
+
+            <Pressable onPress={() => router.navigate(`/training-sessions/${workoutPlan.id}/edit`)}>
+               <MaterialDesignIcons color="#9EA3AD" name="dots-horizontal" size={24} />
+            </Pressable>
+         </View>
+
+         <RoutineDetailHero exercises={exercises} workoutPlan={workoutPlan} />
+         <RoutineDetailExercises exercises={exercises} />
+
+         <Pressable onPress={handleStartRoutine} style={styles.ctaButton}>
+            <Text style={styles.ctaText}>Empezar entrenamiento</Text>
+            <MaterialDesignIcons
+               color={AUTH_COLORS.primaryForeground}
+               name="play"
+               size={20}
+            />
+         </Pressable>
       </ScrollView>
    );
 }
 
-const getStyles = (theme: MD3Theme) => StyleSheet.create({
-   content: {
-      paddingTop: 20,
-      paddingBottom: 48,
-      gap: 22,
-   },
-   centerState: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: 24,
-      gap: 10,
-   },
-   stateTitle: {
-      color: theme.colors.onBackground,
-      fontWeight: '800',
-      textAlign: 'center',
-   },
-   stateText: {
-      color: VIEW_COLORS.muted,
-      textAlign: 'center',
-   },
-   title: {
-      color: theme.colors.onBackground,
-      fontWeight: '900',
-   },   
-});
+const getStyles = (theme: MD3Theme) =>
+   StyleSheet.create({
+      centerState: {
+         alignItems: 'center',
+         flex: 1,
+         gap: 10,
+         justifyContent: 'center',
+         padding: 24,
+      },
+      content: {
+         gap: 12,
+         paddingBottom: 32,
+         paddingTop: 12,
+      },
+      ctaButton: {
+         alignItems: 'center',
+         backgroundColor: AUTH_COLORS.primary,
+         borderRadius: 16,
+         flexDirection: 'row',
+         gap: 8,
+         height: 52,
+         justifyContent: 'center',
+         marginTop: 4,
+      },
+      ctaText: {
+         color: AUTH_COLORS.primaryForeground,
+         fontSize: 15,
+         fontWeight: '900',
+      },
+      header: {
+         alignItems: 'center',
+         flexDirection: 'row',
+         gap: 12,
+         height: 48,
+      },
+      headerTitle: {
+         color: VIEW_COLORS.onDark,
+         flex: 1,
+         fontSize: 20,
+         fontWeight: '800',
+      },
+      iconButton: {
+         alignItems: 'center',
+         backgroundColor: '#211F26',
+         borderRadius: 21,
+         height: 42,
+         justifyContent: 'center',
+         width: 42,
+      },
+      stateText: {
+         color: VIEW_COLORS.muted,
+         textAlign: 'center',
+      },
+      stateTitle: {
+         color: theme.colors.onBackground,
+         fontWeight: '800',
+         textAlign: 'center',
+      },
+   });

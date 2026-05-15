@@ -4,11 +4,11 @@ import { Divider, Surface, Text, useTheme } from 'react-native-paper';
 import { VIEW_COLORS } from '@/theme/colors';
 
 type NewRoutineHeroProps = {
-   durationWeeks: string;
+   exerciseCount: number;
 };
 
 // Componente cabecera de la pantalla de inicio de una nueva rutina.
-const NewRoutineHero = ({ durationWeeks }: NewRoutineHeroProps) => {
+const NewRoutineHero = ({ exerciseCount }: NewRoutineHeroProps) => {
    const theme = useTheme();
 
    return (
@@ -26,27 +26,22 @@ const NewRoutineHero = ({ durationWeeks }: NewRoutineHeroProps) => {
                variant="bodyMedium"
                style={[styles.description, { color: theme.colors.onSurfaceVariant }]}
             >
-               Completa la información principal para dejar la rutina preparada antes de
-               añadir ejercicios.
+               Completa la información principal y añade los ejercicios en el orden
+               en el que quieres entrenarlos.
             </Text>
          </View>
 
          <View style={[styles.heroStats, { backgroundColor: theme.colors.surfaceVariant }]}>
             <View style={styles.stat}>
-               <Text style={[styles.statValue, { color: theme.colors.onSurface }]}>0</Text>
+               <Text style={[styles.statValue, { color: theme.colors.onSurface }]}>
+                  {exerciseCount}
+               </Text>
                <Text style={[styles.statLabel, { color: theme.colors.onSurfaceVariant }]}>ejercicios</Text>
             </View>
             <Divider style={[styles.statDivider, { backgroundColor: theme.colors.outline }]} />
             <View style={styles.stat}>
-               <Text style={[styles.statValue, { color: theme.colors.onSurface }]}>
-                  {durationWeeks === '' ? '0' : durationWeeks}
-               </Text>
-               <Text style={[styles.statLabel, { color: theme.colors.onSurfaceVariant }]}>semanas</Text>
-            </View>
-            <Divider style={[styles.statDivider, { backgroundColor: theme.colors.outline }]} />
-            <View style={styles.stat}>
-               <Text style={[styles.statValue, { color: theme.colors.onSurface }]}>3</Text>
-               <Text style={[styles.statLabel, { color: theme.colors.onSurfaceVariant }]}>días</Text>
+               <Text style={[styles.statValue, { color: theme.colors.onSurface }]}>Auto</Text>
+               <Text style={[styles.statLabel, { color: theme.colors.onSurfaceVariant }]}>orden</Text>
             </View>
          </View>
       </Surface>

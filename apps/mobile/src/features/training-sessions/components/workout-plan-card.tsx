@@ -1,12 +1,20 @@
 import type { WorkoutPlan } from '@gym-app/types';
+import {
+   getWorkoutPlanGoalLabelEs,
+   getWorkoutPlanLevelLabelEs,
+} from '@gym-app/types';
 import { router } from 'expo-router';
-import { View, StyleSheet } from 'react-native';
-import { Appbar, Button, Card, Text, Tooltip } from 'react-native-paper';
+import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
+
+import { AUTH_COLORS, VIEW_COLORS } from '@/theme/colors';
 
 type WorkoutPlanCardProps = {
    workoutPlan: WorkoutPlan;
    onOpenInfo: (workoutPlan: WorkoutPlan) => void;
    onOpenOptions: (workoutPlan: WorkoutPlan) => void;
+   isCompact?: boolean;
 };
 
 // Componente para mostrar una rutina en una lista de rutinas.
@@ -14,8 +22,8 @@ export function WorkoutPlanCard({
    workoutPlan,
    onOpenInfo,
    onOpenOptions,
+   isCompact = false,
 }: WorkoutPlanCardProps) {
-
    // Evento para iniciar la rutina seleccionada.
    const handleStartRoutine = (workoutPlanId: string) => {
       router.push({
@@ -26,52 +34,199 @@ export function WorkoutPlanCard({
       });
    };
 
-   return (
-      <Card mode="outlined" onPress={() => onOpenInfo(workoutPlan)}>
-         <Card.Title
-            title={workoutPlan.name}
-            subtitle={workoutPlan.isActive ? 'Activa' : 'Inactiva'}
-            right={() => (
-               <Tooltip title="Opciones">
-                  <Appbar.Action
-                     icon="dots-horizontal"
-                     onPress={() => onOpenOptions(workoutPlan)}
-                  />
-               </Tooltip>
-            )}
-         />
+   const metaParts = [
+      workoutPlan.goal ? getWorkoutPlanGoalLabelEs(workoutPlan.goal).toUpperCase() : null,
+      workoutPlan.level ? getWorkoutPlanLevelLabelEs(workoutPlan.level).toUpperCase() : null,
+      workoutPlan.exercises?.length ? `${workoutPlan.exercises.length} ejercicios` : null,
+   ].filter(Boolean);
 
-         <Card.Content>
-            <Text>
-               {workoutPlan.description?.trim() || 'Sin descripción'}
+   const detailTiles = [
+      {
+         label: 'Ejercicios',
+         value: String(workoutPlan.exercises?.length ?? 0),
+         accent: false,
+      },
+      {
+         label: 'Orden',
+         value: 'Auto',
+         accent: false,
+      },
+      {
+         label: 'Estado',
+         value: workoutPlan.isActive ? 'Activa' : 'Pausada',
+         accent: workoutPlan.isActive,
+      },
+   ];
+
+   if (isCompact) {
+      return (
+         <Pressable onPress={() => onOpenInfo(workoutPlan)} style={styles.compactCard}>
+            <Text style={styles.compactTitle}>{workoutPlan.name}</Text>
+            <Text style={styles.compactMeta}>
+               {metaParts.length > 0 ? metaParts.join(' · ') : 'Sin configuración adicional'}
             </Text>
-         </Card.Content>
-         <View>
-            <Button
-               mode="contained"
-               labelStyle={styles.buttonLabel}
-               style={styles.button}
-               contentStyle={styles.buttonContent}
-               onPress={() => handleStartRoutine(workoutPlan.id)}
+         </Pressable>
+      );
+   }
+
+   return (
+      <View style={styles.card}>
+         <View style={styles.titleRow}>
+            <View style={styles.titleCopy}>
+               <Text style={styles.title}>{workoutPlan.name}</Text>
+               <Text style={styles.metaLine}>
+                  {metaParts.length > 0 ? metaParts.join(' · ') : 'Rutina personalizada'}
+               </Text>
+            </View>
+
+            <Pressable
+               accessibilityLabel="Opciones"
+               hitSlop={8}
+               onPress={() => onOpenOptions(workoutPlan)}
+               style={styles.moreButton}
             >
-               Empezar rutina
-            </Button>
+               <MaterialDesignIcons color="#9EA3AD" name="dots-horizontal" size={22} />
+            </Pressable>
          </View>
-      </Card>
+
+         <Pressable onPress={() => onOpenInfo(workoutPlan)}>
+            <Text style={styles.description}>
+               {workoutPlan.description?.trim() ||
+                  'Plan sin descripción. Ábrelo para revisar ejercicios y configuración.'}
+            </Text>
+
+            <View style={styles.fieldsRow}>
+               {detailTiles.map((tile) => (
+                  <View
+                     key={tile.label}
+                     style={[styles.fieldTile, tile.accent && styles.fieldTileAccent]}
+                  >
+                     <Text style={[styles.fieldValue, tile.accent && styles.fieldValueAccent]}>
+                        {tile.value}
+                     </Text>
+                     <Text style={styles.fieldLabel}>{tile.label}</Text>
+                  </View>
+               ))}
+            </View>
+         </Pressable>
+
+         <Pressable
+            onPress={() => handleStartRoutine(workoutPlan.id)}
+            style={styles.startButton}
+         >
+            <Text style={styles.startButtonText}>Empezar rutina</Text>
+            <MaterialDesignIcons
+               color={AUTH_COLORS.primaryForeground}
+               name="play"
+               size={18}
+            />
+         </Pressable>
+      </View>
    );
 }
 
 const styles = StyleSheet.create({
-   button: {
-      marginVertical: 20,
-      marginHorizontal: 12,
-      borderRadius: 12,
-      borderCurve: 'continuous',
+   card: {
+      backgroundColor: AUTH_COLORS.elevatedSurface,
+      borderColor: AUTH_COLORS.elevatedOutline,
+      borderRadius: 18,
+      borderWidth: 1,
+      gap: 12,
+      padding: 14,
    },
-   buttonContent: {
-      minHeight: 34,
+   compactCard: {
+      backgroundColor: '#181A20',
+      borderColor: '#2A2E36',
+      borderRadius: 18,
+      borderWidth: 1,
+      gap: 8,
+      padding: 14,
    },
-   buttonLabel: {
+   compactMeta: {
+      color: '#9EA3AD',
+      fontFamily: 'monospace',
+      fontSize: 10,
+      fontWeight: '700',
+      lineHeight: 16,
+      textTransform: 'uppercase',
+   },
+   compactTitle: {
+      color: VIEW_COLORS.onDark,
       fontSize: 16,
+      fontWeight: '800',
+   },
+   description: {
+      color: '#B8BCC6',
+      fontSize: 12,
+      lineHeight: 18,
+   },
+   fieldLabel: {
+      color: '#9EA3AD',
+      fontSize: 11,
+   },
+   fieldTile: {
+      backgroundColor: '#211F26',
+      borderRadius: 12,
+      flex: 1,
+      gap: 2,
+      padding: 10,
+   },
+   fieldTileAccent: {
+      backgroundColor: AUTH_COLORS.helpSurface,
+   },
+   fieldsRow: {
+      flexDirection: 'row',
+      gap: 8,
+      marginTop: 12,
+   },
+   fieldValue: {
+      color: VIEW_COLORS.onDark,
+      fontSize: 15,
+      fontWeight: '800',
+   },
+   fieldValueAccent: {
+      color: AUTH_COLORS.primary,
+   },
+   metaLine: {
+      color: '#9EA3AD',
+      fontFamily: 'monospace',
+      fontSize: 10,
+      fontWeight: '700',
+      lineHeight: 16,
+      textTransform: 'uppercase',
+   },
+   moreButton: {
+      alignItems: 'center',
+      height: 22,
+      justifyContent: 'center',
+      width: 22,
+   },
+   startButton: {
+      alignItems: 'center',
+      backgroundColor: AUTH_COLORS.primary,
+      borderRadius: 14,
+      flexDirection: 'row',
+      gap: 8,
+      height: 44,
+      justifyContent: 'center',
+   },
+   startButtonText: {
+      color: AUTH_COLORS.primaryForeground,
+      fontSize: 14,
+      fontWeight: '800',
+   },
+   title: {
+      color: VIEW_COLORS.onDark,
+      fontSize: 18,
+      fontWeight: '800',
+   },
+   titleCopy: {
+      flex: 1,
+      gap: 2,
+   },
+   titleRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 12,
    },
 });
