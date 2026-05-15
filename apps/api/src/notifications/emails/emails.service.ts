@@ -20,6 +20,12 @@ type AdminCreatedAccountEmailData = {
    temporaryPassword: string;
 };
 
+type PasswordResetEmailData = {
+   email: string;
+   firstName: string | null;
+   resetUrl: string;
+};
+
 /**
  * Servicio de envio de e-mails.
  */
@@ -90,6 +96,38 @@ export class EmailsService {
          greeting,
          temporaryPassword: data.temporaryPassword,
       });
+
+      await this.sendMail({
+         to: data.email,
+         subject,
+         text,
+         html,
+      });
+   }
+
+   /**
+    * Envía un e-mail para restablecer contrasena.
+    */
+   async sendPasswordResetEmail(data: PasswordResetEmailData): Promise<void> {
+      const subject = 'Restablece tu contrasena de Gym App';
+      const greeting = data.firstName ? `Hola ${data.firstName},` : 'Hola,';
+
+      const text = [
+         greeting,
+         '',
+         'Hemos recibido una solicitud para restablecer tu contrasena.',
+         'Usa este enlace para crear una nueva contrasena:',
+         data.resetUrl,
+         '',
+         'Este enlace caduca pronto. Si no solicitaste este cambio, ignora este correo.',
+      ].join('\n');
+
+      const html = `
+			<p>${greeting}</p>
+			<p>Hemos recibido una solicitud para restablecer tu contrasena.</p>
+			<p><a href="${data.resetUrl}">Crear nueva contrasena</a></p>
+			<p>Si no solicitaste este cambio, ignora este correo.</p>
+		`;
 
       await this.sendMail({
          to: data.email,

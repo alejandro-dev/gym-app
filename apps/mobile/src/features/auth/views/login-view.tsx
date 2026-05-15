@@ -95,7 +95,7 @@ const LoginView = () => {
             </View>
 
             <View className="gap-3">
-               <Pressable onPress={() => {}}>
+               <Pressable onPress={() => router.navigate('/forgot-password')}>
                   <Text style={styles.forgotPasswordText}>
                      ¿Has olvidado tu contrasena?
                   </Text>

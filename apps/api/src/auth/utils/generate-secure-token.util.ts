@@ -5,6 +5,6 @@ import { randomBytes } from 'node:crypto';
  *
  * @returns Token de verificación en formato hexadecimal
  */
-export function generateEmailVerificationToken() {
+export function generateSecureToken() {
    return randomBytes(32).toString('hex');
 }

@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { Job } from 'bullmq';
 import { EmailsService } from '../../notifications/emails/emails.service';
-import { UserRegisteredJobData } from './auth.producer';
+import {
+   PasswordResetRequestedJobData,
+   UserRegisteredJobData,
+} from './auth.producer';
 import { AUTH_JOBS } from './auth-queue.constants';
 import { AuthProcessor } from './auth.processor';
 
@@ -12,6 +15,7 @@ describe('AuthProcessor', () => {
    const emailsServiceMock = {
       sendWelcomeVerificationEmail: jest.fn(),
       sendAdminCreatedAccountEmail: jest.fn(),
+      sendPasswordResetEmail: jest.fn(),
    };
 
    const configServiceMock = {
@@ -117,6 +121,32 @@ describe('AuthProcessor', () => {
          email: 'coach@example.com',
          firstName: 'Coach',
          temporaryPassword: 'TempPass123!',
+      });
+   });
+
+   it('builds the reset URL with FRONT_URL and sends the password reset email', async () => {
+      configServiceMock.get.mockReturnValue('http://localhost:3000');
+      emailsServiceMock.sendPasswordResetEmail.mockResolvedValue(undefined);
+
+      await processor.process({
+         name: AUTH_JOBS.PASSWORD_RESET_REQUESTED,
+         data: {
+            userId: 'user_123',
+            email: 'alex@example.com',
+            firstName: 'Alex',
+            passwordResetToken: 'reset-token-123',
+         },
+      } as Job<PasswordResetRequestedJobData>);
+
+      expect(configServiceMock.get).toHaveBeenCalledWith(
+         'FRONT_URL',
+         'http://localhost:3001',
+      );
+      expect(emailsServiceMock.sendPasswordResetEmail).toHaveBeenCalledWith({
+         email: 'alex@example.com',
+         firstName: 'Alex',
+         resetUrl:
+            'http://localhost:3000/auth/reset-password?token=reset-token-123',
       });
    });
 });

@@ -26,6 +26,18 @@ export const AUTH_PUBLIC_RATE_LIMITS = {
          ttl: 60 * 60 * 1000,
       },
    },
+   forgotPassword: {
+      default: {
+         limit: 15,
+         ttl: 15 * 60 * 1000,
+      },
+   },
+   resetPassword: {
+      default: {
+         limit: 10,
+         ttl: 60 * 60 * 1000,
+      },
+   },
 } as const;
 
 /**

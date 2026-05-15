@@ -32,6 +32,15 @@ export interface AuthVerifyEmailInput {
    token: string;
 }
 
+export interface AuthForgotPasswordInput {
+   email: string;
+}
+
+export interface AuthResetPasswordInput {
+   token: string;
+   newPassword: string;
+}
+
 export interface UpdateProfileInput {
    firstName?: string | null;
    lastName?: string | null;
@@ -63,6 +72,22 @@ export async function register(input: AuthRegisterInput) {
 
 export async function verifyEmail(input: AuthVerifyEmailInput) {
    return fetchJson<AuthMessageResponse>("/api/auth/verify-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+   });
+}
+
+export async function forgotPassword(input: AuthForgotPasswordInput) {
+   return fetchJson<AuthMessageResponse>("/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+   });
+}
+
+export async function resetPassword(input: AuthResetPasswordInput) {
+   return fetchJson<AuthMessageResponse>("/api/auth/reset-password", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),

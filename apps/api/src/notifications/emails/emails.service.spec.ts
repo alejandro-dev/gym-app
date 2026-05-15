@@ -84,4 +84,31 @@ describe('EmailsService', () => {
          html: fallbackUrlMatcher,
       });
    });
+
+   it('sends a password reset email with the reset link', async () => {
+      mailerServiceMock.sendMail.mockResolvedValue(undefined);
+
+      await service.sendPasswordResetEmail({
+         email: 'alex@example.com',
+         firstName: 'Alex',
+         resetUrl: 'http://localhost:3001/auth/reset-password?token=abc123',
+      });
+
+      expect(mailerServiceMock.sendMail).toHaveBeenCalledWith({
+         to: 'alex@example.com',
+         subject: 'Restablece tu contrasena de Gym App',
+         text: [
+            'Hola Alex,',
+            '',
+            'Hemos recibido una solicitud para restablecer tu contrasena.',
+            'Usa este enlace para crear una nueva contrasena:',
+            'http://localhost:3001/auth/reset-password?token=abc123',
+            '',
+            'Este enlace caduca pronto. Si no solicitaste este cambio, ignora este correo.',
+         ].join('\n'),
+         html: expect.stringContaining(
+            'http://localhost:3001/auth/reset-password?token=abc123',
+         ) as unknown as string,
+      });
+   });
 });
