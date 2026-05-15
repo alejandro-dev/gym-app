@@ -4,6 +4,22 @@ export const APP_COLORS = {
    accent: '#22C55E',
 } as const;
 
+export const AUTH_COLORS = {
+   background: '#111111',
+   surface: '#1A1A1A',
+   field: '#2E2E2E',
+   fieldOutline: '#2E2E2E',
+   elevatedSurface: '#1D1B20',
+   helpSurface: '#261B11',
+   outline: '#2E2E2E',
+   elevatedOutline: '#34303A',
+   primary: '#FF8400',
+   primaryForeground: '#111111',
+   text: '#FFFFFF',
+   muted: '#B8B9B6',
+   warningText: '#FFB15C',
+} as const;
+
 export const VIEW_COLORS = {
    onDark: '#FFFFFF',
    muted: '#A3A3A3',
