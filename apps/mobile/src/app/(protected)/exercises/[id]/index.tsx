@@ -1,6 +1,4 @@
 import { ProtectedScreen } from '@/components/layout/ProtectedScreen';
-import ExerciseDetailHero from '@/features/exercises/components/exercise-detail-hero';
-import ExerciseDetailTabs from '@/features/exercises/components/exercise-detail-tabs';
 import { useExerciseQuery } from '@/features/exercises/queries/use-exercise-query';
 import ExerciseDetailView, { ExerciseTab } from '@/features/exercises/views/exercise-detail-view';
 import { VIEW_COLORS } from '@/theme/colors';
@@ -50,14 +48,9 @@ export default function ExerciseDetailScreen() {
    }
    
    return (
-      <>
-         <ExerciseDetailHero exercise={exercise} />
-         <ExerciseDetailTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
-         <ProtectedScreen edges={['left', 'right']}>
-            <ExerciseDetailView exercise={exercise} selectedTab={selectedTab} />
-         </ProtectedScreen>
-      </>
-      
+      <ProtectedScreen edges={['top', 'left', 'right']}>
+         <ExerciseDetailView exercise={exercise} selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
+      </ProtectedScreen>
    );
 }
 
@@ -77,15 +70,5 @@ const getStyles = (theme: MD3Theme) => StyleSheet.create({
    stateText: {
       color: VIEW_COLORS.muted,
       textAlign: 'center',
-   },
-   emptyHero: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-   },
-   emptyHeroText: {
-      color: VIEW_COLORS.subtle,
-      fontSize: 54,
-      fontWeight: '900',
    },
 });

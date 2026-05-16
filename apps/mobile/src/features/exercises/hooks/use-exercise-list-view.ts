@@ -6,7 +6,7 @@ import { RoutineCatalogExercise } from '../../training-sessions/types';
 
 
 export default function useExerciseListView() {
-   const { setSelectedRoutineExercise } = useNewRoutine();
+   const { exercises, setSelectedRoutineExercise } = useNewRoutine();
    const [exerciseSearch, setExerciseSearch] = useState('');
 
    // Consulta de ejercicios.
@@ -25,7 +25,7 @@ export default function useExerciseListView() {
    // Evento para seleccionar un ejercicio.
    const handleSelectExercise = (exercise: RoutineCatalogExercise) => {
       setSelectedRoutineExercise(exercise);
-      router.back();
+      router.navigate('/training-sessions/new-exercise');
    };
 
    return {
@@ -33,6 +33,7 @@ export default function useExerciseListView() {
       filteredExercises,
       isLoading,
       isError,
+      exercises,
       setExerciseSearch,
       handleSelectExercise,
    };

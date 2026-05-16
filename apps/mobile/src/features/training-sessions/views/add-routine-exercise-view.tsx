@@ -1,183 +1,168 @@
-import { memo } from 'react';
-import {
-   KeyboardAvoidingView,
-   Platform,
-   Pressable,
-   StyleSheet,
-   View,
-} from 'react-native';
+import { getExerciseCategoryLabelEs, getMuscleGroupLabelEs } from '@gym-app/types';
+import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { memo } from 'react';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getMuscleGroupLabelEs } from '@gym-app/types';
-import {
-   Button,
-   Card,
-   HelperText,
-   Text,
-   TextInput,
-} from 'react-native-paper';
+import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 
 import { resolveApiImageUrl } from '@/services/api/media';
-import { VIEW_COLORS } from '@/theme/colors';
+import { AUTH_COLORS, VIEW_COLORS } from '@/theme/colors';
 
 import { useNewRoutine } from '../context/new-routine-context';
 import useAddRoutineExerciseView from '../hooks/use-add-routine-exercise-view';
-import { RoutineCatalogExercise } from '../types';
+import type { RoutineCatalogExercise } from '../types';
 
 const AddRoutineExerciseView = () => {
    const insets = useSafeAreaInsets();
    const { addExercise, selectedRoutineExercise, setSelectedRoutineExercise } = useNewRoutine();
-   const { canAddExercise, targetSets, setTargetSets, targetRepsMin, setTargetRepsMin, targetRepsMax, setTargetRepsMax, targetWeightKg, setTargetWeightKg, restSeconds, setRestSeconds, notes, setNotes, handleAddExercise } = useAddRoutineExerciseView({addExercise, selectedRoutineExercise, setSelectedRoutineExercise});
-   
+   const {
+      canAddExercise,
+      targetSets,
+      setTargetSets,
+      targetRepsMin,
+      setTargetRepsMin,
+      targetRepsMax,
+      setTargetRepsMax,
+      targetWeightKg,
+      setTargetWeightKg,
+      restSeconds,
+      setRestSeconds,
+      notes,
+      setNotes,
+      handleAddExercise,
+   } = useAddRoutineExerciseView({
+      addExercise,
+      selectedRoutineExercise,
+      setSelectedRoutineExercise,
+   });
+
    return (
       <KeyboardAvoidingView
          style={styles.keyboardAvoidingView}
          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
          keyboardVerticalOffset={insets.top}
       >
-         <KeyboardAwareScrollView
-            enableOnAndroid
-            extraHeight={120}
-            extraScrollHeight={48}
-            keyboardOpeningTime={0}
-            contentInsetAdjustmentBehavior="automatic"
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+         <ScrollView
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
             contentContainerStyle={[
                styles.content,
                { paddingBottom: insets.bottom + 28 },
             ]}
          >
-            <Card mode="contained" style={styles.card}>
-               <Card.Content style={styles.cardContent}>
-                  <View style={styles.sectionCopy}>
-                     <Text variant="titleMedium" style={styles.sectionTitle}>
-                        Ejercicio
-                     </Text>
-                     <Text variant="bodySmall" style={styles.sectionHint}>
-                        Selecciona un ejercicio existente para completar la
-                        prescripción.
-                     </Text>
-                  </View>
+            <View style={styles.header}>
+               <Pressable onPress={() => router.back()} style={styles.iconButton}>
+                  <MaterialDesignIcons color={VIEW_COLORS.onDark} name="arrow-left" size={20} />
+               </Pressable>
 
-                  <Pressable
-                     style={styles.exerciseSelector}
-                     onPress={() =>
-                        router.navigate('/training-sessions/exercise-picker')
-                     }
-                  >
-                     {selectedRoutineExercise ? (
-                        <ExerciseThumbnail exercise={selectedRoutineExercise} />
-                     ) : (
-                        <View style={styles.emptyThumbnail}>
-                           <Text variant="titleMedium" style={styles.emptyThumbnailText}>
-                              +
-                           </Text>
-                        </View>
-                     )}
-                     <View style={styles.exerciseSelectorCopy}>
-                        <Text variant="titleSmall" style={styles.exerciseName}>
-                           {selectedRoutineExercise?.name ?? 'Seleccionar ejercicio'}
-                        </Text>
-                        <Text variant="bodySmall" style={styles.exerciseSubtitle}>
-                           {selectedRoutineExercise
-                              ? getMuscleGroupLabelEs(
-                                   selectedRoutineExercise.muscleGroup,
-                                )
-                              : 'Abrir listado de ejercicios'}
-                        </Text>
+               <View style={styles.headerCopy}>
+                  <Text style={styles.eyebrow}>ROUTINE EXERCISE</Text>
+                  <Text style={styles.title}>Añadir ejercicio</Text>
+               </View>
+            </View>
+
+            <View style={styles.exerciseCard}>
+               <View style={styles.exerciseCardHeader}>
+                  <Text style={styles.sectionTitle}>Ejercicio</Text>
+               </View>
+
+               <Pressable
+                  style={styles.exerciseSelector}
+                  onPress={() => router.back()}
+               >
+                  {selectedRoutineExercise ? (
+                     <ExerciseThumbnail exercise={selectedRoutineExercise} />
+                  ) : (
+                     <View style={styles.emptyThumb}>
+                        <MaterialDesignIcons color="#6F7682" name="plus" size={20} />
                      </View>
-                     <Text variant="labelLarge" style={styles.changeLabel}>
+                  )}
+                  <View style={styles.exerciseSelectorCopy}>
+                     <Text numberOfLines={1} style={styles.exerciseName}>
+                        {selectedRoutineExercise?.name ?? 'Seleccionar ejercicio'}
+                     </Text>
+                     <Text numberOfLines={1} style={styles.exerciseSubtitle}>
+                        {selectedRoutineExercise
+                           ? [
+                                getMuscleGroupLabelEs(selectedRoutineExercise.muscleGroup),
+                                getExerciseCategoryLabelEs(selectedRoutineExercise.category),
+                                selectedRoutineExercise.equipment,
+                             ]
+                                .filter(Boolean)
+                                .join(' • ')
+                           : 'Elige el movimiento antes de prescribirlo'}
+                     </Text>
+
+                  </View>
+                  <Text style={styles.swapButtonText}>
                         {selectedRoutineExercise ? 'Cambiar' : 'Buscar'}
                      </Text>
-                  </Pressable>
-               </Card.Content>
-            </Card>
+               </Pressable>
+            </View>
 
-            <Card mode="contained" style={styles.card}>
-               <Card.Content style={styles.cardContent}>
-                  <Text variant="titleMedium" style={styles.sectionTitle}>
-                     Prescripción
-                  </Text>
+            <View style={styles.sectionCard}>
+               <Text style={styles.sectionTitle}>Prescripción</Text>
 
-                  <TextInput
-                     mode="outlined"
+               <View style={styles.inputGrid}>
+                  <Field
                      label="Series"
                      value={targetSets}
                      onChangeText={setTargetSets}
                      keyboardType="number-pad"
-                     outlineStyle={styles.inputOutline}
-                     contentStyle={styles.inputContent}
                   />
-
-                  <View style={styles.inputGrid}>
-                     <TextInput
-                        style={styles.gridInput}
-                        mode="outlined"
-                        label="Reps min"
-                        value={targetRepsMin}
-                        onChangeText={setTargetRepsMin}
-                        keyboardType="number-pad"
-                        outlineStyle={styles.inputOutline}
-                        contentStyle={styles.inputContent}
-                     />
-                     <TextInput
-                        style={styles.gridInput}
-                        mode="outlined"
-                        label="Reps max"
-                        value={targetRepsMax}
-                        onChangeText={setTargetRepsMax}
-                        keyboardType="number-pad"
-                        outlineStyle={styles.inputOutline}
-                        contentStyle={styles.inputContent}
-                     />
-                  </View>
-
-                  <View style={styles.inputGrid}>
-                     <TextInput
-                        style={styles.gridInput}
-                        mode="outlined"
-                        label="Carga"
-                        value={targetWeightKg}
-                        onChangeText={setTargetWeightKg}
-                        keyboardType="decimal-pad"
-                        outlineStyle={styles.inputOutline}
-                        contentStyle={styles.inputContent}
-                        right={<TextInput.Affix text="kg" />}
-                     />
-                     <TextInput
-                        style={styles.gridInput}
-                        mode="outlined"
-                        label="Descanso"
-                        value={restSeconds}
-                        onChangeText={setRestSeconds}
-                        keyboardType="number-pad"
-                        outlineStyle={styles.inputOutline}
-                        contentStyle={styles.inputContent}
-                        right={<TextInput.Affix text="s" />}
-                     />
-                  </View>
-
-                  <TextInput
-                     mode="outlined"
-                     label="Notas"
-                     value={notes}
-                     onChangeText={setNotes}
-                     placeholder="Notas técnicas"
-                     multiline
-                     numberOfLines={4}
-                     outlineStyle={styles.inputOutline}
-                     contentStyle={[styles.inputContent, styles.textareaContent]}
+                  <Field
+                     label="Descanso"
+                     value={restSeconds}
+                     onChangeText={setRestSeconds}
+                     keyboardType="number-pad"
+                     suffix="s"
                   />
-               </Card.Content>
-            </Card>
+               </View>
+
+               <View style={styles.inputGrid}>
+                  <Field
+                     label="Rep min"
+                     value={targetRepsMin}
+                     onChangeText={setTargetRepsMin}
+                     keyboardType="number-pad"
+                  />
+                  <Field
+                     label="Rep max"
+                     value={targetRepsMax}
+                     onChangeText={setTargetRepsMax}
+                     keyboardType="number-pad"
+                  />
+               </View>
+
+               <Field
+                  label="Carga objetivo"
+                  value={targetWeightKg}
+                  onChangeText={setTargetWeightKg}
+                  keyboardType="decimal-pad"
+                  suffix="kg"
+               />
+
+               <TextInput
+                  mode="outlined"
+                  label="Notas"
+                  value={notes}
+                  onChangeText={setNotes}
+                  placeholder="Notas técnicas, tempo, rango o cues"
+                  multiline
+                  numberOfLines={4}
+                  outlineStyle={styles.inputOutline}
+                  contentStyle={styles.textareaContent}
+                  style={styles.input}
+                  textColor={VIEW_COLORS.onDark}
+                  theme={inputTheme}
+               />
+            </View>
 
             <View style={styles.actions}>
                <HelperText type="info" visible={!canAddExercise} style={styles.helper}>
-                  Selecciona un ejercicio para añadirlo a la rutina.
+                  Selecciona un ejercicio antes de añadirlo a la rutina.
                </HelperText>
                <Button
                   mode="contained"
@@ -190,25 +175,55 @@ const AddRoutineExerciseView = () => {
                   Añadir ejercicio
                </Button>
             </View>
-         </KeyboardAwareScrollView>
+         </ScrollView>
       </KeyboardAvoidingView>
    );
 };
 
-export default memo(AddRoutineExerciseView);
+function Field({
+   label,
+   value,
+   onChangeText,
+   keyboardType,
+   suffix,
+}: {
+   label: string;
+   value: string;
+   onChangeText: (value: string) => void;
+   keyboardType: 'number-pad' | 'decimal-pad';
+   suffix?: string;
+}) {
+   return (
+      <TextInput
+         mode="outlined"
+         label={label}
+         value={value}
+         onChangeText={onChangeText}
+         keyboardType={keyboardType}
+         outlineStyle={styles.inputOutline}
+         contentStyle={styles.inputContent}
+         style={[styles.input, styles.gridInput]}
+         textColor={VIEW_COLORS.onDark}
+         theme={inputTheme}
+         right={suffix ? <TextInput.Affix text={suffix} textStyle={styles.affixText} /> : undefined}
+      />
+   );
+}
 
-// Función para mostrar una imágen de ejercicio en la vista.
 function ExerciseThumbnail({ exercise }: { exercise: RoutineCatalogExercise }) {
-   // Obtenemos la URL de la imagen de ejercicio.
    const imageUri = resolveApiImageUrl(exercise.imageUrl);
 
-   // Si no hay URL de imagen, mostramos un la inicial de la palabra del ejercicio.
    if (!imageUri) {
+      const initials = exercise.name
+         .split(' ')
+         .slice(0, 2)
+         .map((part) => part.charAt(0))
+         .join('')
+         .toUpperCase();
+
       return (
-         <View style={styles.emptyThumbnail}>
-            <Text variant="titleMedium" style={styles.emptyThumbnailText}>
-               {exercise.name.charAt(0).toUpperCase()}
-            </Text>
+         <View style={styles.emptyThumb}>
+            <Text style={styles.emptyThumbText}>{initials}</Text>
          </View>
       );
    }
@@ -218,42 +233,87 @@ function ExerciseThumbnail({ exercise }: { exercise: RoutineCatalogExercise }) {
          source={{ uri: imageUri }}
          accessibilityLabel={`Imagen de ${exercise.name}`}
          contentFit="cover"
-         style={styles.exerciseThumbnail}
+         style={styles.exerciseThumb}
       />
    );
 }
 
+const inputTheme = {
+   colors: {
+      background: '#181A20',
+      onSurfaceVariant: '#6F7682',
+      outline: '#34303A',
+      primary: AUTH_COLORS.primary,
+      surface: '#181A20',
+   },
+};
+
+export default memo(AddRoutineExerciseView);
+
 const styles = StyleSheet.create({
-   keyboardAvoidingView: {
-      flex: 1,
+   actions: {
+      gap: 8,
+      marginTop: 2,
+   },
+   affixText: {
+      color: '#9EA3AD',
+      fontSize: 12,
+      fontWeight: '700',
+   },
+   button: {
+      borderRadius: 16,
+      backgroundColor: AUTH_COLORS.primary,
+   },
+   buttonContent: {
+      minHeight: 52,
+   },
+   buttonLabel: {
+      color: AUTH_COLORS.primaryForeground,
+      fontSize: 15,
+      fontWeight: '900',
    },
    content: {
-      flexGrow: 1,
-      gap: 16,
-      marginBottom: 24,
+      gap: 12,
+      paddingBottom: 28,
+      paddingTop: 12,
    },
-   card: {
-      borderRadius: 26,
-      borderCurve: 'continuous',
+   emptyThumb: {
+      alignItems: 'center',
+      backgroundColor: '#E7E6E0',
+      borderRadius: 12,
+      height: 54,
+      justifyContent: 'center',
+      width: 54,
    },
-   cardContent: {
-      gap: 16,
-      paddingVertical: 18,
-   },
-   sectionCopy: {
-      gap: 4,
-   },
-   sectionTitle: {
+   emptyThumbText: {
+      color: '#737373',
+      fontFamily: 'monospace',
+      fontSize: 18,
       fontWeight: '800',
    },
-   sectionHint: {
-      color: VIEW_COLORS.subtle,
-      lineHeight: 18,
+   exerciseCard: {
+      backgroundColor: AUTH_COLORS.elevatedSurface,
+      borderColor: AUTH_COLORS.elevatedOutline,
+      borderRadius: 18,
+      borderWidth: 1,
+      gap: 14,
+      padding: 14,
+   },
+   exerciseCardHeader: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+   },
+   exerciseName: {
+      color: '#FFFFFF',
+      fontSize: 14,
+      fontWeight: '800',
    },
    exerciseSelector: {
       alignItems: 'center',
-      borderColor: VIEW_COLORS.softBorder,
-      borderRadius: 20,
+      backgroundColor: '#181A20',
+      borderColor: '#2A2E36',
+      borderRadius: 14,
       borderWidth: 1,
       flexDirection: 'row',
       gap: 12,
@@ -263,71 +323,103 @@ const styles = StyleSheet.create({
       flex: 1,
       gap: 2,
    },
-   exerciseName: {
-      fontWeight: '800',
-   },
    exerciseSubtitle: {
-      color: VIEW_COLORS.subtle,
+      color: '#6F7682',
+      fontSize: 10,
+      lineHeight: 14,
    },
-   changeLabel: {
-      color: VIEW_COLORS.onDark,
-      fontWeight: '800',
+   exerciseThumb: {
+      backgroundColor: '#E7E6E0',
+      borderRadius: 12,
+      height: 54,
+      width: 54,
    },
-   exerciseThumbnail: {
-      backgroundColor: VIEW_COLORS.mediaPlaceholder,
-      borderRadius: 16,
-      height: 58,
-      width: 58,
+   gridInput: {
+      flex: 1,
    },
-   emptyThumbnail: {
+   header: {
       alignItems: 'center',
-      backgroundColor: VIEW_COLORS.mediaPlaceholder,
-      borderRadius: 16,
-      height: 58,
-      justifyContent: 'center',
-      width: 58,
+      flexDirection: 'row',
+      gap: 12,
+      height: 48,
+      marginBottom: 2,
    },
-   emptyThumbnailText: {
-      color: VIEW_COLORS.subtle,
-      fontWeight: '800',
+   headerCopy: {
+      flex: 1,
+      gap: 2,
+   },
+   helper: {
+      color: '#6F7682',
+      marginHorizontal: 0,
+      paddingHorizontal: 0,
+   },
+   iconButton: {
+      alignItems: 'center',
+      backgroundColor: '#211F26',
+      borderRadius: 18,
+      height: 36,
+      justifyContent: 'center',
+      width: 36,
+   },
+   input: {
+      backgroundColor: '#181A20',
+   },
+   inputContent: {
+      color: VIEW_COLORS.onDark,
+      paddingHorizontal: 8,
    },
    inputGrid: {
       flexDirection: 'row',
       gap: 12,
    },
-   gridInput: {
-      flex: 1,
-   },
    inputOutline: {
-      borderRadius: 18,
-      borderCurve: 'continuous',
+      borderRadius: 14,
+      borderWidth: 1,
    },
-   inputContent: {
+   keyboardAvoidingView: {
       flex: 1,
-      paddingHorizontal: 16,
+   },
+   sectionCard: {
+      backgroundColor: AUTH_COLORS.elevatedSurface,
+      borderColor: AUTH_COLORS.elevatedOutline,
+      borderRadius: 18,
+      borderWidth: 1,
+      gap: 12,
+      padding: 14,
+   },
+   sectionTitle: {
+      color: '#FFFFFF',
+      fontSize: 14,
+      fontWeight: '800',
+   },
+   swapButton: {
+      backgroundColor: '#261B11',
+      borderRadius: 999,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+   },
+   swapButtonText: {
+      color: AUTH_COLORS.primary,
+      fontFamily: 'monospace',
+      fontSize: 10,
+      fontWeight: '800',
    },
    textareaContent: {
-      minHeight: 104,
+      color: VIEW_COLORS.onDark,
+      minHeight: 88,
+      paddingHorizontal: 12,
       paddingTop: 12,
    },
-   actions: {
-      gap: 8,
-      paddingTop: 4,
-      marginBottom: 54,
+   title: {
+      color: '#FFFFFF',
+      fontSize: 28,
+      fontWeight: '800',
    },
-   helper: {
-      marginHorizontal: 0,
-      paddingHorizontal: 0,
-   },
-   button: {
-      borderRadius: 18,
-      borderCurve: 'continuous',
-   },
-   buttonContent: {
-      minHeight: 54,
-   },
-   buttonLabel: {
-      fontSize: 16,
-      fontWeight: '600',
+   eyebrow: {
+      color: AUTH_COLORS.primary,
+      fontFamily: 'monospace',
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 0.8,
    },
 });

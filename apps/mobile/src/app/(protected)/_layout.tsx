@@ -17,17 +17,16 @@ export default function ProtectedLayout() {
 				/>
 				<Stack.Screen
 					name="training-sessions/new"
-					options={{ headerShown: true, title: 'Nueva rutina' }}
+					options={{ headerShown: false }}
 				/>
 				<Stack.Screen
 					name="training-sessions/new-exercise"
-					options={{ headerShown: true, title: 'Añadir ejercicio' }}
+					options={{ headerShown: false }}
 				/>
 				<Stack.Screen
 					name="training-sessions/exercise-picker"
 					options={{
-						headerShown: true,
-						title: 'Agregar ejercicio',
+						headerShown: false,
 					}}
 				/>
 				<Stack.Screen
@@ -45,8 +44,7 @@ export default function ProtectedLayout() {
 				<Stack.Screen
 					name="exercises/[id]/index"
 					options={{
-						headerShown: true,
-						title: 'Ejercicio',
+						headerShown: false,
 					}}
 				/>
 				<Stack.Screen

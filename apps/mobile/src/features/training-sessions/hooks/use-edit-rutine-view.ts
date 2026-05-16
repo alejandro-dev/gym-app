@@ -6,6 +6,10 @@ import { useUpdateRoutineMutation } from '../mutations/routine/use-update-routin
 import { Alert } from "react-native";
 import { router } from "expo-router";
 import { ApiError } from "@/services/api/client";
+import {
+   DEFAULT_WORKOUT_PLAN_GOAL,
+   DEFAULT_WORKOUT_PLAN_LEVEL,
+} from '../constants/workout-plan-defaults';
 import { normalizeRoutineExerciseDrafts, toRoutineExerciseDraft } from "../utils/routine-form-utils";
 
 export default function useEditRutineView(id: string) {
@@ -85,8 +89,8 @@ export default function useEditRutineView(id: string) {
       hydrateRoutineForEdit({
          name: data.name,
          description: data.description ?? "",
-         selectedGoal: data.goal ?? "HYPERTROPHY",
-         selectedLevel: data.level ?? "INTERMEDIATE",
+         selectedGoal: data.goal ?? DEFAULT_WORKOUT_PLAN_GOAL,
+         selectedLevel: data.level ?? DEFAULT_WORKOUT_PLAN_LEVEL,
          status: data.isActive ? "active" : "draft",
          exercises: normalizeRoutineExerciseDrafts(
             exercises.map((exercise) => toRoutineExerciseDraft(exercise)),
