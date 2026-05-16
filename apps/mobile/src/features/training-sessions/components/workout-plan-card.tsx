@@ -5,7 +5,7 @@ import {
 } from '@gym-app/types';
 import { router } from 'expo-router';
 import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, type GestureResponderEvent } from 'react-native';
 import { Text } from 'react-native-paper';
 
 import { AUTH_COLORS, VIEW_COLORS } from '@/theme/colors';
@@ -42,26 +42,40 @@ export function WorkoutPlanCard({
 
    const detailTiles = [
       {
-         label: 'Ejercicios',
+         label: 'ejercicios',
          value: String(workoutPlan.exercises?.length ?? 0),
          accent: false,
       },
       {
-         label: 'Orden',
-         value: 'Auto',
-         accent: false,
-      },
-      {
-         label: 'Estado',
+         label: 'estado',
          value: workoutPlan.isActive ? 'Activa' : 'Pausada',
          accent: workoutPlan.isActive,
       },
    ];
 
+   const handleOpenOptions = (event?: GestureResponderEvent) => {
+      event?.stopPropagation();
+      onOpenOptions(workoutPlan);
+   };
+
    if (isCompact) {
       return (
-         <Pressable onPress={() => onOpenInfo(workoutPlan)} style={styles.compactCard}>
-            <Text style={styles.compactTitle}>{workoutPlan.name}</Text>
+         <Pressable
+            onLongPress={() => onOpenOptions(workoutPlan)}
+            onPress={() => onOpenInfo(workoutPlan)}
+            style={styles.compactCard}
+         >
+            <View style={styles.titleRow}>
+               <Text style={styles.compactTitle}>{workoutPlan.name}</Text>
+               <Pressable
+                  accessibilityLabel="Opciones"
+                  hitSlop={8}
+                  onPress={handleOpenOptions}
+                  style={styles.moreButton}
+               >
+                  <MaterialDesignIcons color="#9EA3AD" name="dots-horizontal" size={22} />
+               </Pressable>
+            </View>
             <Text style={styles.compactMeta}>
                {metaParts.length > 0 ? metaParts.join(' · ') : 'Sin configuración adicional'}
             </Text>
@@ -70,47 +84,41 @@ export function WorkoutPlanCard({
    }
 
    return (
-      <View style={styles.card}>
-         <View style={styles.titleRow}>
-            <View style={styles.titleCopy}>
-               <Text style={styles.title}>{workoutPlan.name}</Text>
+      <Pressable
+         onLongPress={() => onOpenOptions(workoutPlan)}
+         onPress={() => onOpenInfo(workoutPlan)}
+         style={styles.card}
+      >
+         <View style={styles.titleBlock}>
+            <View style={styles.badge}>
                <Text style={styles.metaLine}>
-                  {metaParts.length > 0 ? metaParts.join(' · ') : 'Rutina personalizada'}
+                  {metaParts.length > 0 ? metaParts.join(' · ') : 'RUTINA'}
                </Text>
             </View>
-
-            <Pressable
-               accessibilityLabel="Opciones"
-               hitSlop={8}
-               onPress={() => onOpenOptions(workoutPlan)}
-               style={styles.moreButton}
-            >
-               <MaterialDesignIcons color="#9EA3AD" name="dots-horizontal" size={22} />
-            </Pressable>
+            <Text style={styles.title}>{workoutPlan.name}</Text>
          </View>
 
-         <Pressable onPress={() => onOpenInfo(workoutPlan)}>
-            <Text style={styles.description}>
-               {workoutPlan.description?.trim() ||
-                  'Plan sin descripción. Ábrelo para revisar ejercicios y configuración.'}
-            </Text>
+         <Text style={styles.description}>
+            {workoutPlan.description?.trim() ||
+               'Plan sin descripción. Ábrelo para revisar ejercicios y configuración.'}
+         </Text>
 
-            <View style={styles.fieldsRow}>
-               {detailTiles.map((tile) => (
-                  <View
-                     key={tile.label}
-                     style={[styles.fieldTile, tile.accent && styles.fieldTileAccent]}
-                  >
-                     <Text style={[styles.fieldValue, tile.accent && styles.fieldValueAccent]}>
-                        {tile.value}
-                     </Text>
-                     <Text style={styles.fieldLabel}>{tile.label}</Text>
-                  </View>
-               ))}
-            </View>
-         </Pressable>
+         <View style={styles.fieldsRow}>
+            {detailTiles.map((tile) => (
+               <View
+                  key={tile.label}
+                  style={[styles.fieldTile, tile.accent && styles.fieldTileAccent]}
+               >
+                  <Text style={[styles.fieldValue, tile.accent && styles.fieldValueAccent]}>
+                     {tile.value}
+                  </Text>
+                  <Text style={styles.fieldLabel}>{tile.label}</Text>
+               </View>
+            ))}
+         </View>
 
          <Pressable
+            accessibilityLabel="Empezar rutina"
             onPress={() => handleStartRoutine(workoutPlan.id)}
             style={styles.startButton}
          >
@@ -121,11 +129,18 @@ export function WorkoutPlanCard({
                size={18}
             />
          </Pressable>
-      </View>
+      </Pressable>
    );
 }
 
 const styles = StyleSheet.create({
+   badge: {
+      alignSelf: 'flex-start',
+      backgroundColor: AUTH_COLORS.helpSurface,
+      borderRadius: 999,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+   },
    card: {
       backgroundColor: AUTH_COLORS.elevatedSurface,
       borderColor: AUTH_COLORS.elevatedOutline,
@@ -220,13 +235,13 @@ const styles = StyleSheet.create({
       fontSize: 18,
       fontWeight: '800',
    },
-   titleCopy: {
-      flex: 1,
-      gap: 2,
+   titleBlock: {
+      gap: 6,
    },
    titleRow: {
+      alignItems: 'center',
       flexDirection: 'row',
-      justifyContent: 'space-between',
       gap: 12,
+      justifyContent: 'space-between',
    },
 });

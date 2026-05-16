@@ -1,12 +1,12 @@
-import BottomSheet from '@gorhom/bottom-sheet';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { ProtectedScreen } from '@/components/layout/ProtectedScreen';
 import { OptionsWorkout } from '@/features/training-sessions/components/options-workout';
 import TrainingSessionsView from '@/features/training-sessions/views/training-sessions-view';
-import { useRef, useState } from 'react';
-import { StyleSheet, Alert } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { StyleSheet, Alert, BackHandler } from 'react-native';
 import { DeleteWorkoutDialog } from '@/features/training-sessions/components/delete-workout-dialog';
 import type { WorkoutPlan } from '@gym-app/types';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { ApiError } from '@/services/api/client';
 import { useDeleteRoutineMutation } from '@/features/training-sessions/mutations/routine/use-delete-routine-mutation';
 
@@ -18,17 +18,19 @@ export default function WorkoutsScreen() {
    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
    const [selectedWorkoutPlan, setSelectedWorkoutPlan] =
       useState<WorkoutPlan | null>(null);
+   const [isOptionsSheetOpen, setIsOptionsSheetOpen] = useState(false);
    
    // Mutación para eliminar una rutina.
    const deleteRoutineMutation = useDeleteRoutineMutation();
 
    // Referencia para controlar el Bottom Sheet desde la vista de sesiones de entrenamiento.
-   const bottomSheetRef = useRef<BottomSheet>(null);
+   const bottomSheetRef = useRef<BottomSheetModal>(null);
 
    // Evento para abrir el bottom sheet de opciones de la rutina. Seleccionamos el plan de entrenamiento elegido.
    const handleOpenWorkoutOptions = (workoutPlan: WorkoutPlan) => {
       setSelectedWorkoutPlan(workoutPlan);
-      bottomSheetRef.current?.snapToIndex(0);
+      setIsOptionsSheetOpen(true);
+      bottomSheetRef.current?.present();
    };
 
    // Evento para abrir la pantalla maqueta con la informacion de la rutina.
@@ -39,14 +41,14 @@ export default function WorkoutsScreen() {
    // Evento para redireccionar al detalle de la rutina.
    const handleOpenWorkoutDetail = (id: string) => {
       // Cerramos el Bottom Sheet antes de navegar.
-      bottomSheetRef.current?.close();
+      bottomSheetRef.current?.dismiss();
       router.navigate(`/training-sessions/${id}/edit`);
    };
 
    // Evento para abrir el dialogo cuando se quiere eliminar una rutina.
    const handleOpenDeleteWorkoutDialog = () => {
       // Cerramos el Bottom Sheet para mostrar el dialogo.
-      bottomSheetRef.current?.close();
+      bottomSheetRef.current?.dismiss();
 
       // Abrimos el dialogo para mostrar el cuadro de diálogo.
       setIsDeleteDialogOpen(true);
@@ -82,6 +84,24 @@ export default function WorkoutsScreen() {
       router.navigate(`/training-sessions/${id}/duplicate`);
    };
 
+   // Evento para cerrar el sheet de opciones cuando se pulsa el botón de atras.
+   useFocusEffect(
+      useCallback(() => {
+         // Si el sheet de opciones está abierto, se cierra.
+         const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+            if (!isOptionsSheetOpen) {
+               return false;
+            }
+
+            bottomSheetRef.current?.close();
+            setIsOptionsSheetOpen(false);
+            return true;
+         });
+
+         return () => subscription.remove();
+      }, [isOptionsSheetOpen]),
+   );
+
    return (
       <>
          <ProtectedScreen style={styles.safeArea}>
@@ -91,12 +111,13 @@ export default function WorkoutsScreen() {
             />
          </ProtectedScreen>
          
-         <OptionsWorkout 
-            bottomSheetRef={bottomSheetRef} 
+         <OptionsWorkout
+            bottomSheetRef={bottomSheetRef}
             selectedWorkoutPlan={selectedWorkoutPlan}
             handleOpenDeleteWorkoutDialog={handleOpenDeleteWorkoutDialog}
             handleOpenWorkoutDetail={handleOpenWorkoutDetail}
             handleDuplicateWorkout={handleDuplicateWorkout}
+            onChange={(index) => setIsOptionsSheetOpen(index >= 0)}
          />
         
          <DeleteWorkoutDialog

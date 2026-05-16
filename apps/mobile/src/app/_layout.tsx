@@ -2,7 +2,7 @@ import '../../global.css';
 
 import { ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
-import React from 'react';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PaperProvider } from 'react-native-paper';
@@ -19,21 +19,23 @@ export default function RootLayout() {
 	return (
 		// Este contenedor es necesario para que los gestos del bottom sheet funcionen correctamente en toda la app.
 		<GestureHandlerRootView style={{ flex: 1 }}>
-			<PaperProvider theme={buildPaperTheme(isDark)}>
-				<QueryProvider>
-					<ThemeProvider value={buildNavigationTheme(isDark)}>
-						<Stack
-							screenOptions={{
-								headerShown: false,
-								animation: 'fade',
-								contentStyle: {
-									backgroundColor: getAppBackground(isDark),
-								},
-							}}
-						/>
-					</ThemeProvider>
-				</QueryProvider>
-			</PaperProvider>
+			<BottomSheetModalProvider>
+				<PaperProvider theme={buildPaperTheme(isDark)}>
+					<QueryProvider>
+						<ThemeProvider value={buildNavigationTheme(isDark)}>
+							<Stack
+								screenOptions={{
+									headerShown: false,
+									animation: 'fade',
+									contentStyle: {
+										backgroundColor: getAppBackground(isDark),
+									},
+								}}
+							/>
+						</ThemeProvider>
+					</QueryProvider>
+				</PaperProvider>
+			</BottomSheetModalProvider>
 		</GestureHandlerRootView>
 	);
 }
