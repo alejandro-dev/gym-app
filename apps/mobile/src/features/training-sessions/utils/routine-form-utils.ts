@@ -1,7 +1,7 @@
 import { WorkoutPlanExercise } from "@gym-app/types";
 import { RoutineExerciseDraft } from "../types";
 
-// Función que convierte el input de semanas en number | null para la API.
+// Función que convierte un input numérico opcional en number | null para la API.
 export function toOptionalNumber(value: string) {
    const normalizedValue = value.trim().replace(',', '.');
 
@@ -24,7 +24,6 @@ export function toRoutineExerciseDraft(item: WorkoutPlanExercise, idPrefix?: str
       category: item.exercise.category,
       equipment: item.exercise.equipment,
       isCompound: item.exercise.isCompound ?? false,
-      day: item.day,
       order: item.order,
       targetSets: item.targetSets,
       targetRepsMin: item.targetRepsMin,
@@ -40,7 +39,6 @@ export function normalizeRoutineExerciseDrafts(
 ): RoutineExerciseDraft[] {
    return exercises.map((exercise, index) => ({
       ...exercise,
-      day: null,
       order: index + 1,
    }));
 }

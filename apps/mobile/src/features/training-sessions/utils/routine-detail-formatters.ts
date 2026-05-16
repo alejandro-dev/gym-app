@@ -1,6 +1,6 @@
 import { getWorkoutPlanGoalLabelEs, getWorkoutPlanLevelLabelEs, WorkoutPlan, WorkoutPlanExercise } from "@gym-app/types";
 
-// Función que convierte el input de semanas en number | null para la API.
+// Funciones pequeñas para formatear valores de detalle de rutina.
 function formatGoal(workoutPlan: WorkoutPlan) {
    return workoutPlan.goal ? getWorkoutPlanGoalLabelEs(workoutPlan.goal) : 'Objetivo';
 }

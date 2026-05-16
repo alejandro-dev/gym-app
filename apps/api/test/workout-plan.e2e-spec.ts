@@ -146,7 +146,6 @@ describe('WorkoutPlansController (e2e)', () => {
                         id: sourceExercise.id,
                      },
                   },
-                  day: 2,
                   order: 1,
                   targetSets: 4,
                   targetRepsMin: 6,
@@ -173,7 +172,7 @@ describe('WorkoutPlansController (e2e)', () => {
 
       const copiedExercises = await prisma.workoutPlanExercise.findMany({
          where: { workoutPlanId: copiedPlan.id as string },
-         orderBy: [{ day: 'asc' }, { order: 'asc' }],
+         orderBy: [{ order: 'asc' }],
       });
 
       expect(copiedPlan).toEqual(
@@ -188,7 +187,6 @@ describe('WorkoutPlansController (e2e)', () => {
          expect.objectContaining({
             workoutPlanId: copiedPlan.id,
             exerciseId: sourceExercise.id,
-            day: 2,
             order: 1,
             targetSets: 4,
             targetRepsMin: 6,

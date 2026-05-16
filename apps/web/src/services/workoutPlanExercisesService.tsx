@@ -5,7 +5,6 @@ import { fetchJson } from "./httpClient";
 export type WorkoutPlanExercisePayload = {
    workoutPlanId: string;
    exerciseId: string;
-   day: number | null;
    order: number;
    targetSets: number | null;
    targetRepsMin: number | null;

@@ -29,7 +29,7 @@ const RoutineGeneralInfoCard = ({
             label="Nombre"
             value={name}
             onChangeText={onNameChange}
-            placeholder="Ej. Push Pull Legs 12 semanas"
+            placeholder="Ej. Push Pull Legs"
             outlineStyle={styles.inputOutline}
             contentStyle={styles.inputContent}
             left={<TextInput.Icon icon="dumbbell" />}

@@ -16,7 +16,6 @@ import {
 type CreateWorkoutPlanExerciseDto = {
    workoutPlanId: string;
    exerciseId: string;
-   day?: number | null;
    order: number;
    targetSets: number | null;
    targetRepsMin: number | null;
@@ -34,7 +33,6 @@ type WorkoutPlanExerciseRecord = {
    id: string;
    workoutPlanId: string;
    exerciseId: string;
-   day: number | null;
    order: number;
    targetSets: number | null;
    targetRepsMin: number | null;
@@ -89,7 +87,6 @@ describe('WorkoutPlanExerciseService', () => {
                | {
                     id: string;
                     workoutPlanId: string;
-                    day: number | null;
                     order: number;
                  }
                | null
@@ -110,7 +107,6 @@ describe('WorkoutPlanExerciseService', () => {
    const createWorkoutPlanExerciseDto: CreateWorkoutPlanExerciseDto = {
       workoutPlanId: 'workoutPlan_123',
       exerciseId: 'exercise_123',
-      day: null,
       order: 1,
       targetSets: 4,
       targetRepsMin: 8,
@@ -129,7 +125,6 @@ describe('WorkoutPlanExerciseService', () => {
    const workoutPlanExerciseRecord: WorkoutPlanExerciseRecord = {
       id: 'workoutPlanExercise_123',
       ...createWorkoutPlanExerciseDto,
-      day: createWorkoutPlanExerciseDto.day ?? null,
       exercise: {
          id: createWorkoutPlanExerciseDto.exerciseId,
          name: 'Press banca',
@@ -192,7 +187,6 @@ describe('WorkoutPlanExerciseService', () => {
                },
             },
             order: createWorkoutPlanExerciseDto.order,
-            day: createWorkoutPlanExerciseDto.day,
             targetSets: createWorkoutPlanExerciseDto.targetSets,
             targetRepsMin: createWorkoutPlanExerciseDto.targetRepsMin,
             targetRepsMax: createWorkoutPlanExerciseDto.targetRepsMax,
@@ -205,7 +199,6 @@ describe('WorkoutPlanExerciseService', () => {
             workoutPlanId: true,
             exerciseId: true,
             order: true,
-            day: true,
             targetSets: true,
             targetRepsMin: true,
             targetRepsMax: true,
@@ -228,7 +221,7 @@ describe('WorkoutPlanExerciseService', () => {
          expect(result).toEqual(workoutPlanExerciseRecord);
       });
 
-      it('throws ConflictException when creating a duplicate position without a day', async () => {
+      it('throws ConflictException when creating a duplicate position', async () => {
          prismaMock.workoutPlanExercise.findFirst.mockResolvedValue({
             id: 'existing_workoutPlanExercise',
          });
@@ -239,34 +232,11 @@ describe('WorkoutPlanExerciseService', () => {
          expect(prismaMock.workoutPlanExercise.findFirst).toHaveBeenCalledWith({
             where: {
                workoutPlanId: createWorkoutPlanExerciseDto.workoutPlanId,
-               day: null,
                order: createWorkoutPlanExerciseDto.order,
             },
             select: { id: true },
          });
          expect(prismaMock.workoutPlanExercise.create).not.toHaveBeenCalled();
-      });
-
-      it('allows the same order on a different day', async () => {
-         prismaMock.workoutPlanExercise.create.mockResolvedValue({
-            ...workoutPlanExerciseRecord,
-            day: 2,
-         });
-
-         await service.create({
-            ...createWorkoutPlanExerciseDto,
-            day: 2,
-         });
-
-         expect(prismaMock.workoutPlanExercise.findFirst).toHaveBeenCalledWith({
-            where: {
-               workoutPlanId: createWorkoutPlanExerciseDto.workoutPlanId,
-               day: 2,
-               order: createWorkoutPlanExerciseDto.order,
-            },
-            select: { id: true },
-         });
-         expect(prismaMock.workoutPlanExercise.create).toHaveBeenCalled();
       });
 
       it('translates unexpected database errors into InternalServerErrorException', async () => {
@@ -321,7 +291,6 @@ describe('WorkoutPlanExerciseService', () => {
          });
          expect(findManyArgs.orderBy).toEqual([
             { workoutPlanId: 'asc' },
-            { day: 'asc' },
             { order: 'asc' },
          ]);
          expect(findManyArgs.where).toEqual({
@@ -403,7 +372,6 @@ describe('WorkoutPlanExerciseService', () => {
          prismaMock.workoutPlanExercise.findUnique.mockResolvedValue({
             id: workoutPlanExerciseRecord.id,
             workoutPlanId: workoutPlanExerciseRecord.workoutPlanId,
-            day: workoutPlanExerciseRecord.day,
             order: workoutPlanExerciseRecord.order,
          });
          prismaMock.workoutPlanExercise.update.mockResolvedValue(
@@ -428,7 +396,6 @@ describe('WorkoutPlanExerciseService', () => {
             select: {
                id: true,
                workoutPlanId: true,
-               day: true,
                order: true,
                workoutPlan: true,
             },
@@ -436,7 +403,6 @@ describe('WorkoutPlanExerciseService', () => {
          expect(prismaMock.workoutPlanExercise.findFirst).toHaveBeenCalledWith({
             where: {
                workoutPlanId: workoutPlanExerciseRecord.workoutPlanId,
-               day: null,
                order: updatedWorkoutPlanExerciseDto.order,
                id: {
                   not: workoutPlanExerciseRecord.id,
@@ -450,7 +416,6 @@ describe('WorkoutPlanExerciseService', () => {
          expect(updateArgs.data).toEqual({
             exercise: undefined,
             order: updatedWorkoutPlanExerciseDto.order,
-            day: undefined,
             targetSets: updatedWorkoutPlanExerciseDto.targetSets,
             targetRepsMin: undefined,
             targetRepsMax: undefined,
@@ -463,7 +428,6 @@ describe('WorkoutPlanExerciseService', () => {
             workoutPlanId: true,
             exerciseId: true,
             order: true,
-            day: true,
             targetSets: true,
             targetRepsMin: true,
             targetRepsMax: true,
@@ -490,7 +454,6 @@ describe('WorkoutPlanExerciseService', () => {
          prismaMock.workoutPlanExercise.findUnique.mockResolvedValue({
             id: workoutPlanExerciseRecord.id,
             workoutPlanId: workoutPlanExerciseRecord.workoutPlanId,
-            day: workoutPlanExerciseRecord.day,
             order: workoutPlanExerciseRecord.order,
          });
          prismaMock.workoutPlanExercise.findFirst.mockResolvedValue({
@@ -505,11 +468,10 @@ describe('WorkoutPlanExerciseService', () => {
          expect(prismaMock.workoutPlanExercise.update).not.toHaveBeenCalled();
       });
 
-      it('does not check position conflicts when day and order do not change', async () => {
+      it('does not check position conflicts when order does not change', async () => {
          prismaMock.workoutPlanExercise.findUnique.mockResolvedValue({
             id: workoutPlanExerciseRecord.id,
             workoutPlanId: workoutPlanExerciseRecord.workoutPlanId,
-            day: workoutPlanExerciseRecord.day,
             order: workoutPlanExerciseRecord.order,
          });
          prismaMock.workoutPlanExercise.update.mockResolvedValue({
@@ -544,7 +506,6 @@ describe('WorkoutPlanExerciseService', () => {
          prismaMock.workoutPlanExercise.findUnique.mockResolvedValue({
             id: workoutPlanExerciseRecord.id,
             workoutPlanId: workoutPlanExerciseRecord.workoutPlanId,
-            day: workoutPlanExerciseRecord.day,
             order: workoutPlanExerciseRecord.order,
          });
          prismaMock.workoutPlanExercise.update.mockRejectedValue(
@@ -566,7 +527,6 @@ describe('WorkoutPlanExerciseService', () => {
          prismaMock.workoutPlanExercise.findUnique.mockResolvedValue({
             id: workoutPlanExerciseRecord.id,
             workoutPlanId: workoutPlanExerciseRecord.workoutPlanId,
-            day: workoutPlanExerciseRecord.day,
             order: workoutPlanExerciseRecord.order,
          });
          prismaMock.workoutPlanExercise.delete.mockResolvedValue(
@@ -590,7 +550,6 @@ describe('WorkoutPlanExerciseService', () => {
             select: {
                id: true,
                workoutPlanId: true,
-               day: true,
                order: true,
                workoutPlan: true,
             },
@@ -603,7 +562,6 @@ describe('WorkoutPlanExerciseService', () => {
             workoutPlanId: true,
             exerciseId: true,
             order: true,
-            day: true,
             targetSets: true,
             targetRepsMin: true,
             targetRepsMax: true,

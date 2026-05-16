@@ -20,7 +20,6 @@ const NewRoutineContext = createContext<NewRoutineContextValue | null>(null);
 export function NewRoutineProvider({ children }: { children: ReactNode }) {
    const [name, setName] = useState('');
    const [description, setDescription] = useState('');
-   const [durationWeeks, setDurationWeeks] = useState('');
    const [selectedGoal, setSelectedGoal] =
       useState<WorkoutPlanGoal>('HYPERTROPHY');
    const [selectedLevel, setSelectedLevel] =
@@ -43,8 +42,6 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
          if (nextState.name !== undefined) setName(nextState.name);
          if (nextState.description !== undefined)
             setDescription(nextState.description);
-         if (nextState.durationWeeks !== undefined)
-            setDurationWeeks(nextState.durationWeeks);
          if (nextState.selectedGoal !== undefined)
             setSelectedGoal(nextState.selectedGoal);
          if (nextState.selectedLevel !== undefined)
@@ -67,7 +64,6 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
       () => ({
          name,
          description,
-         durationWeeks,
          selectedGoal,
          selectedLevel,
          status,
@@ -77,7 +73,6 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
          originalExercises,
          setName,
          setDescription,
-         setDurationWeeks,
          setSelectedGoal,
          setSelectedLevel,
          setStatus,
@@ -97,7 +92,6 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
                   {
                      ...exercise,
                      id: `exercise-${Date.now()}`,
-                     day: null,
                      order: nextOrder,
                   },
                ];
@@ -112,7 +106,6 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
          resetRoutine: () => {
             setName('');
             setDescription('');
-            setDurationWeeks('');
             setSelectedGoal('HYPERTROPHY');
             setSelectedLevel('INTERMEDIATE');
             setStatus('active');
@@ -124,7 +117,6 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
       [
          canCreateRoutine,
          description,
-         durationWeeks,
          exercises,
          hydrateRoutineForEdit,
          name,

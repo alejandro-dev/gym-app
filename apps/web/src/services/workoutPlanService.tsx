@@ -20,7 +20,6 @@ export interface WorkoutPlanBasePayload {
   isActive: boolean;
   goal: WorkoutPlanGoal | null;
   level: WorkoutPlanLevel | null;
-  durationWeeks: number | null;
 }
 
 export interface CreateWorkoutPlanPayload extends WorkoutPlanBasePayload {

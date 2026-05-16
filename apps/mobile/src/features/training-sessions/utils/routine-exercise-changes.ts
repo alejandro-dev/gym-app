@@ -2,7 +2,6 @@ import type { RoutineExerciseDraft } from '../types';
 
 type RoutineExercisePayload = {
    exerciseId: string;
-   day: number | null;
    order: number;
    targetSets: number | null;
    targetRepsMin: number | null;
@@ -61,7 +60,6 @@ export function buildRoutineExerciseChangeSet(
 function toWorkoutPlanExercisePayload(exercise: RoutineExerciseDraft) {
    return {
       exerciseId: exercise.exerciseId,
-      day: null,
       order: exercise.order,
       targetSets: exercise.targetSets,
       targetRepsMin: exercise.targetRepsMin,

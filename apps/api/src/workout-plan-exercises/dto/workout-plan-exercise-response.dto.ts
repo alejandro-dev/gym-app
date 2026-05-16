@@ -17,10 +17,6 @@ export class WorkoutPlanExerciseResponseDto {
    /** Identificador del ejercicio asociado. */
    exerciseId!: string;
 
-   @ApiPropertyOptional({ example: 1, nullable: true })
-   /** Dia del ejercicio dentro del plan. */
-   day!: number | null;
-
    @ApiProperty({ example: 1 })
    /** Posicion del ejercicio dentro del plan. */
    order!: number;

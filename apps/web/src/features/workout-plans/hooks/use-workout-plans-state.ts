@@ -15,7 +15,6 @@ export function buildFallbackExercises(planId: string): WorkoutPlanExerciseDraft
          id: `${planId}-exercise-1`,
          workoutPlanId: planId,
          isDraft: true,
-         day: 1,
          order: 1,
          exerciseId: null,
          exercise: null,
@@ -36,7 +35,6 @@ export function toWorkoutPlanViewModel(plan: WorkoutPlan): WorkoutPlanViewModel 
       ...plan,
       goal: plan.goal ? plan.goal : null,
       level: plan.level ? plan.level : null,
-      durationWeeks: plan.durationWeeks ?? null,
       exercisesCount: plan.exercises?.length ?? 0,
       exercises: plan.exercises ?? [],
    };

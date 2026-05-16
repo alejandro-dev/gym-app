@@ -5,7 +5,6 @@ import { apiFetch } from '@/services/api/client';
 export type CreateWorkoutPlanExerciseParams = {
    workoutPlanId: string;
    exerciseId: string;
-   day: number | null;
    order: number;
    targetSets: number | null;
    targetRepsMin: number | null;

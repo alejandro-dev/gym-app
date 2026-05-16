@@ -61,7 +61,6 @@ export default async function WorkoutPlanDetailPage({
             ...plan,
             goal: plan.goal ? plan.goal : null,
             level: plan.level ? plan.level : null,
-            durationWeeks: plan.durationWeeks ?? null,
             exercisesCount: planExercises.length,
             exercises: planExercises,
          }}

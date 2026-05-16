@@ -32,7 +32,6 @@ type WorkoutPlanRecord = {
    description: string | null;
    goal: null;
    level: null;
-   durationWeeks: null;
    isActive: boolean;
    createdAt: Date;
    updatedAt: Date;
@@ -40,7 +39,6 @@ type WorkoutPlanRecord = {
 
 type WorkoutPlanExerciseCopyRecord = {
    exerciseId: string;
-   day: number | null;
    order: number;
    targetSets: number | null;
    targetRepsMin: number | null;
@@ -132,7 +130,6 @@ describe('WorkoutPlansService', () => {
       createdById: currentUser.sub,
       goal: null,
       level: null,
-      durationWeeks: null,
       createdAt: new Date('2026-03-21T10:00:00.000Z'),
       updatedAt: new Date('2026-03-21T10:00:00.000Z'),
    };
@@ -177,7 +174,6 @@ describe('WorkoutPlansService', () => {
             isActive: createWorkoutPlanDto.isActive,
             goal: undefined,
             level: undefined,
-            durationWeeks: undefined,
             user: {
                connect: {
                   id: createWorkoutPlanDto.userId,
@@ -251,7 +247,6 @@ describe('WorkoutPlansService', () => {
          const sourceWorkoutPlanExercises: WorkoutPlanExerciseCopyRecord[] = [
             {
                exerciseId: 'exercise_1',
-               day: 1,
                order: 1,
                targetSets: 4,
                targetRepsMin: 8,
@@ -262,7 +257,6 @@ describe('WorkoutPlansService', () => {
             },
             {
                exerciseId: 'exercise_2',
-               day: 1,
                order: 2,
                targetSets: 3,
                targetRepsMin: 10,
@@ -304,7 +298,6 @@ describe('WorkoutPlansService', () => {
             where: { workoutPlanId: workoutPlanRecord.id },
             select: {
                exerciseId: true,
-               day: true,
                order: true,
                targetSets: true,
                targetRepsMin: true,
@@ -536,7 +529,6 @@ describe('WorkoutPlansService', () => {
             isActive: undefined,
             goal: undefined,
             level: undefined,
-            durationWeeks: undefined,
          });
          expect(updateArgs.select).toMatchObject({
             id: true,

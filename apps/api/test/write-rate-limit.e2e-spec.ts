@@ -345,7 +345,6 @@ describe('Write rate limits (e2e)', () => {
       return {
          workoutPlanId,
          exerciseId,
-         day: null,
          order,
          targetSets: 4,
          targetRepsMin: 8,

@@ -33,7 +33,6 @@ export default function useAddRoutineExerciseView({addExercise, selectedRoutineE
          category: selectedRoutineExercise.category,
          equipment: selectedRoutineExercise.equipment,
          isCompound: selectedRoutineExercise.isCompound,
-         day: null,
          targetSets: toOptionalNumber(targetSets),
          targetRepsMin: toOptionalNumber(targetRepsMin),
          targetRepsMax: toOptionalNumber(targetRepsMax),

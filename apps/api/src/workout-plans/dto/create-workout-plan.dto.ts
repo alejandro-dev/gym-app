@@ -5,11 +5,9 @@ import {
    IsBoolean,
    IsEnum,
    IsIn,
-   IsInt,
    IsNotEmpty,
    IsOptional,
    IsString,
-   Min,
    ValidateIf,
 } from 'class-validator';
 
@@ -70,13 +68,6 @@ export class CreateWorkoutPlanDto {
    @IsOptional()
    @IsEnum(WorkoutPlanLevel)
    level?: WorkoutPlanLevel | null;
-
-   @ApiPropertyOptional({ example: 8, nullable: true })
-   /** Duracion estimada del plan en semanas. */
-   @IsOptional()
-   @IsInt()
-   @Min(1)
-   durationWeeks?: number | null;
 
    @ApiPropertyOptional({
       enum: ['new', 'copy'],

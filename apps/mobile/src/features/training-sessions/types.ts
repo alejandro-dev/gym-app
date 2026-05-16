@@ -20,7 +20,6 @@ export type RoutineExerciseDraft = {
    category: ExerciseCategory;
    equipment: string | null;
    isCompound: boolean;
-   day: number | null;
    order: number;
    targetSets: number | null;
    targetRepsMin: number | null;
@@ -34,7 +33,6 @@ export type RoutineExerciseDraft = {
 export type NewRoutineState = {
    name: string;
    description: string;
-   durationWeeks: string;
    selectedGoal: WorkoutPlanGoal;
    selectedLevel: WorkoutPlanLevel;
    status: string;
@@ -52,7 +50,6 @@ export type NewRoutineContextValue = NewRoutineState & {
    canCreateRoutine: boolean;
    setName: (name: string) => void;
    setDescription: (description: string) => void;
-   setDurationWeeks: (durationWeeks: string) => void;
    setSelectedGoal: (selectedGoal: WorkoutPlanGoal) => void;
    setSelectedLevel: (selectedLevel: WorkoutPlanLevel) => void;
    setStatus: (status: string) => void;

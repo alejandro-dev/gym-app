@@ -178,7 +178,6 @@ export interface WorkoutPlan {
   description: string | null;
   goal: WorkoutPlanGoal | null;
   level: WorkoutPlanLevel | null;
-  durationWeeks: number | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -228,7 +227,6 @@ export interface WorkoutPlanExercise {
   id: string;
   workoutPlanId: string;
   exerciseId: string;
-  day: number | null;
   order: number;
   targetSets: number | null;
   targetRepsMin: number | null;
