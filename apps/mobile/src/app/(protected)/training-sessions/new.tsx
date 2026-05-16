@@ -15,7 +15,7 @@ export default function NewRoutineScreen() {
    } = useNewRutineView();
 
    return (
-      <ProtectedScreen edges={['left', 'right']}>
+      <ProtectedScreen edges={['top', 'left', 'right']}>
          <NewRoutineView
             mode="create"
             canSubmitRoutine={canSubmitRoutine}

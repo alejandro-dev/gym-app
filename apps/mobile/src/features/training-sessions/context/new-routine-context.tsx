@@ -11,6 +11,10 @@ import type {
    WorkoutPlanLevel,
 } from '@gym-app/types';
 
+import {
+   DEFAULT_WORKOUT_PLAN_GOAL,
+   DEFAULT_WORKOUT_PLAN_LEVEL,
+} from '../constants/workout-plan-defaults';
 import { RoutineCatalogExercise, NewRoutineState, RoutineExerciseDraft, NewRoutineContextValue } from '../types';
 
 // Contexto para la vista de nueva rutina.
@@ -21,9 +25,9 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
    const [name, setName] = useState('');
    const [description, setDescription] = useState('');
    const [selectedGoal, setSelectedGoal] =
-      useState<WorkoutPlanGoal>('HYPERTROPHY');
+      useState<WorkoutPlanGoal>(DEFAULT_WORKOUT_PLAN_GOAL);
    const [selectedLevel, setSelectedLevel] =
-      useState<WorkoutPlanLevel>('INTERMEDIATE');
+      useState<WorkoutPlanLevel>(DEFAULT_WORKOUT_PLAN_LEVEL);
    const [status, setStatus] = useState('active');
    const [exercises, setExercises] = useState<RoutineExerciseDraft[]>([]);
    const [selectedRoutineExercise, setSelectedRoutineExercise] =
@@ -106,8 +110,8 @@ export function NewRoutineProvider({ children }: { children: ReactNode }) {
          resetRoutine: () => {
             setName('');
             setDescription('');
-            setSelectedGoal('HYPERTROPHY');
-            setSelectedLevel('INTERMEDIATE');
+            setSelectedGoal(DEFAULT_WORKOUT_PLAN_GOAL);
+            setSelectedLevel(DEFAULT_WORKOUT_PLAN_LEVEL);
             setStatus('active');
             setExercises([]);
             setSelectedRoutineExercise(null);

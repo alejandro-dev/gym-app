@@ -10,6 +10,10 @@ import { useCreateRoutineMutation } from '../mutations/routine/use-create-routin
 import { useWorkoutPlanQuery } from '../queries/workout-plan/use-workout-plan-query';
 import { useWorkoutPlanExercisesQuery } from '../queries/workout-plan/use-workout-plan-exercises-query';
 import {
+   DEFAULT_WORKOUT_PLAN_GOAL,
+   DEFAULT_WORKOUT_PLAN_LEVEL,
+} from '../constants/workout-plan-defaults';
+import {
    normalizeRoutineExerciseDrafts,
    toRoutineExerciseDraft,
 } from '../utils/routine-form-utils';
@@ -78,8 +82,8 @@ export default function useDuplicateRoutineView(id: string) {
       hydrateRoutineForEdit({
          name: `${data.name} (copia)`,
          description: data.description ?? '',
-         selectedGoal: data.goal ?? 'HYPERTROPHY',
-         selectedLevel: data.level ?? 'INTERMEDIATE',
+         selectedGoal: data.goal ?? DEFAULT_WORKOUT_PLAN_GOAL,
+         selectedLevel: data.level ?? DEFAULT_WORKOUT_PLAN_LEVEL,
          status: data.isActive ? 'active' : 'draft',
          exercises: normalizeRoutineExerciseDrafts(
             exercises.map((exercise) =>
