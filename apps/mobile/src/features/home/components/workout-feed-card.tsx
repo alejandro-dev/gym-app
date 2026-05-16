@@ -45,7 +45,17 @@ export default function WorkoutFeedCard({
 	if (isCompact) {
 		return (
 			<Pressable onPress={handleOpenDetail} style={styles.compactCard}>
-				<Text style={styles.compactTitle}>{item.name}</Text>
+				<View style={styles.authorRow}>
+					<Text style={styles.compactTitle}>{item.name}</Text>
+					<Pressable
+						accessibilityLabel="Opciones"
+						hitSlop={8}
+						onPress={() => onOpenOptions(item)}
+						style={styles.moreButton}
+					>
+						<MaterialDesignIcons color="#9EA3AD" name="dots-horizontal" size={22} />
+					</Pressable>
+				</View>
 				<Text style={styles.compactMeta}>
 					{`${formatSessionTimeAgo(item.endedAt)} · ${formatDuration(item.durationSeconds)} · ${formatCompactVolume(item.volumeKg)} kg · ${completedSets} series`}
 				</Text>
@@ -162,6 +172,7 @@ const styles = StyleSheet.create({
 		color: VIEW_COLORS.onDark,
 		fontSize: 16,
 		fontWeight: '800',
+		flex: 1,
 	},
 	exerciseChip: {
 		backgroundColor: '#211F26',

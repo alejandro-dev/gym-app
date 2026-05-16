@@ -14,11 +14,8 @@ export default function RoutineDetailExerciseItem({
    const metaParts = [
       exercise.targetSets ? `${exercise.targetSets} series` : null,
       formatReps(exercise),
-      exercise.restSeconds ? `${exercise.restSeconds}s` : null,
       exercise.targetWeightKg ? `${Math.round(exercise.targetWeightKg)} kg` : null,
    ].filter(Boolean);
-
-   const isPrimary = exercise.order === 1;
 
    const handlePress = () => {
       router.push({
@@ -30,9 +27,9 @@ export default function RoutineDetailExerciseItem({
    };
 
    return (
-      <Pressable onPress={handlePress} style={[styles.item, isPrimary ? styles.itemPrimary : styles.itemSecondary]}>
-         <View style={[styles.orderBadge, isPrimary ? styles.orderBadgePrimary : styles.orderBadgeSecondary]}>
-            <Text style={[styles.orderText, isPrimary ? styles.orderTextPrimary : styles.orderTextSecondary]}>
+      <Pressable onPress={handlePress} style={styles.item}>
+         <View style={styles.orderBadge}>
+            <Text style={styles.orderText}>
                {exercise.order}
             </Text>
          </View>
@@ -44,9 +41,7 @@ export default function RoutineDetailExerciseItem({
             </Text>
          </View>
 
-         {isPrimary ? (
-            <MaterialDesignIcons color="#9EA3AD" name="chevron-right" size={22} />
-         ) : null}
+         <MaterialDesignIcons color="#9EA3AD" name="chevron-right" size={22} />
       </Pressable>
    );
 }
@@ -70,20 +65,13 @@ const styles = StyleSheet.create({
    },
    item: {
       alignItems: 'center',
+      backgroundColor: '#181A20',
+      borderColor: '#2A2E36',
       borderRadius: 16,
+      borderWidth: 1,
       flexDirection: 'row',
       gap: 10,
       padding: 12,
-   },
-   itemPrimary: {
-      backgroundColor: '#1D1B20',
-      borderColor: '#34303A',
-      borderWidth: 1,
-   },
-   itemSecondary: {
-      backgroundColor: '#181A20',
-      borderColor: '#2A2E36',
-      borderWidth: 1,
    },
    meta: {
       color: '#9EA3AD',
@@ -97,26 +85,16 @@ const styles = StyleSheet.create({
    },
    orderBadge: {
       alignItems: 'center',
+      backgroundColor: '#FF8400',
       borderRadius: 10,
       height: 34,
       justifyContent: 'center',
       width: 34,
    },
-   orderBadgePrimary: {
-      backgroundColor: '#FF8400',
-   },
-   orderBadgeSecondary: {
-      backgroundColor: '#211F26',
-   },
    orderText: {
+      color: '#111111',
       fontFamily: 'monospace',
       fontSize: 14,
       fontWeight: '900',
-   },
-   orderTextPrimary: {
-      color: '#111111',
-   },
-   orderTextSecondary: {
-      color: '#FFFFFF',
    },
 });

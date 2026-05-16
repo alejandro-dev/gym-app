@@ -7,7 +7,6 @@ import { Button } from 'react-native-paper';
 
 // Maqueta de la pantalla de entrenamiento activo al empezar una rutina.
 export default function ActiveWorkoutScreen() {
-  
    const { 
       workoutPlanQuery,
       exercisesQuery,
@@ -25,27 +24,10 @@ export default function ActiveWorkoutScreen() {
       decrementCompletedSets,
       handleGoDetailFinishScreen,
    } = useStartWorkoutScreen();
-   
+
    return (
       <>
-         <Stack.Screen
-            options={{
-               headerRight: () => (
-                  <Button
-                     mode="contained"
-                     compact
-                     loading={isFinishingWorkoutSession}
-                     disabled={!workoutSession || isFinishingWorkoutSession}
-                     onPress={handleGoDetailFinishScreen}
-                     style={[{borderRadius: 12}]}
-                  >
-                     Terminar
-                  </Button>
-               ),
-            }}
-         />
-
-         <ProtectedScreen edges={['left', 'right']}>
+         <ProtectedScreen edges={['left', 'right', 'top']}>
             <ActiveWorkoutView 
                workoutPlanQuery={workoutPlanQuery}
                exercisesQuery={exercisesQuery}

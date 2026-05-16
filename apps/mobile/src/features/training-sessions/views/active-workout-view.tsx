@@ -1,4 +1,9 @@
-import { ScrollView, StyleSheet, View } from 'react-native';
+import type { UseQueryResult } from '@tanstack/react-query';
+import type { User, WorkoutPlan, WorkoutPlanExercise, WorkoutSession } from '@gym-app/types';
+import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
    ActivityIndicator,
    Button,
@@ -7,17 +12,14 @@ import {
    type MD3Theme,
 } from 'react-native-paper';
 
-import { VIEW_COLORS } from '@/theme/colors';
-import ActiveWorkoutExerciseCard from '../components/active-workout/active-workout-exercise-card';
-import ActiveWorkoutSummary from '../components/active-workout/active-workout-summary';
-import { UseQueryResult } from '@tanstack/react-query';
-import { User, WorkoutPlan, WorkoutPlanExercise, WorkoutSession } from '@gym-app/types';
-import { useState } from 'react';
 import { formatStopwatch } from '@/features/home/utils/utils';
+import { AUTH_COLORS, VIEW_COLORS } from '@/theme/colors';
+
+import ActiveWorkoutExerciseCard from '../components/active-workout/active-workout-exercise-card';
 
 type ActiveWorkoutViewProps = {
    workoutPlanQuery: UseQueryResult<WorkoutPlan, Error>;
-   exercisesQuery: UseQueryResult<WorkoutPlanExercise[], Error>
+   exercisesQuery: UseQueryResult<WorkoutPlanExercise[], Error>;
    exercises: WorkoutPlanExercise[];
    profileQuery: UseQueryResult<User, Error>;
    workoutSession: WorkoutSession | null;
@@ -28,22 +30,32 @@ type ActiveWorkoutViewProps = {
    handleGoDetailFinishScreen: () => void;
    onCompletedSetCreated: () => void;
    onCompletedSetDeleted: () => void;
-}
+};
 
-// Vista para activar una rutina.
-export default function ActiveWorkoutView({ workoutPlanQuery, exercisesQuery, exercises, profileQuery, workoutSession, isFinishingWorkoutSession, completedSetsCount, elapsedSeconds, setIsDeleteDialogOpen, handleGoDetailFinishScreen, onCompletedSetCreated, onCompletedSetDeleted }: ActiveWorkoutViewProps) {
+export default function ActiveWorkoutView({
+   workoutPlanQuery,
+   exercisesQuery,
+   exercises,
+   profileQuery,
+   workoutSession,
+   isFinishingWorkoutSession,
+   completedSetsCount,
+   elapsedSeconds,
+   setIsDeleteDialogOpen,
+   handleGoDetailFinishScreen,
+   onCompletedSetCreated,
+   onCompletedSetDeleted,
+}: ActiveWorkoutViewProps) {
    const theme = useTheme();
+   const insets = useSafeAreaInsets();
    const styles = getStyles(theme);
+   const [totalVolume, setTotalVolume] = useState(0);
+   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
 
-   // Obtenemos el total de volumen de las rutinas.
-   const [totalVolume, setTotalVolume] = useState<number>(0);
-
-   // Evento para eliminar una sesión de entrenamiento.
    const handleDeleteWorkoutSession = () => {
       setIsDeleteDialogOpen(true);
-   }
+   };
 
-   // Si estamos cargando la rutina, mostramos un indicador de carga.
    if (workoutPlanQuery.isLoading || exercisesQuery.isLoading) {
       return (
          <View style={styles.centerState}>
@@ -53,7 +65,6 @@ export default function ActiveWorkoutView({ workoutPlanQuery, exercisesQuery, ex
       );
    }
 
-   // Si se ha producido un error al cargar la rutina, mostramos un mensaje de error.
    if (workoutPlanQuery.isError || !workoutPlanQuery.data) {
       return (
          <View style={styles.centerState}>
@@ -65,7 +76,6 @@ export default function ActiveWorkoutView({ workoutPlanQuery, exercisesQuery, ex
       );
    }
 
-   // Si estamos cargando la rutina, mostramos un indicador de carga.
    if (
       workoutPlanQuery.isLoading ||
       exercisesQuery.isLoading ||
@@ -80,153 +90,241 @@ export default function ActiveWorkoutView({ workoutPlanQuery, exercisesQuery, ex
       );
    }
 
+   const selectedExerciseId = expandedExerciseId ?? exercises[0]?.id ?? null;
+
+   const stats = [
+      {
+         accent: true,
+         label: 'duración',
+         value: formatStopwatch(elapsedSeconds),
+      },
+      {
+         accent: false,
+         label: 'volumen',
+         value: formatVolumeCompact(totalVolume),
+      },
+      {
+         accent: false,
+         label: 'series',
+         value: String(completedSetsCount),
+      },
+   ];
+
    return (
       <View style={styles.screen}>
          <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.content}
+            contentContainerStyle={[
+               styles.content,
+               { paddingBottom: Math.max(insets.bottom, 16) + 104 },
+            ]}
          >
-            <View style={styles.summary}>
-               <ActiveWorkoutSummary
-                  label="Duración"
-                  value={formatStopwatch(elapsedSeconds)}
-                  highlighted
-               />
+            <View style={styles.header}>
+               <View style={styles.headerCopy}>
+                  <Text style={styles.eyebrow}>WORKOUT SESSION</Text>
+                  <Text numberOfLines={1} style={styles.title}>
+                     {workoutPlanQuery.data.name}
+                  </Text>
+               </View>
 
-               <ActiveWorkoutSummary
-                  label="Volumen"
-                  value={totalVolume > 0 ? `${totalVolume} kg` : '-'}
-               />
-               <ActiveWorkoutSummary label="Series" value={String(completedSetsCount)} />
+               <Pressable
+                  accessibilityLabel="Descartar entrenamiento"
+                  onPress={handleDeleteWorkoutSession}
+                  style={styles.closeButton}
+               >
+                  <MaterialDesignIcons color="#EF4444" name="close" size={18} />
+               </Pressable>
+            </View>
+
+            <View style={styles.statsRow}>
+               {stats.map((stat) => (
+                  <View
+                     key={stat.label}
+                     style={[styles.statCard, stat.accent && styles.statCardAccent]}
+                  >
+                     <Text style={[styles.statValue, stat.accent && styles.statValueAccent]}>
+                        {stat.value}
+                     </Text>
+                     <Text style={[styles.statLabel, stat.accent && styles.statLabelAccent]}>
+                        {stat.label}
+                     </Text>
+                  </View>
+               ))}
             </View>
 
             <View style={styles.exerciseList}>
                {exercises.map((exercise) => (
-                  <ActiveWorkoutExerciseCard key={exercise.id} exercise={exercise} workoutSessionId={workoutSession.id} onCompletedSetCreated={onCompletedSetCreated} onCompletedSetDeleted={onCompletedSetDeleted} setTotalVolume={setTotalVolume} />
+                  <ActiveWorkoutExerciseCard
+                     key={exercise.id}
+                     exercise={exercise}
+                     isExpanded={selectedExerciseId === exercise.id}
+                     workoutSessionId={workoutSession.id}
+                     onCompletedSetCreated={onCompletedSetCreated}
+                     onCompletedSetDeleted={onCompletedSetDeleted}
+                     onToggleExpand={() => setExpandedExerciseId(exercise.id)}
+                     setTotalVolume={setTotalVolume}
+                  />
                ))}
             </View>
-
-            {/*<Button
-               mode="contained"
-               icon="plus"
-               style={styles.addExerciseButton}
-               labelStyle={styles.addExerciseButtonLabel}
-               contentStyle={styles.largeButtonContent}
-            >
-               Agregar ejercicio
-            </Button>*/}
-
-            <View style={styles.footerActions}>
-               <Button
-                  mode="contained"
-                  style={styles.finishButton}
-                  labelStyle={styles.finishButtonLabel}
-                  contentStyle={styles.footerButtonContent}
-                  loading={isFinishingWorkoutSession}
-                  disabled={isFinishingWorkoutSession}
-                  onPress={handleGoDetailFinishScreen}
-               >
-                  Terminar
-               </Button>
-
-               <Button
-                  mode="contained-tonal"
-                  style={styles.dangerButton}
-                  labelStyle={styles.dangerButtonLabel}
-                  contentStyle={styles.footerButtonContent}
-                  onPress={handleDeleteWorkoutSession}
-               >
-                  Descartar entreno
-               </Button>
-            </View>
          </ScrollView>
+
+         <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+            <Button
+               mode="contained"
+               style={styles.finishButton}
+               labelStyle={styles.finishButtonLabel}
+               contentStyle={styles.footerButtonContent}
+               loading={isFinishingWorkoutSession}
+               disabled={isFinishingWorkoutSession}
+               onPress={handleGoDetailFinishScreen}
+            >
+               Terminar
+            </Button>
+
+            <Button
+               mode="contained-tonal"
+               style={styles.discardButton}
+               labelStyle={styles.discardButtonLabel}
+               contentStyle={styles.footerButtonContent}
+               onPress={handleDeleteWorkoutSession}
+            >
+               Descartar entreno
+            </Button>
+         </View>
       </View>
    );
 }
 
-const getStyles = (theme: MD3Theme) => StyleSheet.create({
-   screen: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-      marginBottom: 20,
-   },
-   content: {
-      paddingTop: 20,
-      paddingBottom: 28,
-      gap: 28,
-   },
-   summary: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingBottom: 18,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.outline,
-   },
-   exerciseList: {
-      gap: 30,
-   },
-   largeButtonContent: {
-      minHeight: 52,
-   },
-   addExerciseButton: {
-      borderRadius: 12,
-      backgroundColor: theme.colors.primary,
-   },
-   addExerciseButtonLabel: {
-      color: theme.colors.onPrimary,
-      fontSize: 15,
-      fontWeight: '900',
-   },
-   footerActions: {
-      gap: 12,
-   },
-   finishButton: {
-      borderRadius: 12,
-      backgroundColor: theme.colors.primary,
-   },
-   finishButtonLabel: {
-      color: theme.colors.onPrimary,
-      fontSize: 15,
-      fontWeight: '900',
-   },
-   secondaryButton: {
-      flex: 1,
-      borderRadius: 12,
-      backgroundColor: theme.colors.surface,
-   },
-   dangerButton: {
-      flex: 1,
-      borderRadius: 12,
-      backgroundColor: theme.colors.surface,
-   },
-   secondaryButtonLabel: {
-      color: theme.colors.onSurface,
-      fontSize: 15,
-      fontWeight: '900',
-   },
-   dangerButtonLabel: {
-      color: '#EF4444',
-      fontSize: 15,
-      fontWeight: '900',
-   },
-   footerButtonContent: {
-      minHeight: 48,
-   },
-   centerState: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: 24,
-      gap: 10,
-   },
-   stateTitle: {
-      color: theme.colors.onBackground,
-      fontWeight: '900',
-      textAlign: 'center',
-   },
-   stateText: {
-      color: VIEW_COLORS.muted,
-      textAlign: 'center',
-   },
-});
+function formatVolumeCompact(value: number) {
+   if (value <= 0) return '-';
+
+   if (value >= 1000) {
+      const compactValue = value / 1000;
+      const formatted =
+         compactValue >= 10
+            ? Math.round(compactValue).toString()
+            : compactValue.toFixed(1).replace(/\.0$/, '');
+
+      return `${formatted}k`;
+   }
+
+   return String(Math.round(value));
+}
+
+const getStyles = (theme: MD3Theme) =>
+   StyleSheet.create({
+      centerState: {
+         alignItems: 'center',
+         flex: 1,
+         gap: 10,
+         justifyContent: 'center',
+         padding: 24,
+      },
+      closeButton: {
+         alignItems: 'center',
+         backgroundColor: '#211F26',
+         borderRadius: 18,
+         height: 36,
+         justifyContent: 'center',
+         width: 36,
+      },
+      content: {
+         gap: 18,
+         paddingBottom: 28,
+         paddingTop: 12,
+      },
+      discardButton: {
+         backgroundColor: '#211F26',
+         borderRadius: 14,
+      },
+      discardButtonLabel: {
+         color: '#EF4444',
+         fontSize: 13,
+         fontWeight: '900',
+      },
+      exerciseList: {
+         gap: 10,
+      },
+      eyebrow: {
+         color: AUTH_COLORS.primary,
+         fontFamily: 'monospace',
+         fontSize: 10,
+         fontWeight: '700',
+         letterSpacing: 0.8,
+      },
+      finishButton: {
+         backgroundColor: AUTH_COLORS.primary,
+         borderRadius: 14,
+      },
+      finishButtonLabel: {
+         color: AUTH_COLORS.primaryForeground,
+         fontSize: 14,
+         fontWeight: '900',
+      },
+      footer: {
+         backgroundColor: theme.colors.background,
+         gap: 8,
+         paddingTop: 12,
+      },
+      footerButtonContent: {
+         minHeight: 44,
+      },
+      header: {
+         alignItems: 'center',
+         flexDirection: 'row',
+         gap: 12,
+         justifyContent: 'space-between',
+      },
+      headerCopy: {
+         flex: 1,
+         gap: 2,
+      },
+      screen: {
+         backgroundColor: theme.colors.background,
+         flex: 1,
+      },
+      stateText: {
+         color: VIEW_COLORS.muted,
+         textAlign: 'center',
+      },
+      stateTitle: {
+         color: theme.colors.onBackground,
+         fontWeight: '900',
+         textAlign: 'center',
+      },
+      statCard: {
+         backgroundColor: '#211F26',
+         borderRadius: 12,
+         flex: 1,
+         gap: 2,
+         padding: 10,
+      },
+      statCardAccent: {
+         backgroundColor: AUTH_COLORS.helpSurface,
+      },
+      statLabel: {
+         color: '#9EA3AD',
+         fontSize: 10,
+      },
+      statLabelAccent: {
+         color: '#B8BCC6',
+      },
+      statValue: {
+         color: VIEW_COLORS.onDark,
+         fontFamily: 'monospace',
+         fontSize: 20,
+         fontWeight: '800',
+      },
+      statValueAccent: {
+         color: AUTH_COLORS.primary,
+      },
+      statsRow: {
+         flexDirection: 'row',
+         gap: 8,
+      },
+      title: {
+         color: VIEW_COLORS.onDark,
+         fontSize: 28,
+         fontWeight: '800',
+      },
+   });

@@ -25,13 +25,9 @@ export default function RoutineDetailHero({
          value: String(exercises.length),
       },
       {
-         label: 'orden',
-         value: 'AUTO',
-      },
-      {
          accent: workoutPlan.isActive,
-         label: workoutPlan.isActive ? 'activa' : 'pausada',
-         value: workoutPlan.isActive ? 'ACT' : 'OFF',
+         label: 'estado',
+         value: workoutPlan.isActive ? 'Activa' : 'Pausada',
       },
    ];
 
