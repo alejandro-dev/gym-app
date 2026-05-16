@@ -39,7 +39,6 @@ export type WorkoutPlanFormValues = {
    userId: string;
    goal: WorkoutPlanGoal | "";
    level: WorkoutPlanLevel | "";
-   durationWeeks: string;
    isActive: "true" | "false";
 };
 
@@ -49,7 +48,6 @@ export const EMPTY_WORKOUT_PLAN_FORM_VALUES: WorkoutPlanFormValues = {
    userId: "",
    goal: "",
    level: "",
-   durationWeeks: "",
    isActive: "true",
 };
 
@@ -111,32 +109,18 @@ export function WorkoutPlanFormDialog({
 
                <div className="flex-1 overflow-y-auto px-6 py-5">
                   <FieldGroup className="gap-6">
-                     <div className="grid gap-4 md:grid-cols-2">
-                        <Field>
-                           <Label htmlFor="name">
-                              Nombre<span className="text-destructive">*</span>
-                           </Label>
-                           <Input
-                              id="name"
-                              name="name"
-                              value={values.name}
-                              onChange={onValueChange}
-                              placeholder="Ej. Push Pull Legs 12 semanas"
-                           />
-                        </Field>
-                        <Field>
-                           <Label htmlFor="durationWeeks">Duración</Label>
-                           <Input
-                              id="durationWeeks"
-                              name="durationWeeks"
-                              type="number"
-                              min={1}
-                              value={values.durationWeeks}
-                              onChange={onValueChange}
-                              placeholder="8"
-                           />
-                        </Field>
-                     </div>
+                     <Field>
+                        <Label htmlFor="name">
+                           Nombre<span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                           id="name"
+                           name="name"
+                           value={values.name}
+                           onChange={onValueChange}
+                           placeholder="Ej. Push Pull Legs"
+                        />
+                     </Field>
 
                      <Field>
                         <Label htmlFor="description">Descripción</Label>

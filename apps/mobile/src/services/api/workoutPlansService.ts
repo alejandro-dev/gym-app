@@ -14,7 +14,6 @@ export type CreateWorkoutPlanParams = {
    description: string | null;
    goal: WorkoutPlanGoal;
    level: WorkoutPlanLevel;
-   durationWeeks: number | null;
    isActive: boolean;
 };
 

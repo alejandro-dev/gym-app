@@ -23,7 +23,6 @@ export const workoutPlanSchema = z.object({
    isActive: z.boolean(),
    goal: z.enum(WORKOUT_PLAN_GOALS).nullable(),
    level: z.enum(WORKOUT_PLAN_LEVELS).nullable(),
-   durationWeeks: z.number().int().min(1, "Duración debe ser mayor que 0").nullable(),
 });
 
 export type WorkoutPlanInput = z.infer<typeof workoutPlanSchema>;

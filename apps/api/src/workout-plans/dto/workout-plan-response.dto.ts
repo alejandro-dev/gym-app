@@ -46,13 +46,6 @@ export class WorkoutPlanResponseDto {
    /** Indica el nivel del plan. */
    level!: WorkoutPlanLevel | null;
 
-   @ApiPropertyOptional({
-      example: 3,
-      nullable: true,
-   })
-   /** Indica la duracion estimada del plan en semanas. */
-   durationWeeks!: number | null;
-
    @ApiProperty({ example: true })
    /** Indica si el plan esta activo. */
    isActive!: boolean;

@@ -35,7 +35,6 @@ export default function useNewRutineView() {
                description: routine.description.trim() || null,
                goal: routine.selectedGoal,
                level: routine.selectedLevel,
-               durationWeeks: null,
                isActive: routine.status === 'active',
             },
             exercises: routine.exercises,

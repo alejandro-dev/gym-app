@@ -159,7 +159,6 @@ export function useWorkoutPlanForm({ setPlans }: UseWorkoutPlanFormParams) {
 			isActive: values.isActive === "true",
 			goal: values.goal || null,
 			level: values.level || null,
-			durationWeeks: values.durationWeeks ? Number(values.durationWeeks) : null,
 		});
 
 		// Si el formulario no es válido, lanzamos una excepción.
@@ -179,7 +178,6 @@ export function useWorkoutPlanForm({ setPlans }: UseWorkoutPlanFormParams) {
 					isActive: result.data.isActive,
 					goal: result.data.goal,
 					level: result.data.level,
-					durationWeeks: result.data.durationWeeks,
 				},
 			});
 
@@ -196,7 +194,6 @@ export function useWorkoutPlanForm({ setPlans }: UseWorkoutPlanFormParams) {
 				isActive: result.data.isActive,
 				goal: result.data.goal,
 				level: result.data.level,
-				durationWeeks: result.data.durationWeeks,
 				type: mode === "duplicate" ? "copy" : "new",
 				sourceWorkoutPlanId:
 					mode === "duplicate" && selectedPlan ? selectedPlan?.id : null,
@@ -229,7 +226,6 @@ function getFormValuesFromPlan(
 		userId: plan.userId ?? "",
 		goal: plan.goal ?? "",
 		level: plan.level ?? "",
-		durationWeeks: plan.durationWeeks ? String(plan.durationWeeks) : "",
 		isActive: plan.isActive ? "true" : "false",
 	};
 }

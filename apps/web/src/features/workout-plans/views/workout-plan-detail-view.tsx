@@ -69,9 +69,8 @@ export default function WorkoutPlanDetailView({
    const [isSaving, setIsSaving] = React.useState(false);
 
    const exercises = plan.exercises ?? EMPTY_EXERCISES;
-   // La UI se organiza por día para evitar una tabla horizontal larga y pesada.
-   const exerciseGroups = React.useMemo(
-      () => groupExercisesByDay(exercises),
+   const orderedExercises = React.useMemo(
+      () => [...exercises].sort((first, second) => first.order - second.order),
       [exercises],
    );
 
@@ -87,7 +86,6 @@ export default function WorkoutPlanDetailView({
          if (exercise.id !== exerciseId) return exercise;
 
          const numericFields: Array<keyof WorkoutPlanExerciseDraft> = [
-            "day",
             "order",
             "targetSets",
             "targetRepsMin",
@@ -156,18 +154,14 @@ export default function WorkoutPlanDetailView({
    };
 
    // Añade un ejercicio en el plan y devuelve la versión publica del registro.
-   const handleAddExercise = (day = 1) => {
-      // El orden se calcula dentro del día actual porque Prisma usa
-      // @@unique([workoutPlanId, day, order]).
-      const dayExercises = exercises.filter((exercise) => exercise.day === day);
+   const handleAddExercise = () => {
       const nextExercises = [
          ...exercises,
          {
             id: `draft-${crypto.randomUUID()}`,
             workoutPlanId: plan.id,
             isDraft: true,
-            day,
-            order: dayExercises.length + 1,
+            order: exercises.length + 1,
             exerciseId: null,
             exercise: null,
             targetSets: null,
@@ -194,8 +188,8 @@ export default function WorkoutPlanDetailView({
          setDeletedExerciseIds((current) => [...current, exerciseToRemove.id]);
       }
 
-      // Tras borrar, compactamos el orden por día para no dejar huecos visuales.
-      const nextExercises = normalizeExerciseOrderByDay(
+      // Tras borrar, compactamos el orden de la lista para no dejar huecos.
+      const nextExercises = normalizeExerciseOrder(
          exercises.filter((exercise) => exercise.id !== exerciseId),
       );
 
@@ -275,8 +269,8 @@ export default function WorkoutPlanDetailView({
                      </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                     {plan.description ||
-                        "Planifica los días de entrenamiento y ajusta la prescripción de cada ejercicio."}
+                    {plan.description ||
+                        "Planifica la lista de ejercicios y ajusta la prescripción de cada uno."}
                   </p>
                </div>
             </div>
@@ -320,11 +314,9 @@ export default function WorkoutPlanDetailView({
             </Card>
             <Card size="sm">
                <CardHeader>
-                  <CardTitle>Duración</CardTitle>
+                  <CardTitle>Ejercicios</CardTitle>
                </CardHeader>
-               <CardContent>
-                  {plan.durationWeeks ? `${plan.durationWeeks} semanas` : "-"}
-               </CardContent>
+               <CardContent>{exercises.length}</CardContent>
             </Card>
          </div>
 
@@ -332,41 +324,33 @@ export default function WorkoutPlanDetailView({
             <div className="flex flex-col gap-1">
                <h2 className="text-lg font-semibold">Ejercicios del plan</h2>
                <p className="text-sm text-muted-foreground">
-                  Cada día queda separado para que puedas editar sin desplazarte por
-                  una tabla horizontal.
+                  Edita los ejercicios como una lista única en el orden en el que se entrenan.
                </p>
             </div>
 
-            {exerciseGroups.length > 0 ? (
-               exerciseGroups.map((group) => (
-                  // Cada section representa un día del plan y contiene sus ejercicios.
-                  <section
-                     key={group.key}
-                     className="flex flex-col gap-4 rounded-lg border bg-background p-4"
-                  >
-                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex flex-wrap items-center gap-2">
-                           <h3 className="text-base font-medium">{group.label}</h3>
-                           <Badge variant="secondary">
-                              {group.exercises.length}{" "}
-                              {group.exercises.length === 1 ? "ejercicio" : "ejercicios"}
-                           </Badge>
-                        </div>
-                        <Button
-                           type="button"
-                           variant="outline"
-                           size="sm"
-                           onClick={() => handleAddExercise(group.day ?? 1)}
-                        >
-                           <IconPlus data-icon="inline-start" />
-                           {group.day
-                              ? `Añadir en ${group.label.toLowerCase()}`
-                              : "Añadir en día 1"}
-                        </Button>
+            {orderedExercises.length > 0 ? (
+               <section className="flex flex-col gap-4 rounded-lg border bg-background p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                     <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-base font-medium">Lista de ejercicios</h3>
+                        <Badge variant="secondary">
+                           {orderedExercises.length}{" "}
+                           {orderedExercises.length === 1 ? "ejercicio" : "ejercicios"}
+                        </Badge>
                      </div>
+                     <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAddExercise}
+                     >
+                        <IconPlus data-icon="inline-start" />
+                        Añadir ejercicio
+                     </Button>
+                  </div>
 
-                     <div className="grid gap-4 xl:grid-cols-2">
-                        {group.exercises.map((exercise) => (
+                  <div className="grid gap-4 xl:grid-cols-2">
+                     {orderedExercises.map((exercise) => (
                            <Card key={exercise.id} size="sm">
                               <CardHeader className="border-b">
                                  <div className="flex items-start justify-between gap-3">
@@ -391,7 +375,7 @@ export default function WorkoutPlanDetailView({
                               </CardHeader>
                               <CardContent>
                                  <FieldGroup className="gap-4">
-                                    <div className="grid gap-3 lg:grid-cols-[minmax(14rem,1fr)_6rem_6rem]">
+                                    <div className="grid gap-3 lg:grid-cols-[minmax(14rem,1fr)_6rem]">
                                        <Field>
                                           <FieldLabel
                                              htmlFor={`${exercise.id}-exerciseId`}
@@ -430,24 +414,6 @@ export default function WorkoutPlanDetailView({
                                                 </SelectGroup>
                                              </SelectContent>
                                           </Select>
-                                       </Field>
-                                       <Field>
-                                          <FieldLabel htmlFor={`${exercise.id}-day`}>
-                                             Día
-                                          </FieldLabel>
-                                          <Input
-                                             id={`${exercise.id}-day`}
-                                             value={exercise.day ?? ""}
-                                             type="number"
-                                             min={1}
-                                             onChange={(event) =>
-                                                handleExerciseChange(
-                                                   exercise.id,
-                                                   "day",
-                                                   event.currentTarget.value,
-                                                )
-                                             }
-                                          />
                                        </Field>
                                        <Field>
                                           <FieldLabel htmlFor={`${exercise.id}-order`}>
@@ -581,10 +547,9 @@ export default function WorkoutPlanDetailView({
                                  </FieldGroup>
                               </CardContent>
                            </Card>
-                        ))}
-                     </div>
-                  </section>
-               ))
+                     ))}
+                  </div>
+               </section>
             ) : (
                <div className="flex min-h-64 flex-col items-center justify-center gap-3 rounded-lg border border-dashed text-center text-muted-foreground">
                   <p>Aún no hay ejercicios en este plan.</p>
@@ -638,61 +603,13 @@ function NumberField({
    );
 }
 
-function groupExercisesByDay(exercises: WorkoutPlanExerciseDraft[]) {
-   // Agrupa por day manteniendo un bucket especial para ejercicios sin día.
-   const groups = new Map<
-      string,
-      {
-         key: string;
-         day: number | null;
-         label: string;
-         exercises: WorkoutPlanExerciseDraft[];
-      }
-   >();
-
-   for (const exercise of exercises) {
-      const key = exercise.day ? String(exercise.day) : "no-day";
-      const group = groups.get(key) ?? {
-         key,
-         day: exercise.day,
-         label: exercise.day ? `Día ${exercise.day}` : "Sin día",
-         exercises: [],
-      };
-
-      group.exercises.push(exercise);
-      groups.set(key, group);
-   }
-
-   return Array.from(groups.values())
-      .map((group) => ({
-         ...group,
-         // Dentro de cada día se respeta el orden definido en WorkoutPlanExercise.order.
-         exercises: [...group.exercises].sort((first, second) => {
-            return first.order - second.order;
-         }),
-      }))
-      .sort((first, second) => {
-         if (first.day === null) return 1;
-         if (second.day === null) return -1;
-         return first.day - second.day;
-      });
-}
-
-function normalizeExerciseOrderByDay(exercises: WorkoutPlanExerciseDraft[]) {
-   // Reasigna order de forma secuencial por día tras eliminar un item.
-   const dayCounters = new Map<string, number>();
-
-   return exercises.map((exercise) => {
-      const key = exercise.day ? String(exercise.day) : "no-day";
-      const nextOrder = (dayCounters.get(key) ?? 0) + 1;
-
-      dayCounters.set(key, nextOrder);
-
-      return {
+function normalizeExerciseOrder(exercises: WorkoutPlanExerciseDraft[]) {
+   return exercises
+      .sort((first, second) => first.order - second.order)
+      .map((exercise, index) => ({
          ...exercise,
-         order: nextOrder,
-      };
-   });
+         order: index + 1,
+      }));
 }
 
 function toWorkoutPlanExercisePayload(
@@ -706,7 +623,6 @@ function toWorkoutPlanExercisePayload(
    return {
       workoutPlanId,
       exerciseId: exercise.exerciseId,
-      day: exercise.day,
       order: exercise.order,
       targetSets: exercise.targetSets,
       targetRepsMin: exercise.targetRepsMin,
@@ -726,7 +642,6 @@ function toUpdateWorkoutPlanExercisePayload(
 
    return {
       exerciseId: exercise.exerciseId,
-      day: exercise.day,
       order: exercise.order,
       targetSets: exercise.targetSets,
       targetRepsMin: exercise.targetRepsMin,
@@ -743,7 +658,6 @@ function toWorkoutPlanExerciseDraft(
    return {
       id: exercise.id,
       workoutPlanId: exercise.workoutPlanId,
-      day: exercise.day,
       order: exercise.order,
       exerciseId: exercise.exerciseId,
       exercise: exercise.exercise,

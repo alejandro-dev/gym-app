@@ -22,7 +22,6 @@ export type WorkoutPlanExerciseDraft = {
    id: string;
    workoutPlanId: string;
    isDraft?: boolean;
-   day: number | null;
    order: number;
    exerciseId: string | null;
    exercise?: {

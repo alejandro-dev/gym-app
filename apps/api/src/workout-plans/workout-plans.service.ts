@@ -29,7 +29,6 @@ type SelectedWorkoutPlanRecord = {
    description: string | null;
    goal: WorkoutPlanGoal | null;
    level: WorkoutPlanLevel | null;
-   durationWeeks: number | null;
    isActive: boolean;
    createdAt: Date;
    updatedAt: Date;
@@ -65,7 +64,6 @@ export class WorkoutPlansService {
       description: true,
       goal: true,
       level: true,
-      durationWeeks: true,
       isActive: true,
       createdAt: true,
       updatedAt: true,
@@ -76,7 +74,6 @@ export class WorkoutPlansService {
     */
    private readonly workoutPlanExerciseSelect = {
       exerciseId: true,
-      day: true,
       order: true,
       targetSets: true,
       targetRepsMin: true,
@@ -236,7 +233,6 @@ export class WorkoutPlansService {
                   data: sourceWorkoutPlanExercises.map((sourceExercise) => ({
                      workoutPlanId: createdWorkoutPlan.id,
                      exerciseId: sourceExercise.exerciseId,
-                     day: sourceExercise.day,
                      order: sourceExercise.order,
                      targetSets: sourceExercise.targetSets,
                      targetRepsMin: sourceExercise.targetRepsMin,
@@ -355,7 +351,6 @@ export class WorkoutPlansService {
          isActive: createWorkoutPlanDto.isActive,
          goal: createWorkoutPlanDto.goal,
          level: createWorkoutPlanDto.level,
-         durationWeeks: createWorkoutPlanDto.durationWeeks,
          createdBy: {
             connect: {
                id: user.sub,
@@ -390,7 +385,6 @@ export class WorkoutPlansService {
          isActive: updateWorkoutPlanDto.isActive,
          goal: updateWorkoutPlanDto.goal,
          level: updateWorkoutPlanDto.level,
-         durationWeeks: updateWorkoutPlanDto.durationWeeks,
       };
    }
 

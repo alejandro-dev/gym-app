@@ -49,7 +49,6 @@ export default function useDuplicateRoutineView(id: string) {
                description: routine.description.trim() || null,
                goal: routine.selectedGoal,
                level: routine.selectedLevel,
-               durationWeeks: null,
                isActive: routine.status === 'active',
             },
             exercises: routine.exercises,
@@ -79,7 +78,6 @@ export default function useDuplicateRoutineView(id: string) {
       hydrateRoutineForEdit({
          name: `${data.name} (copia)`,
          description: data.description ?? '',
-         durationWeeks: '',
          selectedGoal: data.goal ?? 'HYPERTROPHY',
          selectedLevel: data.level ?? 'INTERMEDIATE',
          status: data.isActive ? 'active' : 'draft',

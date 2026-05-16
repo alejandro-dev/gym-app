@@ -36,7 +36,6 @@ export class WorkoutPlanExerciseService {
       targetWeightKg: true,
       restSeconds: true,
       notes: true,
-      day: true,
       exercise: {
          select: {
             id: true,
@@ -71,7 +70,7 @@ export class WorkoutPlanExerciseService {
             userId,
             workoutPlanId,
          ),
-         orderBy: [{ workoutPlanId: 'asc' }, { day: 'asc' }, { order: 'asc' }],
+         orderBy: [{ workoutPlanId: 'asc' }, { order: 'asc' }],
       });
    }
 
@@ -113,7 +112,6 @@ export class WorkoutPlanExerciseService {
       try {
          await this.assertWorkoutPlanExercisePositionAvailable({
             workoutPlanId: createWorkoutPlanExerciseDto.workoutPlanId,
-            day: createWorkoutPlanExerciseDto.day,
             order: createWorkoutPlanExerciseDto.order,
          });
 
@@ -150,21 +148,14 @@ export class WorkoutPlanExerciseService {
          id,
       );
 
-      const nextDay =
-         updateWorkoutPlanExerciseDto.day === undefined
-            ? workoutPlanExercise.day
-            : updateWorkoutPlanExerciseDto.day;
       const nextOrder =
          updateWorkoutPlanExerciseDto.order ?? workoutPlanExercise.order;
-      const hasPositionChanged =
-         nextDay !== workoutPlanExercise.day ||
-         nextOrder !== workoutPlanExercise.order;
+      const hasPositionChanged = nextOrder !== workoutPlanExercise.order;
 
       try {
          if (hasPositionChanged) {
             await this.assertWorkoutPlanExercisePositionAvailable({
                workoutPlanId: workoutPlanExercise.workoutPlanId,
-               day: nextDay,
                order: nextOrder,
                ignoreId: id,
             });
@@ -223,7 +214,6 @@ export class WorkoutPlanExerciseService {
             },
          },
          order: createWorkoutPlanExerciseDto.order,
-         day: createWorkoutPlanExerciseDto.day,
          targetSets: createWorkoutPlanExerciseDto.targetSets,
          targetRepsMin: createWorkoutPlanExerciseDto.targetRepsMin,
          targetRepsMax: createWorkoutPlanExerciseDto.targetRepsMax,
@@ -251,7 +241,6 @@ export class WorkoutPlanExerciseService {
               }
             : undefined,
          order: updateWorkoutPlanExerciseDto.order,
-         day: updateWorkoutPlanExerciseDto.day,
          targetSets: updateWorkoutPlanExerciseDto.targetSets,
          targetRepsMin: updateWorkoutPlanExerciseDto.targetRepsMin,
          targetRepsMax: updateWorkoutPlanExerciseDto.targetRepsMax,
@@ -284,7 +273,6 @@ export class WorkoutPlanExerciseService {
             select: {
                id: true,
                workoutPlanId: true,
-               day: true,
                order: true,
                workoutPlan: true,
             },
@@ -301,12 +289,10 @@ export class WorkoutPlanExerciseService {
 
    private async assertWorkoutPlanExercisePositionAvailable({
       workoutPlanId,
-      day,
       order,
       ignoreId,
    }: {
       workoutPlanId: string;
-      day?: number | null;
       order: number;
       ignoreId?: string;
    }) {
@@ -314,7 +300,6 @@ export class WorkoutPlanExerciseService {
          await this.prisma.workoutPlanExercise.findFirst({
             where: {
                workoutPlanId,
-               day: day ?? null,
                order,
                ...(ignoreId && {
                   id: {

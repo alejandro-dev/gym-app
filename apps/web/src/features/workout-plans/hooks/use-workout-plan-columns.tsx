@@ -86,11 +86,6 @@ export function useWorkoutPlanColumns({
                <Badge variant="outline">
                   {getWorkoutPlanLevelLabel(row.original.level)}
                </Badge>
-               <Badge variant="outline">
-                  {row.original.durationWeeks
-                     ? `${row.original.durationWeeks} semanas`
-                     : "Sin duración"}
-               </Badge>
             </div>
          ),
       },
